@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import CustomerLayout from '@/Layouts/CustomerLayout';
 import { api } from '@/lib/api';
 import type { Address } from '@/types/address';
 import type { AuthUser } from '@/types/user';
@@ -42,11 +43,11 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
+        <CustomerLayout>
+            <div className="mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Profile</CardTitle>
+                        <CardTitle className="font-heading">Profile</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1 text-sm">
                         <p className="font-medium">{user.name}</p>
@@ -56,7 +57,7 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Saved addresses</CardTitle>
+                        <CardTitle className="font-heading">Saved addresses</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {addresses.length === 0 && (
@@ -123,6 +124,6 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </CustomerLayout>
     );
 }

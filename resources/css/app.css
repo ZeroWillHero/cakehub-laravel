@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource/playfair-display/500.css";
+@import "@fontsource/playfair-display/600.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -123,6 +125,34 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+}
+
+/*
+ * Customer portal theme — warm bakery palette (sage green / cream / peach),
+ * applied only to Customer-facing surfaces via the `customer-theme` class.
+ * Seller and Admin panels keep the default neutral shadcn palette above.
+ * See docs/skills/frontend-design-skill.md for the design rationale.
+ */
+.customer-theme {
+    --background: oklch(0.94 0.025 122);
+    --foreground: oklch(0.28 0.03 60);
+    --card: oklch(0.985 0.01 90);
+    --card-foreground: oklch(0.28 0.03 60);
+    --popover: oklch(0.985 0.01 90);
+    --popover-foreground: oklch(0.28 0.03 60);
+    --primary: oklch(0.72 0.11 55);
+    --primary-foreground: oklch(0.99 0.005 90);
+    --secondary: oklch(0.4 0.05 145);
+    --secondary-foreground: oklch(0.99 0.005 90);
+    --muted: oklch(0.91 0.02 100);
+    --muted-foreground: oklch(0.48 0.03 70);
+    --accent: oklch(0.88 0.04 60);
+    --accent-foreground: oklch(0.32 0.04 60);
+    --border: oklch(0.85 0.02 100);
+    --input: oklch(0.85 0.02 100);
+    --ring: oklch(0.72 0.11 55);
+    --radius: 1rem;
+    --font-heading: 'Playfair Display', ui-serif, Georgia, serif;
 }
 
 @layer base {
