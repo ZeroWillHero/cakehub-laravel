@@ -14,6 +14,19 @@ it('lets a new user become a customer and creates their profile', function () {
     expect($user->customerProfile)->not->toBeNull();
 });
 
+it('lets a new user become a customer when the form sends empty strings for the unused seller fields', function () {
+    // Mirrors the real Inertia frontend, which always submits every field in
+    // its form state — business_name/whatsapp_number arrive as '' (then null,
+    // via ConvertEmptyStringsToNull) rather than being omitted entirely.
+    $user = User::factory()->create(['role' => null]);
+
+    $this->actingAs($user)
+        ->post('/onboarding', ['role' => 'customer', 'business_name' => '', 'whatsapp_number' => ''])
+        ->assertRedirect(route('home'));
+
+    expect($user->refresh()->role)->toBe(UserRole::Customer);
+});
+
 it('lets a new user become a seller and creates their seller record', function () {
     $user = User::factory()->create(['role' => null]);
 

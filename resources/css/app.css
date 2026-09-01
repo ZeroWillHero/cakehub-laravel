@@ -155,6 +155,18 @@
     --font-heading: 'Playfair Display', ui-serif, Georgia, serif;
 }
 
+/*
+ * Tailwind's `@theme inline` block resolves `--font-heading: var(--font-sans)`
+ * to a literal value at build time, so the auto-generated `.font-heading`
+ * utility can't be overridden by `.customer-theme`'s CSS-variable override.
+ * This manual utility keeps the reference live instead.
+ */
+@layer utilities {
+    .font-heading {
+        font-family: var(--font-heading, var(--font-sans));
+    }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

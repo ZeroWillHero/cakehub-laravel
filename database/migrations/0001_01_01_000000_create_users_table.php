@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('avatar_url')->nullable();
             $table->string('role')->nullable(); // customer|seller|admin, null until onboarding completes
             $table->string('status')->default('active'); // active|suspended
+            $table->rememberToken(); // used by Laravel's "remember me" session cookie, not password auth
             $table->timestamps();
         });
 

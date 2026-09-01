@@ -17,8 +17,8 @@ class SelectRoleRequest extends FormRequest
     {
         return [
             'role' => ['required', new Enum(UserRole::class), 'in:customer,seller'],
-            'business_name' => ['required_if:role,seller', 'string', 'max:255'],
-            'whatsapp_number' => ['required_if:role,seller', 'string', 'max:32'],
+            'business_name' => ['nullable', 'required_if:role,seller', 'string', 'max:255'],
+            'whatsapp_number' => ['nullable', 'required_if:role,seller', 'string', 'max:32'],
         ];
     }
 }
