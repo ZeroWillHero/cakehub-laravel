@@ -9,7 +9,10 @@
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.3",
         "laravel/framework": "^13.17",
-        "laravel/tinker": "^3.0"
+        "laravel/sanctum": "^4.3",
+        "laravel/socialite": "^5.31",
+        "laravel/tinker": "^3.0",
+        "matanyadaev/laravel-eloquent-spatial": "^4.8"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -18,6 +21,8 @@
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^4.7",
+        "pestphp/pest-plugin-laravel": "^4.1",
         "phpunit/phpunit": "^12.5.12"
     },
     "autoload": {

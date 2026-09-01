@@ -8,7 +8,7 @@ description: Design system and visual/interaction guidelines for CakeHub's three
 Used by [frontend-agent](../agents/frontend-agent.md) (and checked by [chrome-ui-testing-agent](../agents/chrome-ui-testing-agent.md)) for every screen built in CakeHub.
 
 ## Foundation
-- **Component library:** shadcn/ui (Radix primitives + Tailwind), installed via the shadcn CLI into `resources/js/Components/ui`. Extend/compose shadcn primitives; don't fork or reimplement them.
+- **Component library:** shadcn/ui, `base-nova` style (Base UI primitives, not Radix — corrected 2026-09-01 after actual install) + Tailwind, installed via the shadcn CLI into `resources/js/components/ui` (lowercase — see [frontend-agent](../agents/frontend-agent.md)'s case-sensitivity note). Extend/compose shadcn primitives; don't fork or reimplement them. Note: this style's `Button` has no `asChild` prop — for a link styled as a button, apply `buttonVariants({...})` via `cn()` to an `<a>` directly instead (see `Welcome.tsx`).
 - **Styling:** Tailwind CSS utility classes; shared design tokens (color, spacing, radius, type scale) defined once (Tailwind config + CSS variables per shadcn's theming convention) and reused across all three surfaces — no surface should hand-roll its own token set.
 - **Typography:** one primary typeface for UI text, a clear type scale (e.g. display/h1/h2/h3/body/caption), consistent line-height/weight usage — avoid ad hoc font sizes.
 - **Icons:** one icon set only (e.g. lucide-react, shadcn's default pairing) — no mixing icon libraries.
@@ -39,7 +39,7 @@ Mandatory for every screen, not optional polish:
 - [ ] Destructive actions (delete listing, cancel subscription, reject seller) require explicit confirmation (shadcn `AlertDialog`), and state clearly what will happen.
 - [ ] Forms validate inline, disable submit while invalid/pending, and surface field-specific error text (not just a generic banner).
 - [ ] Empty states (no search results, no orders yet, no listings yet) are designed, not blank — explain why and suggest a next action.
-- [ ] All interactive elements are reachable and operable via keyboard; focus is visibly indicated (rely on Radix's built-in focus handling — don't override it away).
+- [ ] All interactive elements are reachable and operable via keyboard; focus is visibly indicated (rely on Base UI's built-in focus handling — don't override it away).
 - [ ] Color contrast meets WCAG AA; status/role indicators are never conveyed by color alone (pair with icon/text — e.g. "Verified ✓" not just a green dot).
 - [ ] Layout is responsive at 375px / 768px / 1280px minimum (see Responsiveness section above); Customer portal must be fully usable one-handed on mobile; no horizontal page scroll at any width; no clipped/overflowing content or overlapping elements at any breakpoint.
 - [ ] Navigation/current-location in the app is always evident (breadcrumbs, active nav state, step indicators in checkout/onboarding).

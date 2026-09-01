@@ -31,7 +31,11 @@ Every page's `Props` interface and every REST API call is typed against the back
 7. **Flexibility and efficiency of use** — keyboard navigable forms, sensible defaults (e.g. nearest location prefilled from geolocation, most recent delivery address), but never at the cost of discoverability for first-time users.
 8. **Aesthetic and minimalist design** — no unrequested UI chrome; every element on screen must earn its place. Prefer removing over adding.
 9. **Help users recognize, diagnose, and recover from errors** — plain-language error messages tied to the specific field/action, with a concrete next step (not raw stack traces or generic "something went wrong").
-10. **Accessibility (WCAG AA baseline)** — semantic HTML, sufficient color contrast, all interactive elements keyboard-reachable and screen-reader labeled, focus states visible. shadcn/Radix primitives already give a strong baseline — do not strip their built-in a11y behavior (e.g. don't replace `<Dialog>` focus trapping with custom code).
+10. **Accessibility (WCAG AA baseline)** — semantic HTML, sufficient color contrast, all interactive elements keyboard-reachable and screen-reader labeled, focus states visible. shadcn/Base UI primitives already give a strong baseline — do not strip their built-in a11y behavior (e.g. don't replace `<Dialog>` focus trapping with custom code).
+
+## Known gotchas (this project's actual install)
+- **Base UI, not Radix.** This project's shadcn style (`base-nova`) is built on Base UI. `Button` has no `asChild` prop — for a link styled as a button, apply `buttonVariants({...})` via `cn()` directly to an `<a>` (see `resources/js/Pages/Welcome.tsx`).
+- **React 19.2 deprecates `FormEvent`/`FormEventHandler`** from `@types/react` ("doesn't actually exist"). Use `SubmitEventHandler`/`SubmitEvent` for form submissions, `ChangeEventHandler`/`ChangeEvent` for input changes.
 
 ## Working rules
 - Do not introduce a second component library or a competing design system alongside shadcn/ui.
