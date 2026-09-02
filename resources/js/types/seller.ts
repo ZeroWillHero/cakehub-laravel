@@ -16,4 +16,6 @@ export interface Seller {
     store_status: StoreStatus;
     verification_status: VerificationStatus;
     average_rating: number;
+    /** Present only in "nearby" search results. */
+    distance_km?: number;
 }

@@ -33,7 +33,7 @@ Core mechanics:
 - **UI component library:** shadcn/ui (React) for all three surfaces — Admin panel, Seller panel, Customer portal. Each surface should look modern and visually distinct (not three copies of the same theme) while sharing the same underlying design tokens/component primitives.
 - **REST API layer:** `routes/api.php`, authenticated via **Laravel Sanctum (SPA mode)** — for AJAX-only interactions that shouldn't trigger a full Inertia page visit (cart mutations, search-as-you-type, subscription checkout, status toggles). Confirmed 2026-09-01. See [docs/skills/rest-api-skill.md](docs/skills/rest-api-skill.md) for the Inertia-vs-REST split and the typed-contract discipline between Laravel and React.
 - **Backend test framework:** **Pest**. Confirmed 2026-09-01. See [docs/skills/backend-testing-skill.md](docs/skills/backend-testing-skill.md).
-- **Maps/geolocation:** a maps/places provider (e.g. Google Maps/Places API) for location search UI — confirm provider choice with user before integrating, since it has cost/API-key implications.
+- **Maps/geolocation:** **OpenStreetMap** — Leaflet for map display, Nominatim for address geocoding/search. Free, no API key or billing account needed. Confirmed 2026-09-02.
 
 If any of the above needs to change (e.g. swapping Postgres for something else, swapping the admin package), that is a scope/architecture decision — confirm with the user first per Rule 2.
 

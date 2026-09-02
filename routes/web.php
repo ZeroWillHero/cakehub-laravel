@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\AccountController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
+use App\Http\Controllers\Customer\SearchController;
+use App\Http\Controllers\Customer\StorefrontController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Seller\DashboardController as SellerDashboardController;
 use App\Http\Controllers\Seller\ListingController as SellerListingController;
@@ -23,6 +25,10 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:customer')->group(function () {
         Route::get('/account', [AccountController::class, 'edit'])->name('customer.account.edit');
+        Route::get('/search', [SearchController::class, 'index'])->name('search');
+        Route::get('/sellers/{seller:slug}', [StorefrontController::class, 'show'])->name('sellers.show');
+        Route::get('/sellers/{seller:slug}/products/{product}', [StorefrontController::class, 'product'])
+            ->name('sellers.products.show');
     });
 
     Route::middleware('role:seller')->prefix('seller')->name('seller.')->group(function () {
