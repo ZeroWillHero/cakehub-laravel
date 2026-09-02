@@ -85,4 +85,9 @@ class Seller extends Model
     {
         return $this->products()->count();
     }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }

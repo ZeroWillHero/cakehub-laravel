@@ -41,10 +41,21 @@ export default function SellerDashboard({ seller, usage, limit }: Props) {
 
                 <Card>
                     <CardHeader>
+                        <CardTitle className="text-base">Orders</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <a href="/seller/orders" className="text-sm text-primary underline">
+                            View orders
+                        </a>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle className="text-base">Getting started</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        Orders and subscriptions land in later phases (see docs/plan.md). Finish your{' '}
+                        Subscriptions land in a later phase (see docs/plan.md). Finish your{' '}
                         <a href="/seller/profile" className="text-primary underline">
                             store profile
                         </a>{' '}

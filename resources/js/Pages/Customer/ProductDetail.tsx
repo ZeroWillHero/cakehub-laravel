@@ -1,8 +1,20 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { buttonVariants } from '@/components/ui/button';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types/product';
 import type { Seller } from '@/types/seller';
@@ -28,9 +40,37 @@ export default function ProductDetail({ seller, product }: Props) {
     const [selectedVariant, setSelectedVariant] = useState(
         product.variants.find((v) => v.is_default)?.id ?? product.variants[0]?.id ?? null,
     );
+    const [notes, setNotes] = useState('');
+    const [adding, setAdding] = useState(false);
+    const [confirmSwitch, setConfirmSwitch] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const variant = product.variants.find((v) => v.id === selectedVariant);
     const price = product.base_price + (variant?.price_modifier ?? 0);
+    const unavailable = product.availability_status === 'unavailable';
+
+    async function addToCart(replaceCart = false) {
+        setAdding(true);
+        setError(null);
+        try {
+            await api.post('/cart', {
+                product_id: product.id,
+                product_variant_id: selectedVariant,
+                customization_notes: notes || null,
+                replace_cart: replaceCart,
+            });
+            router.visit('/cart');
+        } catch (err) {
+            const apiError = err as { errors?: Record<string, string[]> };
+            if (apiError.errors?.seller_conflict) {
+                setConfirmSwitch(true);
+            } else {
+                setError(apiError.errors?.product_id?.[0] ?? 'Could not add to cart.');
+            }
+        } finally {
+            setAdding(false);
+        }
+    }
 
     return (
         <CustomerLayout>
@@ -71,20 +111,57 @@ export default function ProductDetail({ seller, product }: Props) {
                             </div>
                         )}
 
+                        <div className="mt-6">
+                            <label htmlFor="notes" className="mb-2 block text-sm font-medium">
+                                Customization notes (optional)
+                            </label>
+                            <Textarea
+                                id="notes"
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="e.g. Happy Birthday Sarah!"
+                            />
+                        </div>
+
+                        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
+                        <Button
+                            type="button"
+                            size="lg"
+                            className="mt-4 w-full min-h-11"
+                            disabled={adding || unavailable}
+                            onClick={() => addToCart(false)}
+                        >
+                            {unavailable ? 'Unavailable' : adding ? 'Adding…' : 'Add to cart'}
+                        </Button>
+
                         <a
                             href={whatsappLink(seller, product)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={cn(buttonVariants({ size: 'lg' }), 'mt-6 w-full min-h-11')}
+                            className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'mt-3 w-full min-h-11')}
                         >
                             Order via WhatsApp
                         </a>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                            In-platform checkout arrives in a later phase — order directly with the seller for now.
-                        </p>
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={confirmSwitch} onOpenChange={setConfirmSwitch}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Start a new cart?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Your cart has items from a different seller. Adding this will replace your current cart
+                            (CakeHub only supports ordering from one seller at a time).
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => addToCart(true)}>Replace cart</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </CustomerLayout>
     );
 }
