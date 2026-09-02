@@ -46,9 +46,32 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     return (json as ApiSuccess<T>).data;
 }
 
+async function upload<T>(path: string, formData: FormData): Promise<T> {
+    await primeCsrf();
+
+    const response = await fetch(`/api${path}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            Accept: 'application/json',
+            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') ?? '',
+        },
+        body: formData,
+    });
+
+    const json = (await response.json()) as ApiSuccess<T> | ApiError;
+
+    if (!response.ok) {
+        throw json as ApiError;
+    }
+
+    return (json as ApiSuccess<T>).data;
+}
+
 export const api = {
     get: <T>(path: string) => request<T>('GET', path),
     post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
     put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
     delete: <T>(path: string) => request<T>('DELETE', path),
+    upload: <T>(path: string, formData: FormData) => upload<T>(path, formData),
 };

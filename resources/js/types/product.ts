@@ -9,6 +9,12 @@ export interface ProductVariant {
     is_default: boolean;
 }
 
+export interface ProductImage {
+    id: number;
+    url: string;
+    sort_order: number;
+}
+
 export interface Product {
     id: number;
     name: string;
@@ -19,4 +25,5 @@ export interface Product {
     is_active: boolean;
     categories: Category[];
     variants: ProductVariant[];
+    images: ProductImage[];
 }

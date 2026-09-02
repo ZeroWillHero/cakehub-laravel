@@ -19,7 +19,7 @@ class ListingController extends Controller
 
         return Inertia::render('Seller/Listings', [
             'products' => ProductResource::collection(
-                $seller->products()->with(['categories', 'variants'])->latest()->get()
+                $seller->products()->with(['categories', 'variants', 'images'])->latest()->get()
             )->resolve(),
             'usage' => $seller->listingUsage(),
             'limit' => $seller->listingLimit(),
@@ -50,7 +50,7 @@ class ListingController extends Controller
             )->resolve(),
             'usage' => $product->seller->listingUsage(),
             'limit' => $product->seller->listingLimit(),
-            'product' => (new ProductResource($product->load(['categories', 'variants'])))->resolve(),
+            'product' => (new ProductResource($product->load(['categories', 'variants', 'images'])))->resolve(),
         ]);
     }
 }

@@ -1,5 +1,16 @@
 import { router } from '@inertiajs/react';
-import { useState, type SubmitEventHandler } from 'react';
+import { useRef, useState, type ChangeEventHandler, type SubmitEventHandler } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
-import type { Product, ProductAvailabilityStatus } from '@/types/product';
+import type { Product, ProductAvailabilityStatus, ProductImage } from '@/types/product';
 
 interface Props {
     categories: Category[];
@@ -51,6 +62,10 @@ export default function ListingForm({ categories, usage, limit, product }: Props
     );
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [saving, setSaving] = useState(false);
+    const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
+    const [imageError, setImageError] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     function toggleCategory(id: number) {
         setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
@@ -66,6 +81,33 @@ export default function ListingForm({ categories, usage, limit, product }: Props
 
     function removeVariant(index: number) {
         setVariants((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    const uploadImage: ChangeEventHandler<HTMLInputElement> = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !product) return;
+
+        setUploading(true);
+        setImageError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            const uploaded = await api.upload<ProductImage>(`/seller/products/${product.id}/images`, formData);
+            setImages((prev) => [...prev, uploaded]);
+        } catch (err) {
+            const apiError = err as { errors?: Record<string, string[]> };
+            setImageError(apiError.errors?.image?.[0] ?? 'Could not upload image.');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    async function removeImage(imageId: number) {
+        if (!product) return;
+        await api.delete(`/seller/products/${product.id}/images/${imageId}`);
+        setImages((prev) => prev.filter((img) => img.id !== imageId));
     }
 
     const submit: SubmitEventHandler = async (e) => {
@@ -252,6 +294,61 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                         </form>
                     </CardContent>
                 </Card>
+
+                {isEdit && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Photos</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {images.length === 0 && (
+                                <p className="text-sm text-muted-foreground">No photos yet.</p>
+                            )}
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                {images.map((image) => (
+                                    <div key={image.id} className="group relative aspect-square overflow-hidden rounded-md border">
+                                        <img src={image.url} alt="" className="h-full w-full object-cover" />
+                                        <AlertDialog>
+                                            <AlertDialogTrigger className="absolute right-1 top-1 min-h-8 min-w-8 rounded-md bg-background/90 px-2 text-xs text-destructive shadow">
+                                                Remove
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Remove this photo?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This cannot be undone.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => removeImage(image.id)}>
+                                                        Remove
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <Label htmlFor="image-upload" className="mb-2 block">
+                                    Add a photo
+                                </Label>
+                                <input
+                                    ref={fileInputRef}
+                                    id="image-upload"
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    onChange={uploadImage}
+                                    disabled={uploading}
+                                    className="min-h-11 w-full text-sm file:mr-3 file:min-h-11 file:rounded-md file:border file:bg-background file:px-3 file:text-sm"
+                                />
+                                {uploading && <p className="mt-1 text-sm text-muted-foreground">Uploading…</p>}
+                                {imageError && <p className="mt-1 text-sm text-destructive">{imageError}</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     );

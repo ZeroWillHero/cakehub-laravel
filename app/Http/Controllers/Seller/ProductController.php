@@ -15,7 +15,7 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $products = $request->user()->seller->products()
-            ->with(['categories', 'variants'])
+            ->with(['categories', 'variants', 'images'])
             ->latest()
             ->get();
 
@@ -34,7 +34,7 @@ class ProductController extends Controller
             $product->variants()->create($variant);
         }
 
-        return (new ProductResource($product->load(['categories', 'variants'])))
+        return (new ProductResource($product->load(['categories', 'variants', 'images'])))
             ->response()
             ->setStatusCode(201);
     }
@@ -52,7 +52,7 @@ class ProductController extends Controller
             $product->variants()->create($variant);
         }
 
-        return (new ProductResource($product->load(['categories', 'variants'])))->response();
+        return (new ProductResource($product->load(['categories', 'variants', 'images'])))->response();
     }
 
     public function destroy(Product $product): JsonResponse

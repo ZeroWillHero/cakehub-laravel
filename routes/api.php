@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Seller\ProductController as SellerProductController;
+use App\Http\Controllers\Seller\ProductImageController as SellerProductImageController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,5 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/products', [SellerProductController::class, 'store']);
         Route::put('/products/{product}', [SellerProductController::class, 'update']);
         Route::delete('/products/{product}', [SellerProductController::class, 'destroy']);
+        Route::post('/products/{product}/images', [SellerProductImageController::class, 'store']);
+        Route::delete('/products/{product}/images/{image}', [SellerProductImageController::class, 'destroy']);
     });
 });

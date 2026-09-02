@@ -31,6 +31,11 @@ class ProductResource extends JsonResource
                 'price_modifier' => (float) $v->price_modifier,
                 'is_default' => $v->is_default,
             ]), []),
+            'images' => $this->whenLoaded(
+                'images',
+                fn () => ProductImageResource::collection($this->images)->resolve(),
+                [],
+            ),
         ];
     }
 }
