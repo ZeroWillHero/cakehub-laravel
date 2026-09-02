@@ -29,7 +29,12 @@ it('creates a product for the authenticated seller', function () {
         ])
         ->assertCreated()
         ->assertJsonPath('data.name', 'Chocolate Fudge Cake')
-        ->assertJsonCount(2, 'data.variants');
+        ->assertJsonCount(2, 'data.variants')
+        // Regression: categories must serialize as a plain array, not
+        // Laravel's default resource-collection {"data": [...]} envelope
+        // (the frontend does product.categories.map(...) directly).
+        ->assertJsonPath('data.categories.0.id', $category->id)
+        ->assertJsonMissingPath('data.categories.data');
 
     expect($seller->products()->count())->toBe(1);
 });
