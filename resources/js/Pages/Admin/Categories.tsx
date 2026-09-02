@@ -77,7 +77,7 @@ export default function AdminCategories({ categories: initial }: Props) {
     return (
         <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <h1 className="text-2xl font-semibold">Categories</h1>
                     <Button type="button" onClick={() => setCreateOpen(true)}>
                         Add category

@@ -211,7 +211,11 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                         disabled={atLimit}
                                     >
                                         <SelectTrigger id="availability_status" className="w-full">
-                                            <SelectValue />
+                                            <SelectValue>
+                                                {(value: ProductAvailabilityStatus) =>
+                                                    availabilityOptions.find((opt) => opt.value === value)?.label
+                                                }
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {availabilityOptions.map((opt) => (

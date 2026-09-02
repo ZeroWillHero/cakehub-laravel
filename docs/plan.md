@@ -179,6 +179,15 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Exit criteria:** every screen passes the HCI checklist; test suites green; no known critical bugs from the Chrome UI pass.
 
+**Decision confirmed 2026-09-02:** Vitest + React Testing Library installed as the frontend unit-test stack (per `docs/agents/frontend-unit-testing-agent.md`, never actually set up in earlier phases) — colocated `*.test.tsx`/`*.test.ts` convention, `npm run test`. First batch covers the shared components (`RatingStars`, `ListingUsageIndicator`, `NotificationBell`) and the `lib/api.ts` client; not exhaustive across every page.
+
+**Bugs found and fixed during this pass:**
+- A production-build regression: `resources/js/app.tsx`'s Inertia page resolver (`import.meta.glob('./Pages/**/*.tsx', { eager: true })`) swept up the newly-added `*.test.tsx` files into the shipped bundle, which crashed on load (`Vitest mocker was not initialized`). Fixed by excluding `*.test.tsx` from the glob.
+- Several top-level page headers (`Admin/Dashboard`, `Admin/SellerDetail`, `Admin/Categories`, `Admin/SubscriptionPlans`, `Seller/Reviews`, `Seller/Subscription`, `Customer/Home`) used `flex items-center justify-between` without `flex-wrap`, so the heading and nav links/actions overlapped at the 375px mobile breakpoint instead of stacking. Fixed by adding `flex-wrap` + `gap`, matching the pattern already used elsewhere.
+- The Availability `<Select>` on `Seller/ListingForm` displayed the raw enum value (`in_stock`) instead of its label (`In stock`) — Base UI's `Select.Value` renders the raw value by default and needs an explicit label-mapping render function as `children`, unlike Radix's auto-resolve behavior. Fixed the one usage site.
+
+**Verified:** 157 Pest + 22 Vitest tests passing, `tsc` clean. Manual responsive pass (375/768/1280px) across representative screens on all three surfaces — Customer (Home, Search, Storefront, ProductDetail, Cart, Checkout, Orders, Account), Seller (Dashboard, Listings, ListingForm, Orders, Reviews, StoreProfile, Subscription), Admin (Dashboard, VerificationQueue, SellerDetail, Categories, SubscriptionPlans) — plus a keyboard-navigation focus-state spot-check. Not every single screen/state combination was exercised exhaustively; the above were treated as representative of their shared layout patterns.
+
 ---
 
 ## Phase 9 — Deployment

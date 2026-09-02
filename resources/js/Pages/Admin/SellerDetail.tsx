@@ -96,7 +96,7 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
     return (
         <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
                     <Badge variant={statusVariant[seller.verification_status]}>{seller.verification_status}</Badge>
                 </div>
