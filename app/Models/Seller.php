@@ -90,4 +90,15 @@ class Seller extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function recalculateAverageRating(): void
+    {
+        $this->average_rating = $this->reviews()->avg('rating') ?? 0;
+        $this->save();
+    }
 }

@@ -14,6 +14,7 @@ use App\Http\Controllers\Seller\DashboardController as SellerDashboardController
 use App\Http\Controllers\Seller\ListingController as SellerListingController;
 use App\Http\Controllers\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
+use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -46,6 +47,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/listings/create', [SellerListingController::class, 'create'])->name('listings.create');
         Route::get('/listings/{product}/edit', [SellerListingController::class, 'edit'])->name('listings.edit');
         Route::get('/orders', [SellerOrderController::class, 'index'])->name('orders.index');
+        Route::get('/reviews', [SellerReviewController::class, 'index'])->name('reviews.index');
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {

@@ -21,4 +21,9 @@ class OrderPolicy
     {
         return $user->id === $order->customer_id || $user->seller?->id === $order->seller_id;
     }
+
+    public function review(User $user, Order $order): bool
+    {
+        return $user->id === $order->customer_id;
+    }
 }

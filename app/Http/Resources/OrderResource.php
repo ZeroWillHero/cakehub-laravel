@@ -46,6 +46,7 @@ class OrderResource extends JsonResource
                 'unit_price' => (float) $item->unit_price,
                 'customization_notes' => $item->customization_notes,
             ]), []),
+            'review' => $this->whenLoaded('review', fn () => $this->review ? (new ReviewResource($this->review))->resolve() : null),
         ];
     }
 }

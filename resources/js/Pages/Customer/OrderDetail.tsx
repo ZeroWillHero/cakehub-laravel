@@ -1,10 +1,84 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import RatingStars from '@/components/shared/RatingStars';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import type { Order, OrderStatus } from '@/types/order';
+import { api, type ApiError } from '@/lib/api';
+import type { Order, OrderStatus, Review } from '@/types/order';
 
 interface Props {
     order: Order;
+}
+
+function ReviewSection({ order }: { order: Order }) {
+    const [review, setReview] = useState<Review | null>(order.review ?? null);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    if (order.status !== 'completed') {
+        return null;
+    }
+
+    if (review) {
+        return (
+            <Card className="mt-4">
+                <CardHeader>
+                    <CardTitle className="text-base">Your review</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                    <RatingStars value={review.rating} />
+                    {review.comment && <p>{review.comment}</p>}
+                    {review.seller_response && (
+                        <div className="mt-2 rounded-md bg-muted p-3">
+                            <p className="text-xs font-medium text-muted-foreground">Seller response</p>
+                            <p>{review.seller_response}</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        );
+    }
+
+    async function submit() {
+        setError(null);
+        setSubmitting(true);
+        try {
+            const created = await api.post<Review>(`/orders/${order.id}/reviews`, {
+                rating,
+                comment: comment || undefined,
+            });
+            setReview(created);
+        } catch (err) {
+            const apiError = err as ApiError;
+            setError(apiError.errors?.rating?.[0] ?? apiError.message ?? 'Could not submit review.');
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    return (
+        <Card className="mt-4">
+            <CardHeader>
+                <CardTitle className="text-base">Leave a review</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                <RatingStars value={rating} onChange={setRating} size={24} />
+                <Textarea
+                    placeholder="Tell others about your experience (optional)"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                />
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <Button type="button" disabled={rating === 0 || submitting} onClick={submit}>
+                    Submit review
+                </Button>
+            </CardContent>
+        </Card>
+    );
 }
 
 const timeline: OrderStatus[] = ['placed', 'confirmed', 'preparing', 'ready', 'delivered', 'completed'];
@@ -93,6 +167,8 @@ export default function OrderDetail({ order }: Props) {
                         )}
                     </CardContent>
                 </Card>
+
+                <ReviewSection order={order} />
             </div>
         </CustomerLayout>
     );

@@ -112,9 +112,16 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 - Verified-purchase reviews/ratings on sellers/products; seller responses; average rating surfaced on storefront and search results.
 - Order-status notifications (in-app at minimum; email/SMS/push if a provider is confirmed — flag as open decision if not yet chosen).
 
+**Phase 0 decisions confirmed 2026-09-02:**
+- Notification channels: in-app (Laravel database notifications) + email. Email uses Laravel's `log` mail driver for now (renders/logs instead of real sending) — same stub-now-swap-later pattern as Phase 4's payment stub; swapping to a real provider later is an `.env` change only.
+- In-app surface: a notification bell/dropdown in the Customer and Seller header layouts, showing recent notifications + unread count, backed by Laravel's built-in `notifications` table.
+- Review scope stays as designed in [database-design.md](database-design.md): one review per order, targeting the seller (not per-product), with a seller response and a denormalized `average_rating` on `sellers`. Report/flag on a review (`is_flagged`) is stored but the moderation queue itself is Phase 6 (Admin) — no customer-facing "report" action is built this phase.
+
+**Dev environment note (2026-09-02):** local dev now runs on port **8080**, not 8000 — port 8000 collides with an unrelated Spring Boot project (`pcs-main-backend`) also run locally by the developer. `APP_URL`, `SANCTUM_STATEFUL_DOMAINS`, and `.claude/launch.json` were updated accordingly; the Google OAuth client's authorized redirect URIs must include `http://localhost:8080/auth/google/callback`.
+
 **Agents/skills:** [backend-agent](agents/backend-agent.md) → [frontend-agent](agents/frontend-agent.md) → full test trio.
 
-**Exit criteria:** a completed order can be reviewed once (not duplicated), rating reflects on seller profile, and the customer/seller both receive an order-status notification.
+**Exit criteria:** a completed order can be reviewed once (not duplicated), rating reflects on seller profile, and the customer/seller both receive an order-status notification (in-app + email/log).
 
 ---
 

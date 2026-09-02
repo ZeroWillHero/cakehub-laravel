@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import RatingStars from '@/components/shared/RatingStars';
 import SellerMap from '@/components/shared/SellerMap';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -175,6 +176,14 @@ export default function SearchResults({ categories }: Props) {
                                                 <span className="font-medium">{seller.business_name}</span>
                                                 {seller.verification_status === 'verified' && (
                                                     <Badge>Verified</Badge>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <RatingStars value={Math.round(seller.average_rating)} size={14} />
+                                                {seller.average_rating > 0 && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {seller.average_rating.toFixed(1)}
+                                                    </span>
                                                 )}
                                             </div>
                                             <p className="text-sm text-muted-foreground">

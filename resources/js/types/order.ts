@@ -37,4 +37,22 @@ export interface Order {
         name: string;
     };
     items: OrderItem[];
+    review?: Review | null;
+}
+
+export interface Review {
+    id: number;
+    order_id: number;
+    rating: number;
+    comment: string | null;
+    seller_response: string | null;
+    created_at: string;
+    customer?: {
+        id: number;
+        name: string;
+    };
+    seller?: {
+        id: number;
+        business_name: string;
+    };
 }

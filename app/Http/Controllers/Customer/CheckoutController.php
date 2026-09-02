@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CheckoutRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Notifications\OrderStatusUpdated;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -54,7 +55,10 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        return (new OrderResource($order->load(['items', 'seller', 'deliveryAddress'])))
+        $order->load(['items', 'seller.user', 'deliveryAddress']);
+        $order->seller->user->notify(new OrderStatusUpdated($order));
+
+        return (new OrderResource($order))
             ->response()
             ->setStatusCode(201);
     }

@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import NotificationBell from '@/components/shared/NotificationBell';
 import type { Category } from '@/types/category';
 
 interface Props {
@@ -25,6 +26,7 @@ export default function CustomerHome({ categories }: Props) {
                         <Link href="/account" className="text-primary underline">
                             Account
                         </Link>
+                        <NotificationBell />
                     </div>
                 </div>
                 <p className="mt-2 text-muted-foreground">Browse by category, or search nearby bakers.</p>

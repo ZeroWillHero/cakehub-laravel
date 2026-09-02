@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
+import NotificationBell from '@/components/shared/NotificationBell';
 import type { Seller } from '@/types/seller';
 
 interface Props {
@@ -22,9 +23,15 @@ export default function SellerDashboard({ seller, usage, limit }: Props) {
             <div className="mx-auto max-w-4xl space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
-                    <Badge variant={seller.verification_status === 'verified' ? 'default' : 'secondary'}>
-                        {verificationLabel[seller.verification_status]}
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                        <Badge variant={seller.verification_status === 'verified' ? 'default' : 'secondary'}>
+                            {verificationLabel[seller.verification_status]}
+                        </Badge>
+                        <a href="/seller/reviews" className="text-sm text-primary underline">
+                            Reviews
+                        </a>
+                        <NotificationBell />
+                    </div>
                 </div>
 
                 <Card>

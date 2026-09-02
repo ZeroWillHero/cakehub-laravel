@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Seller\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Notifications\OrderStatusUpdated;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,7 +34,9 @@ class OrderController extends Controller
         $this->authorize('updateStatus', $order);
 
         $order->update(['status' => OrderStatus::from($request->validated('status'))]);
+        $order->load(['customer', 'items']);
+        $order->customer->notify(new OrderStatusUpdated($order));
 
-        return (new OrderResource($order->load(['customer', 'items'])))->response();
+        return (new OrderResource($order))->response();
     }
 }
