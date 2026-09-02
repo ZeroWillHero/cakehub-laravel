@@ -18,4 +18,4 @@ Suggested tooling: **Vitest** + **React Testing Library** (standard pairing for 
 - Mock network/Inertia calls — this layer does not hit a real Laravel backend (that's [frontend-integration-testing-agent](frontend-integration-testing-agent.md)'s job).
 - One test file per component/module, colocated or mirrored under a `resources/js/**/__tests__` (or `.test.tsx`) convention — pick one convention and stay consistent, confirm with user if not already decided.
 - New components from [frontend-agent](frontend-agent.md) should ship with unit tests in the same change, not as a follow-up.
-- Do not test shadcn/Radix internals themselves (already tested upstream) — test how CakeHub uses/configures them.
+- Do not test shadcn/Base UI internals themselves (already tested upstream) — test how CakeHub uses/configures them.

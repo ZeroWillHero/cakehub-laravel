@@ -47,14 +47,20 @@ If any of the above needs to change (e.g. swapping Postgres for something else, 
 - **Seller** — the cake-selling business/person. Manages storefront, catalog, listing limits, subscription, verification documents.
 - **Admin** — platform operator. Verifies sellers, manages categories, manages subscription plans, moderates content, oversees orders/disputes.
 
-## 4. Working Process
+## 4. Git Workflow
+
+- `main` holds only reviewed, complete work — **never commit phase implementation work directly to `main`.**
+- Each phase from [docs/plan.md](docs/plan.md) is built on its own branch (e.g. `phase-1-auth-roles-accounts`), branched from `main`.
+- Do not merge a phase branch into `main` without the user's explicit go-ahead — implementation work stays on its branch until the user reviews and approves it.
+
+## 5. Working Process
 
 - Before starting a feature, check [docs/requirements.md](docs/requirements.md) to confirm it's in scope. If it isn't clearly covered, ask before building it.
 - Keep the requirements doc and this file in sync with decisions made in conversation — if the user confirms a new decision (schema, package, flow), update the relevant doc rather than letting it live only in chat history.
 - Prefer Laravel/ecosystem-native solutions (official packages, well-maintained community packages) over custom-built infrastructure for solved problems (auth, admin CRUD, billing, spatial queries) — but confirm package choice when there are multiple reasonable options.
 - No feature flags, backwards-compatibility shims, or speculative abstractions for hypothetical future requirements — build what's asked, nothing more (ties back to Rule 1).
 
-## 5. Agents & Skills — where to find them
+## 6. Agents & Skills — where to find them
 
 Project-specific agent and skill definitions live under `docs/`, one file per agent/skill (not bundled into a single file). Consult the relevant one(s) before doing related work.
 
@@ -75,6 +81,6 @@ Project-specific agent and skill definitions live under `docs/`, one file per ag
 
 When adding a new agent or skill, create it as its own file in the matching folder (kebab-case, e.g. `payments-agent.md`) and add a pointer to it here — do not append multiple agents/skills into one file.
 
-## 6. Note on this scaffold
+## 7. Note on this scaffold
 
 This project was scaffolded via `composer create-project laravel/laravel`. Laravel's own installer generated an `AGENTS.md` suggesting installation of `laravel/boost` (a dev tool that would regenerate this file with framework-specific guidelines). **Boost has not been installed** — installing it is a new dependency/tooling decision and requires user confirmation first, per Rule 2 above. `AGENTS.md` is left as-is from the scaffold; this `CLAUDE.md` is the authoritative instructions file and should not be overwritten by future scaffold/install steps without checking its content is preserved.

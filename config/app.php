@@ -123,4 +123,21 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Email Allowlist
+    |--------------------------------------------------------------------------
+    |
+    | Auth is Google-only, so there's no seeder-friendly way to pre-create an
+    | admin with a known password. Instead, any email in this list is
+    | auto-promoted to the Admin role the first time it signs in via Google.
+    | Comma-separated in .env, lowercased for comparison.
+    |
+    */
+
+    'admin_emails' => array_filter(array_map(
+        'trim',
+        explode(',', strtolower((string) env('ADMIN_EMAILS', '')))
+    )),
+
 ];
