@@ -10,7 +10,8 @@ it('lets an admin create a category', function () {
         ->postJson('/api/admin/categories', ['name' => 'Cupcakes'])
         ->assertCreated()
         ->assertJsonPath('data.name', 'Cupcakes')
-        ->assertJsonPath('data.slug', 'cupcakes');
+        ->assertJsonPath('data.slug', 'cupcakes')
+        ->assertJsonPath('data.is_active', true);
 });
 
 it('lets an admin update a category', function () {

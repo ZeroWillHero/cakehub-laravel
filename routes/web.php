@@ -17,7 +17,9 @@ use App\Http\Controllers\Seller\ListingController as SellerListingController;
 use App\Http\Controllers\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
+use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
 use App\Http\Controllers\Seller\SellerDocumentController;
+use App\Http\Controllers\Seller\SubscriptionPageController as SellerSubscriptionPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -52,6 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/listings/{product}/edit', [SellerListingController::class, 'edit'])->name('listings.edit');
         Route::get('/orders', [SellerOrderController::class, 'index'])->name('orders.index');
         Route::get('/reviews', [SellerReviewController::class, 'index'])->name('reviews.index');
+        Route::get('/subscription', [SellerSubscriptionPageController::class, 'show'])->name('subscription.show');
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -59,5 +62,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/sellers/pending', [SellerVerificationController::class, 'pending'])->name('sellers.pending');
         Route::get('/sellers/{seller}', [SellerVerificationController::class, 'show'])->name('sellers.show');
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+        Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
     });
 });

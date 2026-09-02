@@ -151,6 +151,8 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Builds on:** requirements.md §3.9 (including §3.9.1's dynamic-plan requirement). **Blocked on** Phase 0's payment-gateway decision.
 
+**Phase 0 decision confirmed 2026-09-02:** payment gateway deferred again — same stub-now-swap-later pattern as Phase 4's checkout. Subscribing marks a `seller_subscriptions` row `active` immediately with no real charge (`external_subscription_id` stays null); Cashier/a real gateway is wired up later as its own task. Target region/currency stays open, not blocking (USD placeholder).
+
 **What gets built:**
 - Dynamic, DB-driven subscription plan model (no hard-coded tiers) — admin CRUD: add/edit/delete/enable-disable/reorder plans, mark a plan free.
 - Seller subscription purchase flow (recurring billing via chosen gateway/Cashier), status/renewal display, usage-vs-limit indicator (built earlier in Phase 2, now live against real subscription state).
@@ -160,6 +162,8 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 **Agents/skills:** [backend-agent](agents/backend-agent.md) (Cashier, dynamic plan schema) → [frontend-agent](agents/frontend-agent.md) (Admin plan management UI, Seller subscription purchase UI) → full test trio, including a test that changing a plan's price/limit in the admin UI takes effect without a deploy.
 
 **Exit criteria:** admin creates a new test plan entirely through the UI, a seller subscribes to it, and their listing limit updates accordingly — with zero code changes.
+
+**Note (2026-09-02):** "auto-downgrade on lapse" is implemented as a scheduled command (`app:expire-seller-subscriptions`, daily via `routes/console.php`) that expires subscriptions past `ends_at` and hides each affected seller's most-recently-created listings down to their new (lower) limit — never deletes them. The same hiding runs immediately when a seller manually switches to a lower-limit plan, or when an admin lowers a plan's `listing_limit` while sellers are actively subscribed to it.
 
 ---
 

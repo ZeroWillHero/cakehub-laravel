@@ -68,8 +68,7 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | PATCH | `/api/seller/orders/{order}/status` | `SellerOrderController@updateStatus` | status transition, validated against allowed next-states |
 | PUT | `/api/seller/profile` | `SellerProfileController@update` | store profile fields, location pin |
 | PATCH | `/api/seller/store-status` | `SellerProfileController@toggleStatus` | open/closed/vacation |
-| GET | `/api/seller/subscription` | `SellerSubscriptionController@show` | current plan + usage |
-| POST | `/api/seller/subscription/checkout` | `SellerSubscriptionController@checkout` | Cashier checkout session |
+| POST | `/api/seller/subscription/checkout` | `SellerSubscriptionController@checkout` | payment stubbed (Phase 0, confirmed 2026-09-02) — no Cashier/gateway call, just activates the subscription |
 | POST | `/api/seller/reviews/{review}/response` | `SellerReviewController@respond` | one response per review |
 
 ### Admin-facing (auth: admin role)
@@ -82,8 +81,9 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | POST | `/api/admin/sellers/{seller}/request-info` | `Admin\SellerVerificationController@requestInfo` | no status change — just notifies the seller |
 | GET/POST/PUT/DELETE | `/api/admin/categories[/{category}]` | `Admin\CategoryController` | |
 | PATCH | `/api/admin/categories/reorder` | `Admin\CategoryController@reorder` | bulk sort_order update from `order: number[]` |
-| GET/POST/PUT/DELETE | `/api/admin/subscription-plans[/{plan}]` | `Admin\SubscriptionPlanController` | delete requires migration-target plan if subscribers exist |
+| POST/PUT/DELETE | `/api/admin/subscription-plans[/{plan}]` | `Admin\SubscriptionPlanController` | delete requires `migrate_to` if a plan has active subscribers (no separate GET — index is Inertia-delivered, like the other admin list pages) |
 | PATCH | `/api/admin/subscription-plans/{plan}/toggle` | `Admin\SubscriptionPlanController@toggleActive` | |
+| PATCH | `/api/admin/subscription-plans/reorder` | `Admin\SubscriptionPlanController@reorder` | bulk sort_order update from `order: number[]` |
 | GET | `/api/admin/orders` | `Admin\OrderController@index` | filterable |
 | POST | `/api/admin/orders/{order}/refund` | `Admin\OrderController@refund` | |
 | POST | `/api/admin/reviews/{review}/remove` | `Admin\ReviewModerationController@remove` | |
@@ -95,5 +95,5 @@ All REST API responses (success and error) use one envelope — see [skills/rest
 
 ## Open items
 
-- Exact checkout/payment endpoints depend on the payment gateway choice (Phase 0, still open) — `POST /api/checkout` and `POST /api/seller/subscription/checkout` are placeholders for whatever gateway-specific flow (redirect vs. embedded) is chosen.
+- Payment gateway choice (Phase 0) is deferred, not open — both `POST /api/checkout` (Phase 4) and `POST /api/seller/subscription/checkout` (Phase 7) are stubbed: they activate the order/subscription immediately with no real charge. Both will need real gateway-specific flows (redirect vs. embedded) wired in as a later task.
 - `SellerSearchController@nearby` depends on the maps-provider decision only for the frontend map UI, not the query itself (PostGIS handles that server-side regardless of provider).

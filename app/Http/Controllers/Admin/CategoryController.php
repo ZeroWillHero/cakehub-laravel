@@ -28,6 +28,7 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request): JsonResponse
     {
         $category = Category::query()->create([
+            'is_active' => true,
             ...$request->validated(),
             'slug' => str($request->validated('name'))->slug(),
             'sort_order' => Category::query()->max('sort_order') + 1,

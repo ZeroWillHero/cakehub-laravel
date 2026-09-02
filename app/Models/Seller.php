@@ -120,4 +120,27 @@ class Seller extends Model
         }
         $this->save();
     }
+
+    /**
+     * Called after a subscription downgrade/lapse: if the seller now has
+     * more customer-visible listings than their new (lower) limit allows,
+     * hide the excess (is_active = false) rather than delete them — the
+     * seller can pick which stay visible, or re-activate on resubscribing.
+     * Most-recently-created listings are hidden first.
+     */
+    public function hideExcessListings(): void
+    {
+        $limit = $this->listingLimit();
+        if ($limit === null) {
+            return;
+        }
+
+        $activeProducts = $this->products()->where('is_active', true)->latest()->get();
+        $excess = $activeProducts->count() - $limit;
+        if ($excess <= 0) {
+            return;
+        }
+
+        $activeProducts->take($excess)->each(fn (Product $product) => $product->update(['is_active' => false]));
+    }
 }

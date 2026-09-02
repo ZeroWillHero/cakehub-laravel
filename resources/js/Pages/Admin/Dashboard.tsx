@@ -23,6 +23,9 @@ export default function AdminDashboard({ metrics }: Props) {
                         <Link href="/admin/categories" className="text-primary underline">
                             Categories
                         </Link>
+                        <Link href="/admin/subscription-plans" className="text-primary underline">
+                            Subscription plans
+                        </Link>
                     </div>
                 </div>
 
