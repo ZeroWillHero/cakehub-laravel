@@ -4,6 +4,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import RatingStars from '@/components/shared/RatingStars';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types/product';
 import type { Seller } from '@/types/seller';
@@ -30,6 +31,12 @@ export default function Storefront({ seller, products }: Props) {
                         <div className="flex items-center gap-2">
                             <h1 className="font-heading text-2xl font-semibold">{seller.business_name}</h1>
                             {seller.verification_status === 'verified' && <Badge>Verified</Badge>}
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                            <RatingStars value={Math.round(seller.average_rating)} />
+                            <span className="text-sm text-muted-foreground">
+                                {seller.average_rating > 0 ? seller.average_rating.toFixed(1) : 'No reviews yet'}
+                            </span>
                         </div>
                         {seller.address_line && (
                             <p className="mt-1 text-sm text-muted-foreground">{seller.address_line}</p>

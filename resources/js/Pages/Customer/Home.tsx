@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import NotificationBell from '@/components/shared/NotificationBell';
 import type { Category } from '@/types/category';
 
 interface Props {
@@ -13,7 +14,21 @@ export default function CustomerHome({ categories }: Props) {
     return (
         <CustomerLayout>
             <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 className="font-heading text-3xl font-semibold">Find your next cake</h1>
+                <div className="flex items-center justify-between gap-3">
+                    <h1 className="font-heading text-3xl font-semibold">Find your next cake</h1>
+                    <div className="flex items-center gap-4 text-sm">
+                        <Link href="/cart" className="text-primary underline">
+                            Cart
+                        </Link>
+                        <Link href="/orders" className="text-primary underline">
+                            Orders
+                        </Link>
+                        <Link href="/account" className="text-primary underline">
+                            Account
+                        </Link>
+                        <NotificationBell />
+                    </div>
+                </div>
                 <p className="mt-2 text-muted-foreground">Browse by category, or search nearby bakers.</p>
 
                 <Link href="/search" className="mt-6 block">
