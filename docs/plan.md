@@ -11,9 +11,9 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 **Goal:** resolve the blocking decisions identified so far so later phases aren't built on assumptions.
 
 **Open decisions to resolve before/at start of this phase** (see prior conversation — none of these are decided yet):
-- [ ] Postgres hosting (local Herd Postgres vs. hosted — Neon/Supabase/RDS/other).
+- [x] Postgres hosting — local via Docker (`cakehub-postgres` container, `postgres:15.17-trixie` + manually-installed `postgresql-15-postgis-3`).
 - [ ] Admin panel approach, now that frontend is Inertia+React not Blade (Filament is Blade/Livewire-based — decide: run Filament as a separate admin sub-app, or build the Admin panel as React/Inertia pages like everything else, for one consistent stack).
-- [ ] Maps/geolocation provider (Google Maps/Places vs. alternative) — cost/API-key implications.
+- [x] Maps/geolocation provider — **OpenStreetMap** (Leaflet + Nominatim), confirmed 2026-09-02. Free, no API key needed.
 - [ ] Payment gateway (Stripe vs. regional alternative) — used for both order checkout and seller subscription billing.
 - [ ] Cart model: single-seller-per-order vs. multi-seller cart.
 - [ ] Delivery logistics ownership: platform-arranged riders vs. seller's own responsibility.
