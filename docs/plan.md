@@ -14,12 +14,12 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 - [x] Postgres hosting — local via Docker (`cakehub-postgres` container, `postgres:15.17-trixie` + manually-installed `postgresql-15-postgis-3`).
 - [ ] Admin panel approach, now that frontend is Inertia+React not Blade (Filament is Blade/Livewire-based — decide: run Filament as a separate admin sub-app, or build the Admin panel as React/Inertia pages like everything else, for one consistent stack).
 - [x] Maps/geolocation provider — **OpenStreetMap** (Leaflet + Nominatim), confirmed 2026-09-02. Free, no API key needed.
-- [ ] Payment gateway (Stripe vs. regional alternative) — used for both order checkout and seller subscription billing.
-- [ ] Cart model: single-seller-per-order vs. multi-seller cart.
-- [ ] Delivery logistics ownership: platform-arranged riders vs. seller's own responsibility.
-- [ ] Payment/fund flow: marketplace/escrow (platform holds & pays out sellers) vs. sellers collect directly.
-- [ ] Commission model: subscription-only, per-order commission, or both.
-- [ ] Target region/currency (affects gateway choice, tax handling, and the draft pricing table in requirements.md §3.9.1).
+- [x] Payment gateway for order checkout — **deferred** (confirmed 2026-09-02). Phase 4 builds the full cart/checkout/order-status flow with the payment step **stubbed** (order marked `paid` without a real charge). A real gateway is wired up later as its own task. Subscription billing (Phase 7) is a separate decision, still open.
+- [x] Cart model — **single-seller-per-order**, confirmed 2026-09-02. Adding a product from a different seller starts a new cart (see Phase 4 for the exact UX).
+- [x] Delivery logistics ownership — **seller's own responsibility**, confirmed 2026-09-02. Platform captures address/time slot only; no rider dispatch system.
+- [x] Payment/fund flow — **sellers collect payment directly**, confirmed 2026-09-02 (no escrow/marketplace holding). This rules out a per-order commission model — see below.
+- [x] Commission model — **subscription-only**, confirmed 2026-09-02 (follows directly from "sellers collect directly" — the platform never touches order payments, so it can only monetize via the seller subscription tiers already in requirements.md §3.9).
+- [ ] Target region/currency — still open; not blocking while payment is stubbed (USD `$` used as a placeholder in the UI). Revisit when a real gateway is wired up.
 
 **What gets built once decided:**
 - `.env` configured for the chosen Postgres instance; PostGIS extension enabled and verified.
@@ -88,13 +88,13 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Goal:** a customer can order a cake from a seller through the platform.
 
-**Builds on:** requirements.md §3.5. **Blocked on Phase 0 decisions**: cart model, delivery logistics, payment/fund flow, payment gateway.
+**Builds on:** requirements.md §3.5. **Decisions confirmed 2026-09-02** (see Phase 0): single-seller cart, seller-arranged delivery, seller collects payment directly (no escrow), payment step **stubbed** (no real gateway yet).
 
 **What gets built:**
-- Cart (per the chosen single/multi-seller model), checkout flow (delivery date/time slot, address, customization notes), payment gateway integration.
+- Single-seller cart (adding a product from a different seller replaces the current cart, with a confirmation prompt), checkout flow (delivery-vs-pickup, date/time slot, address, customization notes), **stubbed payment step** (order created as `paid` immediately — no real charge, no gateway call).
 - Order model + status lifecycle (Placed → Confirmed → Preparing → Ready/Out for delivery → Delivered/Completed → Cancelled).
-- Order history (customer + seller sides); seller real-time new-order notification.
-- Cancellation/refund workflow (basic version — policy details per requirements.md §3.5).
+- Order history (customer + seller sides); seller sees new orders on their dashboard (polling/refresh, not full real-time push — that's beyond a stubbed-payment MVP).
+- Cancellation workflow (customer-initiated within a window, seller-initiated) — refunds are moot while payment is stubbed; revisit with the real gateway.
 
 **Agents/skills:** [backend-agent](agents/backend-agent.md) (orders, payment integration) → [frontend-agent](agents/frontend-agent.md) (checkout UX, order tracking UI) → full test trio, particular attention to payment-path integration tests.
 

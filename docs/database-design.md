@@ -166,15 +166,18 @@ Fully dynamic, admin-managed (requirements.md §3.9.1 — **no hard-coded tiers*
 | external_subscription_id | string, nullable | payment-gateway reference (Cashier) |
 
 ### `cart_items`
+Single-seller cart (confirmed 2026-09-02, [plan.md](plan.md) Phase 0): a customer has at most one active cart, and every row in it belongs to the same seller. `seller_id` is denormalized here (not derived via the variant→product join) so the "does this new item belong to a different seller?" check is a cheap direct comparison, and so the cart can be queried without joining through products.
+
 | Column | Type | Notes |
 |---|---|---|
 | id | bigint PK | |
 | user_id | FK → users (customer) | |
+| seller_id | FK → sellers | denormalized; enforced equal to `product_variant.product.seller_id` at write time |
 | product_variant_id | FK → product_variants | |
 | quantity | integer | |
 | customization_notes | text, nullable | |
 
-*(Cart model — single-seller vs. multi-seller — depends on the Phase 0 decision in [plan.md](plan.md); this table works either way, seller-grouping happens at query/UI time.)*
+Adding a product from a different seller than what's already in the cart **replaces** the cart (with a confirmation prompt in the UI) rather than merging — see [screens.md](screens.md) C8.
 
 ### `orders`
 | Column | Type | Notes |
@@ -187,8 +190,8 @@ Fully dynamic, admin-managed (requirements.md §3.9.1 — **no hard-coded tiers*
 | delivery_address_id | FK → addresses, nullable | null when pickup |
 | scheduled_at | timestamp | requested delivery/pickup slot |
 | subtotal / delivery_fee / tax / total | decimal(10,2) | |
-| payment_status | enum('pending','paid','failed','refunded') | |
-| payment_reference | string, nullable | gateway transaction id |
+| payment_status | enum('pending','paid','failed','refunded') | **stubbed for Phase 4** — set to `paid` at order creation, no real gateway call; revisit when a real gateway is wired up |
+| payment_reference | string, nullable | gateway transaction id — unused while payment is stubbed |
 | cancelled_reason | text, nullable | |
 
 ### `order_items`
@@ -231,5 +234,4 @@ Fully dynamic, admin-managed (requirements.md §3.9.1 — **no hard-coded tiers*
 
 ## Open items
 
-- Exact `payment_reference`/`external_subscription_id` shape depends on the chosen payment gateway (still open, [plan.md](plan.md) Phase 0).
-- Whether `cart_items` needs a `seller_id` denormalized column depends on the single- vs multi-seller cart decision (still open).
+- Exact `payment_reference`/`external_subscription_id` shape depends on the chosen payment gateway — still open for **subscription billing** (Phase 7). Order checkout payment is confirmed **stubbed** for Phase 4 (no real gateway).

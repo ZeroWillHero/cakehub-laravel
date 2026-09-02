@@ -158,13 +158,16 @@ Notes:
 
 ## 4. Open Questions (to clarify before/while building)
 
-- Cart model: can a single order include items from multiple sellers, or is checkout restricted to one seller at a time?
-- Delivery logistics: does the platform arrange delivery riders, or is delivery entirely the seller's responsibility?
-- Payment flow: does the platform hold funds and payout sellers (marketplace/escrow model), or do sellers collect payment directly?
-- Commission model: subscription-only, per-order commission, or both?
-- Is in-app messaging required for MVP or can it be deferred?
-- Target region(s) — affects payment gateway choice, tax rules, and currency.
-- MVP scope vs. full feature set — which sections above are Phase 1 vs. later phases?
+Resolved (2026-09-02, see [plan.md](plan.md) Phase 0):
+- ~~Cart model~~ → single-seller-per-order.
+- ~~Delivery logistics~~ → seller's own responsibility; platform only captures address/time slot.
+- ~~Payment flow~~ → sellers collect payment directly (no platform escrow).
+- ~~Commission model~~ → subscription-only (follows from the payment-flow decision).
+
+Still open:
+- Is in-app messaging required for MVP or can it be deferred? (Currently deferred — WhatsApp deep link covers this per §2/§3.7.)
+- Target region(s) — affects payment gateway choice (still undecided; order-checkout payment is stubbed for Phase 4), tax rules, and currency.
+- MVP scope vs. full feature set — which sections above are Phase 1 vs. later phases? (Superseded by the phase breakdown in [plan.md](plan.md).)
 
 ---
 
