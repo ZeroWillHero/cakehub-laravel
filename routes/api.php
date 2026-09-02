@@ -14,7 +14,9 @@ use App\Http\Controllers\Seller\ProductController as SellerProductController;
 use App\Http\Controllers\Seller\ProductImageController as SellerProductImageController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
+use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
 use App\Http\Controllers\Seller\SellerDocumentController;
+use App\Http\Controllers\Seller\SubscriptionController as SellerSubscriptionController;
 use App\Http\Controllers\SellerSearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +53,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::patch('/orders/{order}/status', [SellerOrderController::class, 'updateStatus']);
         Route::post('/reviews/{review}/response', [SellerReviewController::class, 'respond']);
         Route::post('/documents', [SellerDocumentController::class, 'store']);
+        Route::post('/subscription/checkout', [SellerSubscriptionController::class, 'checkout']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
@@ -62,5 +65,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
         Route::patch('/categories/reorder', [AdminCategoryController::class, 'reorder']);
+        Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store']);
+        Route::put('/subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'update']);
+        Route::delete('/subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'destroy']);
+        Route::patch('/subscription-plans/{plan}/toggle', [AdminSubscriptionPlanController::class, 'toggleActive']);
+        Route::patch('/subscription-plans/reorder', [AdminSubscriptionPlanController::class, 'reorder']);
     });
 });
