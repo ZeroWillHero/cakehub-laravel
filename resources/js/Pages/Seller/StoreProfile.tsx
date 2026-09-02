@@ -1,13 +1,108 @@
-import { useState, type SubmitEventHandler } from 'react';
+import { useState, type ChangeEvent, type SubmitEventHandler } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import type { Seller } from '@/types/seller';
+import type { DocumentType, SellerDocument } from '@/types/sellerDocument';
 
 interface Props {
     seller: Seller;
+}
+
+const documentLabel: Record<DocumentType, string> = {
+    business_registration: 'Business registration',
+    food_safety_cert: 'Food safety certificate',
+    address_proof: 'Address proof',
+};
+
+const statusVariant: Record<SellerDocument['status'], 'default' | 'secondary' | 'destructive'> = {
+    pending: 'secondary',
+    approved: 'default',
+    rejected: 'destructive',
+};
+
+function DocumentUpload({ documents: initialDocuments }: { documents: SellerDocument[] }) {
+    const [documents, setDocuments] = useState(initialDocuments);
+    const [type, setType] = useState<DocumentType>('business_registration');
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    async function upload(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        setError(null);
+        const formData = new FormData();
+        formData.append('type', type);
+        formData.append('file', file);
+
+        try {
+            const created = await api.upload<SellerDocument>('/seller/documents', formData);
+            setDocuments((prev) => [...prev, created]);
+        } catch (err) {
+            const apiError = err as { message?: string };
+            setError(apiError.message ?? 'Upload failed.');
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
+    }
+
+    return (
+        <Card className="mt-6">
+            <CardHeader>
+                <CardTitle>Verification documents</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {documents.length > 0 && (
+                    <ul className="space-y-2">
+                        {documents.map((doc) => (
+                            <li key={doc.id} className="flex items-center justify-between text-sm">
+                                <span>{documentLabel[doc.type]}</span>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant={statusVariant[doc.status]}>{doc.status}</Badge>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                <div className="flex flex-wrap items-end gap-3">
+                    <div className="space-y-2">
+                        <Label htmlFor="document_type">Document type</Label>
+                        <select
+                            id="document_type"
+                            value={type}
+                            onChange={(e) => setType(e.target.value as DocumentType)}
+                            className="border-input min-h-11 rounded-md border bg-transparent px-3 text-sm"
+                        >
+                            {Object.entries(documentLabel).map(([value, label]) => (
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="document_file">Upload file (PDF or image)</Label>
+                        <input
+                            id="document_file"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            disabled={uploading}
+                            onChange={upload}
+                            className="text-sm"
+                        />
+                    </div>
+                </div>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+            </CardContent>
+        </Card>
+    );
 }
 
 export default function StoreProfile({ seller: initialSeller }: Props) {
@@ -87,6 +182,8 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
                         </form>
                     </CardContent>
                 </Card>
+
+                <DocumentUpload documents={initialSeller.documents ?? []} />
             </div>
         </div>
     );

@@ -63,6 +63,7 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | Method | Path | Controller | Notes |
 |---|---|---|---|
 | POST | `/api/seller/documents` | `SellerDocumentController@store` | upload verification doc |
+| GET | `/seller-documents/{document}` | `SellerDocumentController@show` | streams the file; owner seller or admin only (web route, not `/api` — a plain authenticated link/download) |
 | GET/POST/PUT/DELETE | `/api/seller/products[/{product}]` | `SellerProductController` | full CRUD, enforces listing-limit check on create |
 | PATCH | `/api/seller/orders/{order}/status` | `SellerOrderController@updateStatus` | status transition, validated against allowed next-states |
 | PUT | `/api/seller/profile` | `SellerProfileController@update` | store profile fields, location pin |
@@ -78,8 +79,9 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | POST | `/api/admin/sellers/{seller}/verify` | `Admin\SellerVerificationController@verify` | |
 | POST | `/api/admin/sellers/{seller}/reject` | `Admin\SellerVerificationController@reject` | requires `reason` |
 | POST | `/api/admin/sellers/{seller}/suspend` | `Admin\SellerVerificationController@suspend` | |
+| POST | `/api/admin/sellers/{seller}/request-info` | `Admin\SellerVerificationController@requestInfo` | no status change — just notifies the seller |
 | GET/POST/PUT/DELETE | `/api/admin/categories[/{category}]` | `Admin\CategoryController` | |
-| PATCH | `/api/admin/categories/reorder` | `Admin\CategoryController@reorder` | bulk sort_order update |
+| PATCH | `/api/admin/categories/reorder` | `Admin\CategoryController@reorder` | bulk sort_order update from `order: number[]` |
 | GET/POST/PUT/DELETE | `/api/admin/subscription-plans[/{plan}]` | `Admin\SubscriptionPlanController` | delete requires migration-target plan if subscribers exist |
 | PATCH | `/api/admin/subscription-plans/{plan}/toggle` | `Admin\SubscriptionPlanController@toggleActive` | |
 | GET | `/api/admin/orders` | `Admin\OrderController@index` | filterable |

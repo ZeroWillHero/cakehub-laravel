@@ -91,6 +91,11 @@ class Seller extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(SellerDocument::class);
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
@@ -99,6 +104,20 @@ class Seller extends Model
     public function recalculateAverageRating(): void
     {
         $this->average_rating = $this->reviews()->avg('rating') ?? 0;
+        $this->save();
+    }
+
+    /**
+     * verification_status/verified_by/verified_at are intentionally not
+     * mass-assignable (only admins should ever set them) — set directly.
+     */
+    public function applyVerification(VerificationStatus $status, ?int $verifiedBy = null): void
+    {
+        $this->verification_status = $status;
+        if ($verifiedBy !== null) {
+            $this->verified_by = $verifiedBy;
+            $this->verified_at = now();
+        }
         $this->save();
     }
 }
