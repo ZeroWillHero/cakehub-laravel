@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\SellerSubscriptionStatus;
 use App\Enums\StoreStatus;
 use App\Enums\VerificationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
@@ -39,5 +41,48 @@ class Seller extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(SellerSubscription::class);
+    }
+
+    public function activeSubscription(): ?SellerSubscription
+    {
+        return $this->subscriptions()
+            ->where('status', SellerSubscriptionStatus::Active)
+            ->latest('starts_at')
+            ->with('subscriptionPlan')
+            ->first();
+    }
+
+    /**
+     * The seller's current listing limit: from their active subscription's
+     * plan, or the platform's default Free plan (price = 0) if they've
+     * never subscribed. Null means unlimited. Never hard-code the number
+     * here — it always comes from subscription_plans (admin-editable,
+     * see docs/requirements.md §3.9.1).
+     */
+    public function listingLimit(): ?int
+    {
+        $plan = $this->activeSubscription()?->subscriptionPlan
+            ?? SubscriptionPlan::query()->where('price', 0)->where('is_active', true)->first();
+
+        return $plan?->listing_limit;
+    }
+
+    /**
+     * Every listing counts against the limit, active or inactive
+     * (soft-unpublishing shouldn't be a way to bypass the limit).
+     */
+    public function listingUsage(): int
+    {
+        return $this->products()->count();
     }
 }

@@ -11,8 +11,12 @@ class DashboardController extends Controller
 {
     public function index(): Response
     {
+        $seller = request()->user()->seller;
+
         return Inertia::render('Seller/Dashboard', [
-            'seller' => (new SellerResource(request()->user()->seller))->resolve(),
+            'seller' => (new SellerResource($seller))->resolve(),
+            'usage' => $seller->listingUsage(),
+            'limit' => $seller->listingLimit(),
         ]);
     }
 }
