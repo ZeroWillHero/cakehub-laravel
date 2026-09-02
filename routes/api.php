@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Customer\CartController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Seller\ProductController as SellerProductController;
 use App\Http\Controllers\Seller\ProductImageController as SellerProductImageController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
+use App\Http\Controllers\Seller\SellerDocumentController;
 use App\Http\Controllers\SellerSearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,5 +50,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/products/{product}/images/{image}', [SellerProductImageController::class, 'destroy']);
         Route::patch('/orders/{order}/status', [SellerOrderController::class, 'updateStatus']);
         Route::post('/reviews/{review}/response', [SellerReviewController::class, 'respond']);
+        Route::post('/documents', [SellerDocumentController::class, 'store']);
+    });
+
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::post('/sellers/{seller}/verify', [SellerVerificationController::class, 'verify']);
+        Route::post('/sellers/{seller}/reject', [SellerVerificationController::class, 'reject']);
+        Route::post('/sellers/{seller}/request-info', [SellerVerificationController::class, 'requestInfo']);
+        Route::post('/sellers/{seller}/suspend', [SellerVerificationController::class, 'suspend']);
+        Route::post('/categories', [AdminCategoryController::class, 'store']);
+        Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
+        Route::patch('/categories/reorder', [AdminCategoryController::class, 'reorder']);
     });
 });

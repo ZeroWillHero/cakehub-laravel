@@ -1,3 +1,5 @@
+import type { SellerDocument } from './sellerDocument';
+
 export type StoreStatus = 'open' | 'closed' | 'vacation';
 export type VerificationStatus = 'pending' | 'verified' | 'rejected' | 'suspended';
 
@@ -18,4 +20,10 @@ export interface Seller {
     average_rating: number;
     /** Present only in "nearby" search results. */
     distance_km?: number;
+    documents?: SellerDocument[];
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
 }

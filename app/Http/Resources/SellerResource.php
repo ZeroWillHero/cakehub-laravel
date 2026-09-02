@@ -27,6 +27,12 @@ class SellerResource extends JsonResource
             'store_status' => $this->store_status?->value,
             'verification_status' => $this->verification_status?->value,
             'average_rating' => (float) $this->average_rating,
+            'documents' => $this->whenLoaded('documents', fn () => SellerDocumentResource::collection($this->documents)->resolve()),
+            'user' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+            ]),
             // Present only when the query computed a distance (in meters)
             // via the `nearby` search — see SellerSearchController.
             'distance_km' => $this->when(

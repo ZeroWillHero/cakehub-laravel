@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\AccountController;
 use App\Http\Controllers\Customer\CartPageController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Seller\ListingController as SellerListingController;
 use App\Http\Controllers\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
+use App\Http\Controllers\Seller\SellerDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -27,6 +30,7 @@ Route::get('/', [CustomerHomeController::class, 'index'])->name('home');
 Route::middleware('auth')->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+    Route::get('/seller-documents/{document}', [SellerDocumentController::class, 'show'])->name('seller-documents.show');
 
     Route::middleware('role:customer')->group(function () {
         Route::get('/account', [AccountController::class, 'edit'])->name('customer.account.edit');
@@ -52,5 +56,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/sellers/pending', [SellerVerificationController::class, 'pending'])->name('sellers.pending');
+        Route::get('/sellers/{seller}', [SellerVerificationController::class, 'show'])->name('sellers.show');
+        Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
     });
 });

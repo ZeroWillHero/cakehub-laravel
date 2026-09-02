@@ -12,7 +12,7 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Open decisions to resolve before/at start of this phase** (see prior conversation — none of these are decided yet):
 - [x] Postgres hosting — local via Docker (`cakehub-postgres` container, `postgres:15.17-trixie` + manually-installed `postgresql-15-postgis-3`).
-- [ ] Admin panel approach, now that frontend is Inertia+React not Blade (Filament is Blade/Livewire-based — decide: run Filament as a separate admin sub-app, or build the Admin panel as React/Inertia pages like everything else, for one consistent stack).
+- [x] Admin panel approach — **React/Inertia pages**, confirmed 2026-09-02. Same stack as Customer/Seller (one consistent codebase, reuses existing auth/routing/testing patterns); Filament was ruled out since it's Blade/Livewire-based and would introduce a second UI stack.
 - [x] Maps/geolocation provider — **OpenStreetMap** (Leaflet + Nominatim), confirmed 2026-09-02. Free, no API key needed.
 - [x] Payment gateway for order checkout — **deferred** (confirmed 2026-09-02). Phase 4 builds the full cart/checkout/order-status flow with the payment step **stubbed** (order marked `paid` without a real charge). A real gateway is wired up later as its own task. Subscription billing (Phase 7) is a separate decision, still open.
 - [x] Cart model — **single-seller-per-order**, confirmed 2026-09-02. Adding a product from a different seller starts a new cart (see Phase 4 for the exact UX).
@@ -140,6 +140,8 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 **Agents/skills:** [backend-agent](agents/backend-agent.md) → [frontend-agent](agents/frontend-agent.md) (Admin panel surface, dense/table-heavy per [frontend-design-skill](skills/frontend-design-skill.md)) → full test trio.
 
 **Exit criteria:** admin can verify/reject a seller and the badge/status reflects immediately on the storefront; category changes propagate to customer-facing search without a deploy.
+
+**Note (2026-09-02):** the seller-side document upload flow (`POST /api/seller/documents`, Store Profile screen) had never actually been built in earlier phases despite being documented — built as part of this phase since the verification queue has nothing to review without it. Documents are stored on the `local` (private) disk, not `public`, and served through a policy-gated `GET /seller-documents/{document}` route (owner seller or admin only) rather than a public URL, since verification documents (business registration, ID, etc.) are sensitive.
 
 ---
 

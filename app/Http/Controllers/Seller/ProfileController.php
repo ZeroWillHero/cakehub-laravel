@@ -15,7 +15,7 @@ class ProfileController extends Controller
     public function edit(): Response
     {
         return Inertia::render('Seller/StoreProfile', [
-            'seller' => (new SellerResource(request()->user()->seller))->resolve(),
+            'seller' => (new SellerResource(request()->user()->seller->load('documents')))->resolve(),
         ]);
     }
 
