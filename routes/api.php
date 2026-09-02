@@ -2,12 +2,17 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Customer\AddressController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Seller\ProductController as SellerProductController;
 use App\Http\Controllers\Seller\ProductImageController as SellerProductImageController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
+use App\Http\Controllers\SellerSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/sellers/nearby', [SellerSearchController::class, 'nearby']);
+Route::get('/sellers/search', [SellerSearchController::class, 'search']);
+Route::get('/sellers/{seller:slug}/products', [ProductController::class, 'bySeller']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware('role:customer')->group(function () {

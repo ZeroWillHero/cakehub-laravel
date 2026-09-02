@@ -27,6 +27,12 @@ class SellerResource extends JsonResource
             'store_status' => $this->store_status?->value,
             'verification_status' => $this->verification_status?->value,
             'average_rating' => (float) $this->average_rating,
+            // Present only when the query computed a distance (in meters)
+            // via the `nearby` search — see SellerSearchController.
+            'distance_km' => $this->when(
+                array_key_exists('distance', $this->resource->getAttributes()),
+                fn () => round(((float) $this->resource->getAttributes()['distance']) / 1000, 2),
+            ),
         ];
     }
 }

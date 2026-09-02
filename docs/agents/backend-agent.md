@@ -25,6 +25,11 @@ Every route/endpoint this agent builds needs coverage per [skills/backend-testin
 
 An endpoint isn't done when it responds correctly once manually — it's done when both of the above have their coverage in place, per [../plan.md](../plan.md)'s per-phase exit criteria.
 
+## Known gotchas (this project's actual install)
+- **`matanyadaev/laravel-eloquent-spatial`'s `withDistance`/`whereDistance`/`orderByDistance` scopes cast to `::geometry`, not `::geography`** — even though our `location` columns are `geography(Point,4326)`, these scopes compute *planar degree-unit* distance, not real-world meters, silently returning wrong results (a distance threshold in meters compares against a degree-scale number and does almost nothing). Use the **Sphere** variants instead — `withDistanceSphere`/`whereDistanceSphere`/`orderByDistanceSphere` (uses `ST_DistanceSphere`, correctly returns meters). See `SellerSearchController::nearby()`.
+- **`new Point($lat, $lng)` defaults to SRID 0**, not 4326, unless a default is set. `AppServiceProvider::boot()` calls `EloquentSpatial::setDefaultSrid(Srid::WGS84)` app-wide so every `Point` construction matches the geography columns — don't pass points around without confirming this is still in place if it's ever refactored.
+- A `JsonResource`'s raw SQL select aliases (e.g. `AS distance` from a `withDistanceSphere` query) are **not** reachable via `$this->attributes` inside the resource (that's not proxied) — use `$this->resource->getAttributes()['distance']` instead. See `SellerResource`'s `distance_km` field.
+
 ## Working rules
 - Follow the tech stack and roles as defined in root [CLAUDE.md](../../CLAUDE.md) — Postgres/PostGIS, Google OAuth only, Sanctum SPA auth, dynamic DB-driven subscription plans, no hard-coded tiers.
 - Do not add endpoints/fields not backed by a requirement in [../requirements.md](../requirements.md) or listed in [../api-endpoints.md](../api-endpoints.md) — ask first if scope is unclear (root CLAUDE.md Rule 1/2).
