@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AddressMapPicker from '@/components/shared/AddressMapPicker';
+import SellerLayout from '@/Layouts/SellerLayout';
 import { api } from '@/lib/api';
 import type { Seller } from '@/types/seller';
 import type { DocumentType, SellerDocument } from '@/types/sellerDocument';
@@ -136,8 +137,8 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl">
+        <SellerLayout breadcrumb={['Store Profile']}>
+            <div className="mx-auto w-full max-w-2xl">
                 <Card>
                     <CardHeader>
                         <CardTitle>Store profile</CardTitle>
@@ -203,6 +204,6 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
 
                 <DocumentUpload documents={initialSeller.documents ?? []} />
             </div>
-        </div>
+        </SellerLayout>
     );
 }

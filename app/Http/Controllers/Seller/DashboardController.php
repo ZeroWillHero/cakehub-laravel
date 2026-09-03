@@ -6,15 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\SellerResource;
 use App\Support\OrderStats;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $seller = request()->user()->seller;
+        $seller = $request->user()->seller;
         $hasAnalytics = $seller->hasAnalyticsAccess();
+        $range = OrderStats::normalizeRange($request->query('range'));
 
         return Inertia::render('Seller/Dashboard', [
             'seller' => (new SellerResource($seller))->resolve(),
@@ -25,7 +27,8 @@ class DashboardController extends Controller
                 $seller->orders()->with(['customer', 'items'])->latest()->limit(5)->get()
             )->resolve(),
             'analytics' => $hasAnalytics ? [
-                'ordersOverTime' => OrderStats::dailyCounts($seller->orders()),
+                'range' => $range,
+                'ordersOverTime' => OrderStats::dailyCounts($seller->orders(), $range),
                 'statusBreakdown' => OrderStats::statusBreakdown($seller->orders()),
                 'orderValueTotal' => (float) $seller->orders()->where('status', 'completed')->sum('total'),
             ] : null,

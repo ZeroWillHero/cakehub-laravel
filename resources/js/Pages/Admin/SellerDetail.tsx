@@ -20,6 +20,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { Seller, VerificationStatus } from '@/types/seller';
 import type { DocumentType } from '@/types/sellerDocument';
@@ -94,14 +95,13 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
-                    <Badge variant={statusVariant[seller.verification_status]}>{seller.verification_status}</Badge>
-                </div>
+        <AdminLayout breadcrumb={['Verification Queue', seller.business_name]}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
+                <Badge variant={statusVariant[seller.verification_status]}>{seller.verification_status}</Badge>
+            </div>
 
-                <Card>
+            <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Details</CardTitle>
                     </CardHeader>
@@ -234,7 +234,6 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </div>
-        </div>
+        </AdminLayout>
     );
 }

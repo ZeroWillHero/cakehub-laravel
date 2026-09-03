@@ -36,6 +36,17 @@ it('includes a 30-day orders/new-sellers analytics series on the admin dashboard
             ->has('analytics.statusBreakdown'));
 });
 
+it('honors a valid range query param on the admin dashboard', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get('/admin/dashboard?range=90')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('analytics.range', 90)
+            ->has('analytics.ordersOverTime', 90)
+            ->has('analytics.newSellersOverTime', 90));
+});
+
 it('lets an admin download a CSV export of the dashboard stats', function () {
     $admin = User::factory()->admin()->create();
 

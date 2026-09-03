@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
@@ -144,9 +145,8 @@ export default function ListingForm({ categories, usage, limit, product }: Props
     };
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
-                <Card>
+        <SellerLayout breadcrumb={['Listings', isEdit ? 'Edit listing' : 'Add product']}>
+            <Card>
                     <CardHeader>
                         <CardTitle>{isEdit ? 'Edit listing' : 'Add product'}</CardTitle>
                     </CardHeader>
@@ -211,7 +211,11 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                         disabled={atLimit}
                                     >
                                         <SelectTrigger id="availability_status" className="w-full">
-                                            <SelectValue />
+                                            <SelectValue>
+                                                {(value: ProductAvailabilityStatus) =>
+                                                    availabilityOptions.find((opt) => opt.value === value)?.label
+                                                }
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {availabilityOptions.map((opt) => (
@@ -349,7 +353,6 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                         </CardContent>
                     </Card>
                 )}
-            </div>
-        </div>
+        </SellerLayout>
     );
 }

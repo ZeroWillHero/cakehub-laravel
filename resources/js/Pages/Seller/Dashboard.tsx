@@ -1,13 +1,15 @@
+import { router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
-import NotificationBell from '@/components/shared/NotificationBell';
-import OrdersLineChart from '@/components/shared/OrdersLineChart';
+import OrdersAreaChart, { type ChartRange } from '@/components/shared/OrdersAreaChart';
 import StatusBreakdownChart from '@/components/shared/StatusBreakdownChart';
 import type { Order, OrderStatus } from '@/types/order';
 import type { Seller } from '@/types/seller';
 
 interface Analytics {
+    range: ChartRange;
     ordersOverTime: { date: string; count: number }[];
     statusBreakdown: Record<OrderStatus, number>;
     orderValueTotal: number;
@@ -47,23 +49,20 @@ export default function SellerDashboard({
     recentOrders,
     analytics,
 }: Props) {
-    return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-4xl space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant={seller.verification_status === 'verified' ? 'default' : 'secondary'}>
-                            {verificationLabel[seller.verification_status]}
-                        </Badge>
-                        <a href="/seller/reviews" className="text-sm text-primary underline">
-                            Reviews
-                        </a>
-                        <NotificationBell />
-                    </div>
-                </div>
+    function setRange(range: ChartRange) {
+        router.reload({ data: { range }, only: ['analytics'] });
+    }
 
-                <Card>
+    return (
+        <SellerLayout breadcrumb={['Dashboard']}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
+                <Badge variant={seller.verification_status === 'verified' ? 'default' : 'secondary'}>
+                    {verificationLabel[seller.verification_status]}
+                </Badge>
+            </div>
+
+            <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Listings</CardTitle>
                     </CardHeader>
@@ -104,16 +103,12 @@ export default function SellerDashboard({
 
                 {hasAnalyticsAccess && analytics ? (
                     <>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Orders — last 30 days</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <OrdersLineChart
-                                    series={[{ data: analytics.ordersOverTime, label: 'Orders' }]}
-                                />
-                            </CardContent>
-                        </Card>
+                        <OrdersAreaChart
+                            title="Orders"
+                            data={analytics.ordersOverTime}
+                            range={analytics.range}
+                            onRangeChange={setRange}
+                        />
 
                         <Card>
                             <CardHeader>
@@ -175,7 +170,6 @@ export default function SellerDashboard({
                         to get set up.
                     </CardContent>
                 </Card>
-            </div>
-        </div>
+        </SellerLayout>
     );
 }

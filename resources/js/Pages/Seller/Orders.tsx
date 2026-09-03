@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import SellerLayout from '@/Layouts/SellerLayout';
 import { api } from '@/lib/api';
 import type { Order, OrderStatus } from '@/types/order';
 
@@ -85,32 +86,30 @@ export default function SellerOrders({ orders: initialOrders }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-8">
-                <div>
-                    <h1 className="text-2xl font-semibold">Active orders</h1>
-                    {active.length === 0 ? (
-                        <p className="mt-4 text-sm text-muted-foreground">No active orders.</p>
-                    ) : (
-                        <div className="mt-4 space-y-3">
-                            {active.map((order) => (
-                                <OrderCard key={order.id} order={order} />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {history.length > 0 && (
-                    <div>
-                        <h2 className="text-xl font-semibold">History</h2>
-                        <div className="mt-4 space-y-3">
-                            {history.map((order) => (
-                                <OrderCard key={order.id} order={order} />
-                            ))}
-                        </div>
+        <SellerLayout breadcrumb={['Orders']}>
+            <div>
+                <h1 className="text-2xl font-semibold">Active orders</h1>
+                {active.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">No active orders.</p>
+                ) : (
+                    <div className="mt-4 space-y-3">
+                        {active.map((order) => (
+                            <OrderCard key={order.id} order={order} />
+                        ))}
                     </div>
                 )}
             </div>
-        </div>
+
+            {history.length > 0 && (
+                <div>
+                    <h2 className="text-xl font-semibold">History</h2>
+                    <div className="mt-4 space-y-3">
+                        {history.map((order) => (
+                            <OrderCard key={order.id} order={order} />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </SellerLayout>
     );
 }

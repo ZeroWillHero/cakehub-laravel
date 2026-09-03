@@ -8,22 +8,28 @@ use Illuminate\Support\Carbon;
 
 /**
  * Small shared aggregation helpers for the Seller/Admin dashboard charts.
- * Fixed 30-day window (see docs/plan-analytics-and-location.md — no
- * range picker in this pass).
  */
 class OrderStats
 {
-    public const DAYS = 30;
+    public const VALID_RANGES = [7, 30, 90];
+    public const DEFAULT_RANGE = 30;
+
+    public static function normalizeRange(mixed $range): int
+    {
+        $range = (int) $range;
+
+        return in_array($range, self::VALID_RANGES, true) ? $range : self::DEFAULT_RANGE;
+    }
 
     /**
-     * Daily order counts for the last self::DAYS days, zero-filled for
-     * days with no orders, oldest first.
+     * Daily order counts for the last $days days, zero-filled for days
+     * with no orders, oldest first.
      *
      * @return array<int, array{date: string, count: int}>
      */
-    public static function dailyCounts(Builder $query): array
+    public static function dailyCounts(Builder $query, int $days = self::DEFAULT_RANGE): array
     {
-        $since = Carbon::today()->subDays(self::DAYS - 1);
+        $since = Carbon::today()->subDays($days - 1);
 
         $counts = (clone $query)
             ->where('created_at', '>=', $since)
@@ -31,13 +37,13 @@ class OrderStats
             ->groupBy('day')
             ->pluck('count', 'day');
 
-        $days = [];
-        for ($i = 0; $i < self::DAYS; $i++) {
+        $result = [];
+        for ($i = 0; $i < $days; $i++) {
             $date = $since->copy()->addDays($i)->toDateString();
-            $days[] = ['date' => $date, 'count' => (int) ($counts[$date] ?? 0)];
+            $result[] = ['date' => $date, 'count' => (int) ($counts[$date] ?? 0)];
         }
 
-        return $days;
+        return $result;
     }
 
     /**

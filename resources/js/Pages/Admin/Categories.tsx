@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
 
@@ -75,16 +76,15 @@ export default function AdminCategories({ categories: initial }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Categories</h1>
-                    <Button type="button" onClick={() => setCreateOpen(true)}>
-                        Add category
-                    </Button>
-                </div>
+        <AdminLayout breadcrumb={['Categories']}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-semibold">Categories</h1>
+                <Button type="button" onClick={() => setCreateOpen(true)}>
+                    Add category
+                </Button>
+            </div>
 
-                <div className="divide-y rounded-lg border">
+            <div className="divide-y rounded-lg border">
                     {categories.map((category, index) => (
                         <div key={category.id} className="flex items-center justify-between gap-3 px-4 py-3">
                             <div className="flex items-center gap-2">
@@ -168,7 +168,6 @@ export default function AdminCategories({ categories: initial }: Props) {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
-        </div>
+        </AdminLayout>
     );
 }

@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
 import { api } from '@/lib/api';
 import type { SellerSubscription } from '@/types/sellerSubscription';
@@ -58,11 +59,10 @@ export default function SellerSubscriptionPage({
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
-                <h1 className="text-2xl font-semibold">Subscription</h1>
+        <SellerLayout breadcrumb={['Subscription']}>
+            <h1 className="text-2xl font-semibold">Subscription</h1>
 
-                <Card>
+            <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Current plan</CardTitle>
                     </CardHeader>
@@ -150,7 +150,6 @@ export default function SellerSubscriptionPage({
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
-        </div>
+        </SellerLayout>
     );
 }

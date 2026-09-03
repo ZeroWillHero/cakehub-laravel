@@ -36,6 +36,20 @@ it('exposes analytics to a seller on a plan with basic_analytics', function () {
             ->where('analytics.orderValueTotal', 42));
 });
 
+it('honors a valid range query param and falls back to 30 for an invalid one', function () {
+    $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
+    $plan = SubscriptionPlan::factory()->create(['features' => ['basic_analytics' => true]]);
+    SellerSubscription::factory()->for($seller)->for($plan, 'subscriptionPlan')->create(['status' => SellerSubscriptionStatus::Active]);
+
+    $this->actingAs($seller->user)->get('/seller/dashboard?range=7')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('analytics.range', 7)->has('analytics.ordersOverTime', 7));
+
+    $this->actingAs($seller->user)->get('/seller/dashboard?range=not-a-number')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('analytics.range', 30)->has('analytics.ordersOverTime', 30));
+});
+
 it('only counts the seller\'s own orders in their analytics', function () {
     $sellerA = Seller::factory()->for(User::factory()->seller(), 'user')->create();
     $sellerB = Seller::factory()->create();

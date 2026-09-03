@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -44,22 +45,21 @@ export default function Listings({ products: initialProducts, limit }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-4xl space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <h1 className="text-2xl font-semibold">Listings</h1>
-                    {atLimit ? (
-                        <span className="text-sm text-muted-foreground">
-                            Listing limit reached — upgrade your subscription to add more.
-                        </span>
-                    ) : (
-                        <Link href="/seller/listings/create" className={buttonVariants()}>
-                            Add product
-                        </Link>
-                    )}
-                </div>
+        <SellerLayout breadcrumb={['Listings']}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <h1 className="text-2xl font-semibold">Listings</h1>
+                {atLimit ? (
+                    <span className="text-sm text-muted-foreground">
+                        Listing limit reached — upgrade your subscription to add more.
+                    </span>
+                ) : (
+                    <Link href="/seller/listings/create" className={buttonVariants()}>
+                        Add product
+                    </Link>
+                )}
+            </div>
 
-                <Card>
+            <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Usage</CardTitle>
                     </CardHeader>
@@ -126,7 +126,6 @@ export default function Listings({ products: initialProducts, limit }: Props) {
                         ))}
                     </div>
                 )}
-            </div>
-        </div>
+        </SellerLayout>
     );
 }

@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { ApiError } from '@/lib/api';
 import type { BillingCycle, SubscriptionPlan } from '@/types/subscriptionPlan';
@@ -97,16 +98,15 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Subscription plans</h1>
-                    <Button type="button" onClick={() => setFormOpen(true)}>
-                        Add plan
-                    </Button>
-                </div>
+        <AdminLayout breadcrumb={['Subscription Plans']}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-semibold">Subscription plans</h1>
+                <Button type="button" onClick={() => setFormOpen(true)}>
+                    Add plan
+                </Button>
+            </div>
 
-                <div className="divide-y rounded-lg border">
+            <div className="divide-y rounded-lg border">
                     {plans.map((plan, index) => (
                         <div key={plan.id} className="flex items-center justify-between gap-3 px-4 py-3">
                             <div className="flex items-center gap-2">
@@ -273,7 +273,6 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
-        </div>
+        </AdminLayout>
     );
 }
