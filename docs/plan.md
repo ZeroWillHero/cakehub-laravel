@@ -167,6 +167,14 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 ---
 
+## Phase 7.5 — Seller/Admin Analytics & Location Picker
+
+**Goal:** close two gaps found ahead of Phase 8's merge — see [plan-analytics-and-location.md](plan-analytics-and-location.md) for the full plan (current-state audit, proposed scope, confirmed decisions). Runs before Phase 8's hardening pass so that pass covers these screens too.
+
+**Summary:** stat graphs (Recharts) on the Seller Dashboard (tier-gated per subscription plan) and Admin Dashboard (with CSV export), plus a real `<AddressMapPicker>` (OpenStreetMap/Leaflet + Nominatim) for the Seller Store Profile and Customer addresses — both specced in screens.md since early phases but never built.
+
+---
+
 ## Phase 8 — Cross-Cutting Testing & Hardening Pass
 
 **Goal:** close test-coverage gaps and do a full HCI/design-checklist pass across all three surfaces before considering the MVP complete.

@@ -61,7 +61,7 @@ Built with: Inertia.js + React + shadcn/ui + Tailwind. Types: every page compone
 - `<ListingUsageIndicator>` (used on S2, S3, S8).
 - `<ConfirmDialog>` wrapper around shadcn `AlertDialog` for every destructive action across all three surfaces (C-cart removal doesn't need it; S4/A3/A5/A7 do).
 - `<EmptyState>` (designed empty states for C4 zero-results, S3 no-listings-yet, S5 no-orders-yet, A2 empty queue).
-- `<AddressMapPicker>` (S1/S7 store location, C13 customer addresses) — depends on Phase 0's maps-provider decision.
+- `<AddressMapPicker>` (S7 store location, C13 customer addresses) — see [plan-analytics-and-location.md](plan-analytics-and-location.md); not yet built as of Phase 8.
 
 ## Open items this doc surfaces (not yet decided — see [plan.md](plan.md) Phase 0)
 
