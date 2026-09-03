@@ -1,4 +1,5 @@
 import { useState, type SubmitEventHandler } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -58,9 +59,15 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                     <CardHeader>
                         <CardTitle className="font-heading">Profile</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-1 text-sm">
-                        <p className="font-medium">{user.name}</p>
-                        <p className="text-muted-foreground">{user.email}</p>
+                    <CardContent className="flex items-center gap-3 text-sm">
+                        <Avatar className="size-12">
+                            <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
+                            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-muted-foreground">{user.email}</p>
+                        </div>
                     </CardContent>
                 </Card>
 

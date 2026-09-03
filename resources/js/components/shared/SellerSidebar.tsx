@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { CreditCard, LayoutDashboard, Package, ShoppingBag, Star, Store } from 'lucide-react';
+import { CreditCard, LayoutDashboard, Package, Settings, ShoppingBag, Star, Store } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -11,6 +11,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import UserSidebarFooter from '@/components/shared/UserSidebarFooter';
 
 const navItems = [
     { title: 'Dashboard', url: '/seller/dashboard', icon: LayoutDashboard },
@@ -20,6 +21,8 @@ const navItems = [
     { title: 'Store Profile', url: '/seller/profile', icon: Store },
     { title: 'Subscription', url: '/seller/subscription', icon: CreditCard },
 ];
+
+const settingsItem = { title: 'Settings', url: '/seller/settings', icon: Settings };
 
 export default function SellerSidebar() {
     const { url } = usePage();
@@ -53,7 +56,24 @@ export default function SellerSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+                <SidebarGroup className="mt-auto">
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    render={<Link href={settingsItem.url} />}
+                                    isActive={url === settingsItem.url || url.startsWith(settingsItem.url + '/')}
+                                    tooltip={settingsItem.title}
+                                >
+                                    <settingsItem.icon />
+                                    <span>{settingsItem.title}</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarContent>
+            <UserSidebarFooter />
         </Sidebar>
     );
 }

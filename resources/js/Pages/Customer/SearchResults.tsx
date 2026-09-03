@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
 import RatingStars from '@/components/shared/RatingStars';
@@ -149,7 +150,17 @@ export default function SearchResults({ categories }: Props) {
                 </div>
 
                 <div className="mt-6">
-                    {loading && <p className="text-sm text-muted-foreground">Searching…</p>}
+                    {loading && (
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label="Loading results">
+                            {[0, 1, 2, 3].map((i) => (
+                                <div key={i} className="space-y-3">
+                                    <Skeleton className="aspect-video w-full rounded-lg" />
+                                    <Skeleton className="h-4 w-2/3" />
+                                    <Skeleton className="h-3 w-1/3" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {!loading && filteredSellers.length === 0 && (
                         <Card>
@@ -170,7 +181,18 @@ export default function SearchResults({ categories }: Props) {
                             {filteredSellers.map((seller) => (
                                 <Link key={seller.id} href={`/sellers/${seller.slug}`}>
                                     <Card className="h-full transition-shadow hover:shadow-md">
-                                        <ImagePlaceholder label={seller.business_name} className="aspect-video w-full rounded-b-none" />
+                                        {seller.cover_path ? (
+                                            <img
+                                                src={`/storage/${seller.cover_path}`}
+                                                alt={seller.business_name}
+                                                className="aspect-video w-full rounded-t-lg object-cover"
+                                            />
+                                        ) : (
+                                            <ImagePlaceholder
+                                                label={seller.business_name}
+                                                className="aspect-video w-full rounded-b-none"
+                                            />
+                                        )}
                                         <CardContent className="space-y-1 py-4">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="font-medium">{seller.business_name}</span>

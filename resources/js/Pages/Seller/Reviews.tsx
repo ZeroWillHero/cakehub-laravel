@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,7 +33,15 @@ function ReviewCard({ review, onResponded }: { review: Review; onResponded: (r: 
         <Card>
             <CardContent className="space-y-2 py-4">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{review.customer?.name}</span>
+                    <div className="flex items-center gap-2">
+                        <Avatar className="size-6">
+                            <AvatarImage src={review.customer?.avatar_url ?? undefined} alt={review.customer?.name} />
+                            <AvatarFallback className="text-[10px]">
+                                {review.customer?.name?.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{review.customer?.name}</span>
+                    </div>
                     <RatingStars value={review.rating} />
                 </div>
                 {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}

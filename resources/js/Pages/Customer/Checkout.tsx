@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { Address } from '@/types/address';
@@ -157,6 +158,7 @@ export default function Checkout({ items, addresses }: Props) {
                     {errors.cart && <p className="text-sm text-destructive">{errors.cart[0]}</p>}
 
                     <Button type="submit" size="lg" className="w-full min-h-11" disabled={submitting}>
+                        {submitting && <Spinner className="mr-2" />}
                         {submitting ? 'Placing order…' : 'Place order'}
                     </Button>
                 </form>

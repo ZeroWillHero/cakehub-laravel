@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -32,8 +33,15 @@ const statusLabel: Record<OrderStatus, string> = {
 };
 
 export default function AdminDashboard({ metrics, analytics }: Props) {
+    const [loadingRange, setLoadingRange] = useState(false);
+
     function setRange(range: ChartRange) {
-        router.reload({ data: { range }, only: ['analytics'] });
+        router.reload({
+            data: { range },
+            only: ['analytics'],
+            onStart: () => setLoadingRange(true),
+            onFinish: () => setLoadingRange(false),
+        });
     }
 
     return (
@@ -80,6 +88,7 @@ export default function AdminDashboard({ metrics, analytics }: Props) {
                     data={analytics.ordersOverTime}
                     range={analytics.range}
                     onRangeChange={setRange}
+                    loading={loadingRange}
                 />
                 <OrdersAreaChart
                     title="New sellers"

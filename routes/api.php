@@ -16,8 +16,10 @@ use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
 use App\Http\Controllers\Seller\SellerDocumentController;
+use App\Http\Controllers\Seller\SettingsController as SellerSettingsController;
 use App\Http\Controllers\Seller\SubscriptionController as SellerSubscriptionController;
 use App\Http\Controllers\SellerSearchController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -25,10 +27,12 @@ Route::get('/sellers/nearby', [SellerSearchController::class, 'nearby']);
 Route::get('/sellers/search', [SellerSearchController::class, 'search']);
 Route::get('/sellers/{seller:slug}/products', [ProductController::class, 'bySeller']);
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::put('/settings/notifications', [SettingsController::class, 'updateNotificationPreferences']);
+    Route::post('/settings/deactivate', [SettingsController::class, 'deactivate']);
 
     Route::middleware('role:customer')->group(function () {
         Route::post('/addresses', [AddressController::class, 'store']);
@@ -44,6 +48,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware('role:seller')->prefix('seller')->group(function () {
         Route::put('/profile', [SellerProfileController::class, 'update']);
+        Route::post('/profile/logo', [SellerProfileController::class, 'uploadLogo']);
+        Route::post('/profile/cover', [SellerProfileController::class, 'uploadCover']);
         Route::get('/products', [SellerProductController::class, 'index']);
         Route::post('/products', [SellerProductController::class, 'store']);
         Route::put('/products/{product}', [SellerProductController::class, 'update']);
@@ -54,6 +60,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/reviews/{review}/response', [SellerReviewController::class, 'respond']);
         Route::post('/documents', [SellerDocumentController::class, 'store']);
         Route::post('/subscription/checkout', [SellerSubscriptionController::class, 'checkout']);
+        Route::put('/settings/payout', [SellerSettingsController::class, 'updatePayout']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {

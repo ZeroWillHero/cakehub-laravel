@@ -16,6 +16,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 #[Fillable([
     'user_id', 'business_name', 'slug', 'description', 'logo_path', 'cover_path',
     'whatsapp_number', 'location', 'address_line', 'operating_hours', 'store_status',
+    'payout_bank_name', 'payout_account_name', 'payout_account_number',
 ])]
 class Seller extends Model
 {

@@ -50,6 +50,7 @@ export interface Review {
     customer?: {
         id: number;
         name: string;
+        avatar_url: string | null;
     };
     seller?: {
         id: number;

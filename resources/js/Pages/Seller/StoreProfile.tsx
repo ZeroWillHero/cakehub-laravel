@@ -26,6 +26,64 @@ const statusVariant: Record<SellerDocument['status'], 'default' | 'secondary' | 
     rejected: 'destructive',
 };
 
+function SellerImageUpload({
+    label,
+    endpoint,
+    path: initialPath,
+    aspect,
+}: {
+    label: string;
+    endpoint: string;
+    path: string | null;
+    aspect: string;
+}) {
+    const [path, setPath] = useState(initialPath);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    async function upload(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        setError(null);
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const updated = await api.upload<Seller>(endpoint, formData);
+            setPath(endpoint.endsWith('logo') ? updated.logo_path : updated.cover_path);
+        } catch (err) {
+            const apiError = err as { message?: string };
+            setError(apiError.message ?? 'Upload failed.');
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
+    }
+
+    return (
+        <div className="space-y-2">
+            <Label>{label}</Label>
+            {path ? (
+                <img src={`/storage/${path}`} alt={label} className={`w-full rounded-lg border object-cover ${aspect}`} />
+            ) : (
+                <div className={`flex w-full items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground ${aspect}`}>
+                    No {label.toLowerCase()} uploaded
+                </div>
+            )}
+            <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                disabled={uploading}
+                onChange={upload}
+                className="text-sm"
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+    );
+}
+
 function DocumentUpload({ documents: initialDocuments }: { documents: SellerDocument[] }) {
     const [documents, setDocuments] = useState(initialDocuments);
     const [type, setType] = useState<DocumentType>('business_registration');
@@ -138,7 +196,27 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
 
     return (
         <SellerLayout breadcrumb={['Store Profile']}>
-            <div className="mx-auto w-full max-w-2xl">
+            <div className="mx-auto w-full max-w-2xl space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Logo & cover photo</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <SellerImageUpload
+                            label="Logo"
+                            endpoint="/seller/profile/logo"
+                            path={initialSeller.logo_path}
+                            aspect="aspect-square"
+                        />
+                        <SellerImageUpload
+                            label="Cover photo"
+                            endpoint="/seller/profile/cover"
+                            path={initialSeller.cover_path}
+                            aspect="aspect-video"
+                        />
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Store profile</CardTitle>

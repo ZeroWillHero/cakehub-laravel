@@ -22,6 +22,7 @@ class ReviewResource extends JsonResource
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer->id,
                 'name' => $this->customer->name,
+                'avatar_url' => $this->customer->avatar_url,
             ]),
             'seller' => $this->whenLoaded('seller', fn () => [
                 'id' => $this->seller->id,

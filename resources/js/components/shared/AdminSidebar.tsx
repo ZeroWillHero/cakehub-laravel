@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ClipboardCheck, CreditCard, LayoutDashboard, Tag } from 'lucide-react';
+import { ClipboardCheck, CreditCard, LayoutDashboard, Settings, Tag } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -11,6 +11,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import UserSidebarFooter from '@/components/shared/UserSidebarFooter';
 
 const navItems = [
     { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
@@ -18,6 +19,8 @@ const navItems = [
     { title: 'Categories', url: '/admin/categories', icon: Tag },
     { title: 'Subscription Plans', url: '/admin/subscription-plans', icon: CreditCard },
 ];
+
+const settingsItem = { title: 'Settings', url: '/admin/settings', icon: Settings };
 
 export default function AdminSidebar() {
     const { url } = usePage();
@@ -51,7 +54,24 @@ export default function AdminSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+                <SidebarGroup className="mt-auto">
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    render={<Link href={settingsItem.url} />}
+                                    isActive={url === settingsItem.url || url.startsWith(settingsItem.url + '/')}
+                                    tooltip={settingsItem.title}
+                                >
+                                    <settingsItem.icon />
+                                    <span>{settingsItem.title}</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarContent>
+            <UserSidebarFooter />
         </Sidebar>
     );
 }

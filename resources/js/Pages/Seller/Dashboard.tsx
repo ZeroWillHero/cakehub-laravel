@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SellerLayout from '@/Layouts/SellerLayout';
@@ -49,8 +50,15 @@ export default function SellerDashboard({
     recentOrders,
     analytics,
 }: Props) {
+    const [loadingRange, setLoadingRange] = useState(false);
+
     function setRange(range: ChartRange) {
-        router.reload({ data: { range }, only: ['analytics'] });
+        router.reload({
+            data: { range },
+            only: ['analytics'],
+            onStart: () => setLoadingRange(true),
+            onFinish: () => setLoadingRange(false),
+        });
     }
 
     return (
@@ -108,6 +116,7 @@ export default function SellerDashboard({
                             data={analytics.ordersOverTime}
                             range={analytics.range}
                             onRangeChange={setRange}
+                            loading={loadingRange}
                         />
 
                         <Card>

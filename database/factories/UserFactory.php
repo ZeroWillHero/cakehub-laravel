@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,6 +20,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'avatar_url' => fake()->imageUrl(),
             'role' => null,
+            'status' => UserStatus::Active,
         ];
     }
 

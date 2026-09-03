@@ -28,6 +28,10 @@ class SellerResource extends JsonResource
             'verification_status' => $this->verification_status?->value,
             'average_rating' => (float) $this->average_rating,
             'documents' => $this->whenLoaded('documents', fn () => SellerDocumentResource::collection($this->documents)->resolve()),
+            // Payout details are sensitive — only ever exposed to the owning seller, never on public storefront/search responses.
+            'payout_bank_name' => $this->when($request->user()?->id === $this->user_id, $this->payout_bank_name),
+            'payout_account_name' => $this->when($request->user()?->id === $this->user_id, $this->payout_account_name),
+            'payout_account_number' => $this->when($request->user()?->id === $this->user_id, $this->payout_account_number),
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,

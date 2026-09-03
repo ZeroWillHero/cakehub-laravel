@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seller\StoreProfileRequest;
+use App\Http\Requests\Seller\UploadSellerImageRequest;
 use App\Http\Resources\SellerResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -33,6 +35,33 @@ class ProfileController extends Controller
             ...collect($data)->except(['latitude', 'longitude'])->all(),
             'location' => $point,
         ]);
+
+        return (new SellerResource($seller))->response();
+    }
+
+    public function uploadLogo(UploadSellerImageRequest $request): JsonResponse
+    {
+        return $this->uploadImage($request, 'logo_path');
+    }
+
+    public function uploadCover(UploadSellerImageRequest $request): JsonResponse
+    {
+        return $this->uploadImage($request, 'cover_path');
+    }
+
+    private function uploadImage(UploadSellerImageRequest $request, string $column): JsonResponse
+    {
+        $seller = $request->user()->seller;
+        $this->authorize('update', $seller);
+
+        $oldPath = $seller->{$column};
+
+        $path = $request->file('image')->store("sellers/{$seller->id}", 'public');
+        $seller->update([$column => $path]);
+
+        if ($oldPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
 
         return (new SellerResource($seller))->response();
     }

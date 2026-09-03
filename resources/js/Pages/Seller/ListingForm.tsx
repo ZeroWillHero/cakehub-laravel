@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
 import type { Product, ProductAvailabilityStatus, ProductImage } from '@/types/product';
@@ -293,6 +294,7 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                             </div>
 
                             <Button type="submit" disabled={saving || atLimit} className="min-h-11">
+                                {saving && <Spinner className="mr-2" />}
                                 {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add product'}
                             </Button>
                         </form>

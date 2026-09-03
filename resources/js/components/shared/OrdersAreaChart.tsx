@@ -3,6 +3,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import Spinner from '@/components/shared/Spinner';
 
 export type ChartRange = 7 | 30 | 90;
 
@@ -20,6 +21,7 @@ interface Props {
     onRangeChange: (range: ChartRange) => void;
     dataKey?: string;
     color?: string;
+    loading?: boolean;
 }
 
 function formatDate(value: string): string {
@@ -34,6 +36,7 @@ export default function OrdersAreaChart({
     onRangeChange,
     dataKey = 'count',
     color = 'var(--chart-3)',
+    loading = false,
 }: Props) {
     const chartConfig = {
         [dataKey]: { label: title, color },
@@ -42,7 +45,12 @@ export default function OrdersAreaChart({
     const gradientId = `fill-${dataKey.replace(/\s+/g, '-')}`;
 
     return (
-        <Card className="@container/card">
+        <Card className="@container/card relative">
+            {loading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-card/60">
+                    <Spinner size={20} />
+                </div>
+            )}
             <CardHeader>
                 <CardTitle>{title}</CardTitle>
                 {description && <CardDescription>{description}</CardDescription>}

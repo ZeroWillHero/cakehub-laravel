@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import SellerLayout from '@/Layouts/SellerLayout';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
 import type { Order, OrderStatus } from '@/types/order';
 
@@ -75,6 +76,7 @@ export default function SellerOrders({ orders: initialOrders }: Props) {
                                     disabled={updating === order.id}
                                     onClick={() => advance(order, status)}
                                 >
+                                    {updating === order.id && <Spinner className="mr-2" />}
                                     Mark {statusLabel[status]}
                                 </Button>
                             ))}

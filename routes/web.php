@@ -19,7 +19,9 @@ use App\Http\Controllers\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Seller\SellerDocumentController;
+use App\Http\Controllers\Seller\SettingsController as SellerSettingsController;
 use App\Http\Controllers\Seller\SubscriptionPageController as SellerSubscriptionPageController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +32,7 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->
 // their role-appropriate landing (see CustomerHomeController).
 Route::get('/', [CustomerHomeController::class, 'index'])->name('home');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'account.active'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
     Route::get('/seller-documents/{document}', [SellerDocumentController::class, 'show'])->name('seller-documents.show');
@@ -56,6 +58,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [SellerOrderController::class, 'index'])->name('orders.index');
         Route::get('/reviews', [SellerReviewController::class, 'index'])->name('reviews.index');
         Route::get('/subscription', [SellerSubscriptionPageController::class, 'show'])->name('subscription.show');
+        Route::get('/settings', [SellerSettingsController::class, 'edit'])->name('settings.edit');
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -65,5 +68,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/sellers/{seller}', [SellerVerificationController::class, 'show'])->name('sellers.show');
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
         Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        Route::get('/settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
     });
 });
