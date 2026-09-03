@@ -2,12 +2,24 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
 import NotificationBell from '@/components/shared/NotificationBell';
+import OrdersLineChart from '@/components/shared/OrdersLineChart';
+import StatusBreakdownChart from '@/components/shared/StatusBreakdownChart';
+import type { Order, OrderStatus } from '@/types/order';
 import type { Seller } from '@/types/seller';
+
+interface Analytics {
+    ordersOverTime: { date: string; count: number }[];
+    statusBreakdown: Record<OrderStatus, number>;
+    orderValueTotal: number;
+}
 
 interface Props {
     seller: Seller;
     usage: number;
     limit: number | null;
+    hasAnalyticsAccess: boolean;
+    recentOrders: Order[];
+    analytics: Analytics | null;
 }
 
 const verificationLabel: Record<Seller['verification_status'], string> = {
@@ -17,13 +29,30 @@ const verificationLabel: Record<Seller['verification_status'], string> = {
     suspended: 'Suspended',
 };
 
-export default function SellerDashboard({ seller, usage, limit }: Props) {
+const statusLabel: Record<OrderStatus, string> = {
+    placed: 'Placed',
+    confirmed: 'Confirmed',
+    preparing: 'Preparing',
+    ready: 'Ready',
+    delivered: 'Delivered',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+};
+
+export default function SellerDashboard({
+    seller,
+    usage,
+    limit,
+    hasAnalyticsAccess,
+    recentOrders,
+    analytics,
+}: Props) {
     return (
         <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
             <div className="mx-auto max-w-4xl space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h1 className="text-2xl font-semibold">{seller.business_name}</h1>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         <Badge variant={seller.verification_status === 'verified' ? 'default' : 'secondary'}>
                             {verificationLabel[seller.verification_status]}
                         </Badge>
@@ -48,14 +77,80 @@ export default function SellerDashboard({ seller, usage, limit }: Props) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Orders</CardTitle>
+                        <CardTitle className="text-base">Recent orders</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
+                        {recentOrders.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No orders yet.</p>
+                        ) : (
+                            <ul className="divide-y">
+                                {recentOrders.map((order) => (
+                                    <li key={order.id} className="flex items-center justify-between py-2 text-sm">
+                                        <span>
+                                            Order #{order.id} — {order.customer?.name}
+                                        </span>
+                                        <Badge variant={order.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                                            {statusLabel[order.status]}
+                                        </Badge>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                         <a href="/seller/orders" className="text-sm text-primary underline">
-                            View orders
+                            View all orders
                         </a>
                     </CardContent>
                 </Card>
+
+                {hasAnalyticsAccess && analytics ? (
+                    <>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Orders — last 30 days</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <OrdersLineChart
+                                    series={[{ data: analytics.ordersOverTime, label: 'Orders' }]}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Order status breakdown</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <StatusBreakdownChart breakdown={analytics.statusBreakdown} labels={statusLabel} />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Completed order value</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-2xl font-semibold">${analytics.orderValueTotal.toFixed(2)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Total value of completed orders — sellers collect payment directly, this isn't
+                                    platform-settled revenue.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </>
+                ) : (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Sales analytics</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm text-muted-foreground">
+                            Order charts and trends are available on the Pro plan and above.{' '}
+                            <a href="/seller/subscription" className="text-primary underline">
+                                Upgrade your plan
+                            </a>
+                            .
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>

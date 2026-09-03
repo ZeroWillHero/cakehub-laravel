@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AddressMapPicker from '@/components/shared/AddressMapPicker';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { api } from '@/lib/api';
 import type { Address } from '@/types/address';
@@ -13,7 +14,15 @@ interface Props {
     addresses: Address[];
 }
 
-const emptyForm = { label: '', line1: '', line2: '', city: '', postal_code: '' };
+const emptyForm = {
+    label: '',
+    line1: '',
+    line2: '',
+    city: '',
+    postal_code: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
+};
 
 export default function AccountSettings({ user, addresses: initialAddresses }: Props) {
     const [addresses, setAddresses] = useState(initialAddresses);
@@ -116,6 +125,21 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                                     aria-invalid={Boolean(errors.line1)}
                                 />
                                 {errors.line1 && <p className="text-sm text-destructive">{errors.line1[0]}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Pin on map (optional)</Label>
+                                <AddressMapPicker
+                                    latitude={form.latitude}
+                                    longitude={form.longitude}
+                                    onChange={(latitude, longitude, label) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            latitude,
+                                            longitude,
+                                            line1: prev.line1 || label || prev.line1,
+                                        }))
+                                    }
+                                />
                             </div>
                             <Button type="submit" disabled={saving} className="w-full min-h-11 sm:w-auto">
                                 {saving ? 'Saving…' : 'Add address'}

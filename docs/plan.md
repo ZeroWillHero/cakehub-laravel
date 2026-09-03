@@ -173,6 +173,12 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Summary:** stat graphs (Recharts) on the Seller Dashboard (tier-gated per subscription plan) and Admin Dashboard (with CSV export), plus a real `<AddressMapPicker>` (OpenStreetMap/Leaflet + Nominatim) for the Seller Store Profile and Customer addresses — both specced in screens.md since early phases but never built.
 
+**Built (2026-09-03):** `Seller::hasAnalyticsAccess()` (reads `subscription_plans.features.basic_analytics`/`advanced_analytics`, admin-editable, seeded so Pro/Premium get it and Free/Basic don't); a shared `OrderStats` helper (30-day daily counts + status breakdown, reused by both dashboards); Seller Dashboard gets recent orders + gated charts, Admin Dashboard gets orders/new-sellers/status charts plus a `GET /admin/dashboard/export` CSV download; `<AddressMapPicker>` (search-with-debounce + click/drag pin) wired into Seller Store Profile and Customer Account Settings — both already accepted `latitude`/`longitude` server-side but had no frontend UI to send them.
+
+**Verified:** 165 Pest tests passing, `tsc` clean. Live-verified on port 8080: Admin dashboard charts render and scale correctly against seeded order data (an initial "flat" read was Recharts' entrance animation, not a bug); Seller dashboard shows gated analytics correctly for a Pro-plan seller; the address picker's Nominatim search returned and applied a real result (Eiffel Tower) with the map recentering and the address field auto-filling; click-to-place-pin on the Customer address form persisted real coordinates. One real bug fixed: the default Recharts line/bar color (`--chart-1`) is a very light, near-invisible gray in this project's neutral palette — shifted the default to `--chart-3` for actual contrast.
+
+**Note:** superseded visually by the sidebar/chart redesign below (see "Admin/Seller Sidebar Layout & shadcn Chart Redesign") — the dashboards built here get restyled into the new `ChartAreaInteractive`-style components and sidebar shell, but the underlying data/endpoints (`OrderStats`, the analytics-access gate, the CSV export) stay as built.
+
 ---
 
 ## Phase 8 — Cross-Cutting Testing & Hardening Pass

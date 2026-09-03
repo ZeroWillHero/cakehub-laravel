@@ -18,6 +18,22 @@ it('lets a seller update their own store profile', function () {
     expect($seller->refresh()->business_name)->toBe('Updated Bakery');
 });
 
+it('lets a seller set their store location via latitude/longitude', function () {
+    $user = User::factory()->seller()->create();
+    $seller = Seller::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->putJson('/api/seller/profile', [
+            'business_name' => 'Pinned Bakery',
+            'whatsapp_number' => '+15559876543',
+            'latitude' => 37.7749,
+            'longitude' => -122.4194,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.latitude', 37.7749)
+        ->assertJsonPath('data.longitude', -122.4194);
+});
+
 it('rejects a seller profile update missing required fields', function () {
     $user = User::factory()->seller()->create();
     Seller::factory()->for($user)->create();

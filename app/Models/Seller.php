@@ -86,6 +86,22 @@ class Seller extends Model
         return $this->products()->count();
     }
 
+    /**
+     * Whether the seller's current plan includes sales analytics
+     * (requirements.md §3.9.1: Free/Basic = none, Pro = basic, Premium =
+     * advanced). Driven by the plan's admin-editable `features` jsonb —
+     * never hard-code which plan names get analytics.
+     */
+    public function hasAnalyticsAccess(): bool
+    {
+        $plan = $this->activeSubscription()?->subscriptionPlan
+            ?? SubscriptionPlan::query()->where('price', 0)->where('is_active', true)->first();
+
+        $features = $plan?->features ?? [];
+
+        return ($features['basic_analytics'] ?? false) || ($features['advanced_analytics'] ?? false);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

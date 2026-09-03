@@ -16,16 +16,16 @@ class SubscriptionPlanSeeder extends Seeder
     public function run(): void
     {
         $plans = [
-            ['name' => 'Free', 'price' => 0, 'billing_cycle' => null, 'listing_limit' => 5, 'sort_order' => 0],
-            ['name' => 'Basic', 'price' => 9, 'billing_cycle' => 'monthly', 'listing_limit' => 20, 'sort_order' => 1],
-            ['name' => 'Pro', 'price' => 19, 'billing_cycle' => 'monthly', 'listing_limit' => 50, 'sort_order' => 2],
-            ['name' => 'Premium', 'price' => 39, 'billing_cycle' => 'monthly', 'listing_limit' => null, 'sort_order' => 3],
+            ['name' => 'Free', 'price' => 0, 'billing_cycle' => null, 'listing_limit' => 5, 'sort_order' => 0, 'features' => []],
+            ['name' => 'Basic', 'price' => 9, 'billing_cycle' => 'monthly', 'listing_limit' => 20, 'sort_order' => 1, 'features' => []],
+            ['name' => 'Pro', 'price' => 19, 'billing_cycle' => 'monthly', 'listing_limit' => 50, 'sort_order' => 2, 'features' => ['basic_analytics' => true]],
+            ['name' => 'Premium', 'price' => 39, 'billing_cycle' => 'monthly', 'listing_limit' => null, 'sort_order' => 3, 'features' => ['basic_analytics' => true, 'advanced_analytics' => true]],
         ];
 
         foreach ($plans as $plan) {
             SubscriptionPlan::query()->updateOrCreate(
                 ['name' => $plan['name']],
-                [...$plan, 'features' => [], 'is_active' => true],
+                [...$plan, 'is_active' => true],
             );
         }
     }

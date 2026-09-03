@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AddressMapPicker from '@/components/shared/AddressMapPicker';
 import { api } from '@/lib/api';
 import type { Seller } from '@/types/seller';
 import type { DocumentType, SellerDocument } from '@/types/sellerDocument';
@@ -111,6 +112,8 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
         description: initialSeller.description ?? '',
         whatsapp_number: initialSeller.whatsapp_number,
         address_line: initialSeller.address_line ?? '',
+        latitude: initialSeller.latitude,
+        longitude: initialSeller.longitude,
     });
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [saving, setSaving] = useState(false);
@@ -171,6 +174,21 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
                                     id="address_line"
                                     value={form.address_line}
                                     onChange={(e) => setForm({ ...form, address_line: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Store location</Label>
+                                <AddressMapPicker
+                                    latitude={form.latitude}
+                                    longitude={form.longitude}
+                                    onChange={(latitude, longitude, label) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            latitude,
+                                            longitude,
+                                            address_line: label ?? prev.address_line,
+                                        }))
+                                    }
                                 />
                             </div>
                             <div className="flex items-center gap-3">
