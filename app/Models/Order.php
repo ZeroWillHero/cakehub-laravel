@@ -54,8 +54,17 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * The single overall/seller-level review for this order (order_item_id
+     * null) — distinct from the optional per-item reviews in reviews().
+     */
     public function review(): HasOne
     {
-        return $this->hasOne(Review::class);
+        return $this->hasOne(Review::class)->whereNull('order_item_id');
     }
 }

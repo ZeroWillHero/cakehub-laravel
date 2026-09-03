@@ -28,7 +28,9 @@ class StorefrontController extends Controller
 
         return Inertia::render('Customer/ProductDetail', [
             'seller' => (new SellerResource($seller))->resolve(),
-            'product' => (new ProductResource($product->load(['categories', 'variants', 'images'])))->resolve(),
+            'product' => (new ProductResource(
+                $product->load(['categories', 'variants', 'images', 'reviews.customer'])
+            ))->resolve(),
         ]);
     }
 }

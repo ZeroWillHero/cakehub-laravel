@@ -38,11 +38,14 @@ export interface Order {
     };
     items: OrderItem[];
     review?: Review | null;
+    reviews?: Review[];
 }
 
 export interface Review {
     id: number;
     order_id: number;
+    order_item_id: number | null;
+    product_id: number | null;
     rating: number;
     comment: string | null;
     seller_response: string | null;

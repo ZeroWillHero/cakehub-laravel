@@ -28,7 +28,7 @@ class OrderController extends Controller
         $this->authorize('view', $order);
 
         return Inertia::render('Customer/OrderDetail', [
-            'order' => (new OrderResource($order->load(['seller', 'items', 'deliveryAddress', 'review'])))->resolve(),
+            'order' => (new OrderResource($order->load(['seller', 'items', 'deliveryAddress', 'review', 'reviews'])))->resolve(),
         ]);
     }
 }

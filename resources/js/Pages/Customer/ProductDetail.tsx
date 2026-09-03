@@ -10,10 +10,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import RatingStars from '@/components/shared/RatingStars';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types/product';
@@ -84,6 +87,15 @@ export default function ProductDetail({ seller, product }: Props) {
 
                     <div>
                         <h1 className="font-heading text-2xl font-semibold">{product.name}</h1>
+                        {product.average_rating > 0 && (
+                            <div className="mt-1 flex items-center gap-1.5">
+                                <RatingStars value={Math.round(product.average_rating)} size={14} />
+                                <span className="text-xs text-muted-foreground">
+                                    {product.average_rating.toFixed(1)} ({product.reviews?.length ?? 0} review
+                                    {product.reviews?.length === 1 ? '' : 's'})
+                                </span>
+                            </div>
+                        )}
                         <p className="mt-1 text-lg">${price.toFixed(2)}</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {availabilityLabel[product.availability_status]}
@@ -145,6 +157,35 @@ export default function ProductDetail({ seller, product }: Props) {
                         </a>
                     </div>
                 </div>
+
+                {product.reviews && product.reviews.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="font-heading text-lg font-semibold">Reviews</h2>
+                        <div className="mt-3 space-y-3">
+                            {product.reviews.map((review) => (
+                                <Card key={review.id}>
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="size-6">
+                                                <AvatarImage src={review.customer?.avatar_url ?? undefined} alt="" />
+                                                <AvatarFallback>
+                                                    {review.customer?.name.slice(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <CardTitle className="text-sm font-medium">
+                                                {review.customer?.name}
+                                            </CardTitle>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2 pt-0 text-sm">
+                                        <RatingStars value={review.rating} size={14} />
+                                        {review.comment && <p>{review.comment}</p>}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <AlertDialog open={confirmSwitch} onOpenChange={setConfirmSwitch}>

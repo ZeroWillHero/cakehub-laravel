@@ -47,6 +47,7 @@ class OrderResource extends JsonResource
                 'customization_notes' => $item->customization_notes,
             ]), []),
             'review' => $this->whenLoaded('review', fn () => $this->review ? (new ReviewResource($this->review))->resolve() : null),
+            'reviews' => $this->whenLoaded('reviews', fn () => ReviewResource::collection($this->reviews)->resolve()),
         ];
     }
 }

@@ -17,6 +17,7 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'base_price' => (float) $this->base_price,
+            'average_rating' => (float) $this->average_rating,
             'preparation_time_hours' => $this->preparation_time_hours,
             'availability_status' => $this->availability_status?->value,
             'is_active' => $this->is_active,
@@ -35,6 +36,10 @@ class ProductResource extends JsonResource
                 'images',
                 fn () => ProductImageResource::collection($this->images)->resolve(),
                 [],
+            ),
+            'reviews' => $this->whenLoaded(
+                'reviews',
+                fn () => ReviewResource::collection($this->reviews)->resolve(),
             ),
         ];
     }

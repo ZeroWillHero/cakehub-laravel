@@ -1,4 +1,5 @@
 import type { Category } from './category';
+import type { Review } from './order';
 
 export type ProductAvailabilityStatus = 'in_stock' | 'made_to_order' | 'unavailable';
 
@@ -20,10 +21,12 @@ export interface Product {
     name: string;
     description: string | null;
     base_price: number;
+    average_rating: number;
     preparation_time_hours: number | null;
     availability_status: ProductAvailabilityStatus;
     is_active: boolean;
     categories: Category[];
     variants: ProductVariant[];
     images: ProductImage[];
+    reviews?: Review[];
 }
