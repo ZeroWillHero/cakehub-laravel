@@ -19,6 +19,7 @@ class CategoryResource extends JsonResource
             'parent_id' => $this->parent_id,
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
+            'created_by' => $this->created_by,
         ];
     }
 }

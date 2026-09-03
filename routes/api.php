@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Seller\CategoryController as SellerCategoryController;
 use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
@@ -61,6 +62,7 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/documents', [SellerDocumentController::class, 'store']);
         Route::post('/subscription/checkout', [SellerSubscriptionController::class, 'checkout']);
         Route::put('/settings/payout', [SellerSettingsController::class, 'updatePayout']);
+        Route::post('/categories', [SellerCategoryController::class, 'store']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {

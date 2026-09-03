@@ -18,6 +18,9 @@ class NearbySellersRequest extends FormRequest
             'lng' => ['required', 'numeric', 'between:-180,180'],
             'radius_km' => ['nullable', 'numeric', 'min:0.1', 'max:100'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => ['nullable', 'numeric', 'min:0', 'gte:min_price'],
+            'rating_min' => ['nullable', 'numeric', 'min:0', 'max:5'],
         ];
     }
 }

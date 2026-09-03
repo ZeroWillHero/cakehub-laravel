@@ -91,3 +91,26 @@ it('returns all sellers when search has no query or category', function () {
         ->assertOk()
         ->assertJsonCount(3, 'data');
 });
+
+it('filters search results by price range', function () {
+    $cheap = Seller::factory()->create(['business_name' => 'Cheap Bakery']);
+    Product::factory()->for($cheap)->create(['base_price' => 5]);
+
+    $pricey = Seller::factory()->create(['business_name' => 'Pricey Bakery']);
+    Product::factory()->for($pricey)->create(['base_price' => 50]);
+
+    $response = $this->getJson('/api/sellers/search?min_price=10&max_price=100')->assertOk();
+
+    expect($response->json('data'))->toHaveCount(1);
+    expect($response->json('data.0.id'))->toBe($pricey->id);
+});
+
+it('filters search results by minimum rating', function () {
+    $lowRated = Seller::factory()->create(['average_rating' => 2.0]);
+    $highRated = Seller::factory()->create(['average_rating' => 4.5]);
+
+    $response = $this->getJson('/api/sellers/search?rating_min=4')->assertOk();
+
+    expect($response->json('data'))->toHaveCount(1);
+    expect($response->json('data.0.id'))->toBe($highRated->id);
+});

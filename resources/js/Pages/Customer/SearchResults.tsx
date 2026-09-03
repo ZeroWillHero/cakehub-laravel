@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
@@ -29,6 +31,9 @@ export default function SearchResults({ categories }: Props) {
         queryParam('category_id') ? Number(queryParam('category_id')) : null,
     );
     const [openNowOnly, setOpenNowOnly] = useState(false);
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [ratingMin, setRatingMin] = useState('');
     const [view, setView] = useState<ViewMode>('list');
     const [geo, setGeo] = useState<GeoState>('idle');
     const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -54,6 +59,9 @@ export default function SearchResults({ categories }: Props) {
         setLoading(true);
         const params = new URLSearchParams();
         if (categoryId) params.set('category_id', String(categoryId));
+        if (minPrice) params.set('min_price', minPrice);
+        if (maxPrice) params.set('max_price', maxPrice);
+        if (ratingMin) params.set('rating_min', ratingMin);
 
         const path =
             coords !== null
@@ -63,7 +71,7 @@ export default function SearchResults({ categories }: Props) {
         api.get<Seller[]>(path)
             .then(setSellers)
             .finally(() => setLoading(false));
-    }, [categoryId, coords]);
+    }, [categoryId, coords, minPrice, maxPrice, ratingMin]);
 
     const filteredSellers = useMemo(
         () => (openNowOnly ? sellers.filter((s) => s.store_status === 'open') : sellers),
@@ -97,6 +105,52 @@ export default function SearchResults({ categories }: Props) {
                             {category.name}
                         </Button>
                     ))}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-end gap-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="min_price" className="text-xs">
+                            Min price
+                        </Label>
+                        <Input
+                            id="min_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={minPrice}
+                            onChange={(e) => setMinPrice(e.target.value)}
+                            className="w-24"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="max_price" className="text-xs">
+                            Max price
+                        </Label>
+                        <Input
+                            id="max_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={maxPrice}
+                            onChange={(e) => setMaxPrice(e.target.value)}
+                            className="w-24"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="rating_min" className="text-xs">
+                            Min rating
+                        </Label>
+                        <Input
+                            id="rating_min"
+                            type="number"
+                            min="0"
+                            max="5"
+                            step="0.5"
+                            value={ratingMin}
+                            onChange={(e) => setRatingMin(e.target.value)}
+                            className="w-24"
+                        />
+                    </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

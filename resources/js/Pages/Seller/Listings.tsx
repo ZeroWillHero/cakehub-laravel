@@ -14,16 +14,19 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import type { Category } from '@/types/category';
 import type { Product } from '@/types/product';
 
 interface Props {
     products: Product[];
     usage: number;
     limit: number | null;
+    categories: Category[];
 }
 
 const statusLabel: Record<Product['availability_status'], string> = {
@@ -32,12 +35,24 @@ const statusLabel: Record<Product['availability_status'], string> = {
     unavailable: 'Unavailable',
 };
 
-export default function Listings({ products: initialProducts, limit }: Props) {
+export default function Listings({ products: initialProducts, limit, categories }: Props) {
     const [products, setProducts] = useState(initialProducts);
+    const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
     // Derived from local state (not the initial `usage` prop) so it stays
     // correct after a delete without a full page reload.
     const usage = products.length;
     const atLimit = limit !== null && usage >= limit;
+
+    const visibleProducts = products.filter((product) => {
+        if (categoryFilter !== 'all' && !product.categories.some((c) => String(c.id) === categoryFilter)) {
+            return false;
+        }
+        if (availabilityFilter !== 'all' && product.availability_status !== availabilityFilter) {
+            return false;
+        }
+        return true;
+    });
 
     async function remove(id: number) {
         await api.delete(`/seller/products/${id}`);
@@ -68,15 +83,60 @@ export default function Listings({ products: initialProducts, limit }: Props) {
                     </CardContent>
                 </Card>
 
-                {products.length === 0 ? (
+                {products.length > 0 && (
+                    <div className="flex flex-wrap gap-3">
+                        <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v ?? 'all')}>
+                            <SelectTrigger className="w-44" aria-label="Filter by category">
+                                <SelectValue>
+                                    {(value: string) =>
+                                        value === 'all'
+                                            ? 'All categories'
+                                            : (categories.find((c) => String(c.id) === value)?.name ?? 'All categories')
+                                    }
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All categories</SelectItem>
+                                {categories.map((category) => (
+                                    <SelectItem key={category.id} value={String(category.id)}>
+                                        {category.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={availabilityFilter} onValueChange={(v) => setAvailabilityFilter(v ?? 'all')}>
+                            <SelectTrigger className="w-44" aria-label="Filter by availability">
+                                <SelectValue>
+                                    {(value: string) =>
+                                        value === 'all'
+                                            ? 'All availability'
+                                            : statusLabel[value as Product['availability_status']]
+                                    }
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All availability</SelectItem>
+                                {Object.entries(statusLabel).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>
+                                        {label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
+                {visibleProducts.length === 0 ? (
                     <Card>
                         <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                            No listings yet. Add your first product to start selling.
+                            {products.length === 0
+                                ? 'No listings yet. Add your first product to start selling.'
+                                : 'No listings match your filters.'}
                         </CardContent>
                     </Card>
                 ) : (
                     <div className="space-y-3">
-                        {products.map((product) => (
+                        {visibleProducts.map((product) => (
                             <Card key={product.id}>
                                 <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
                                     <div>

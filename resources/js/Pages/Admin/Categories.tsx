@@ -32,6 +32,11 @@ export default function AdminCategories({ categories: initial }: Props) {
     const [newName, setNewName] = useState('');
     const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
     const [busy, setBusy] = useState(false);
+    const [search, setSearch] = useState('');
+
+    const visibleCategories = categories.filter((c) =>
+        c.name.toLowerCase().includes(search.trim().toLowerCase()),
+    );
 
     async function createCategory() {
         setBusy(true);
@@ -64,9 +69,10 @@ export default function AdminCategories({ categories: initial }: Props) {
         }
     }
 
-    async function move(index: number, direction: -1 | 1) {
+    async function move(categoryId: number, direction: -1 | 1) {
+        const index = categories.findIndex((c) => c.id === categoryId);
         const target = index + direction;
-        if (target < 0 || target >= categories.length) return;
+        if (index === -1 || target < 0 || target >= categories.length) return;
 
         const reordered = [...categories];
         [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
@@ -84,15 +90,26 @@ export default function AdminCategories({ categories: initial }: Props) {
                 </Button>
             </div>
 
+            <div className="max-w-sm">
+                <Input
+                    placeholder="Search categories…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Search categories"
+                />
+            </div>
+
             <div className="divide-y rounded-lg border">
-                    {categories.map((category, index) => (
+                    {visibleCategories.map((category) => {
+                        const index = categories.findIndex((c) => c.id === category.id);
+                        return (
                         <div key={category.id} className="flex items-center justify-between gap-3 px-4 py-3">
                             <div className="flex items-center gap-2">
                                 <div className="flex flex-col">
                                     <button
                                         type="button"
                                         disabled={index === 0}
-                                        onClick={() => move(index, -1)}
+                                        onClick={() => move(category.id, -1)}
                                         className="disabled:opacity-30"
                                         aria-label="Move up"
                                     >
@@ -101,7 +118,7 @@ export default function AdminCategories({ categories: initial }: Props) {
                                     <button
                                         type="button"
                                         disabled={index === categories.length - 1}
-                                        onClick={() => move(index, 1)}
+                                        onClick={() => move(category.id, 1)}
                                         className="disabled:opacity-30"
                                         aria-label="Move down"
                                     >
@@ -110,6 +127,7 @@ export default function AdminCategories({ categories: initial }: Props) {
                                 </div>
                                 <span className="font-medium">{category.name}</span>
                                 {!category.is_active && <Badge variant="secondary">Inactive</Badge>}
+                                {category.created_by !== null && <Badge variant="outline">Seller-added</Badge>}
                             </div>
                             <div className="flex items-center gap-3">
                                 <Checkbox
@@ -127,9 +145,12 @@ export default function AdminCategories({ categories: initial }: Props) {
                                 </Button>
                             </div>
                         </div>
-                    ))}
-                    {categories.length === 0 && (
-                        <p className="px-4 py-6 text-center text-sm text-muted-foreground">No categories yet.</p>
+                        );
+                    })}
+                    {visibleCategories.length === 0 && (
+                        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                            {categories.length === 0 ? 'No categories yet.' : 'No categories match your search.'}
+                        </p>
                     )}
                 </div>
 

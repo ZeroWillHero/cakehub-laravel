@@ -18,6 +18,7 @@ export interface Seller {
     store_status: StoreStatus;
     verification_status: VerificationStatus;
     average_rating: number;
+    created_at?: string | null;
     payout_bank_name?: string | null;
     payout_account_name?: string | null;
     payout_account_number?: string | null;

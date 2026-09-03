@@ -54,7 +54,11 @@ export default function ListingForm({ categories, usage, limit, product }: Props
     const [availabilityStatus, setAvailabilityStatus] = useState<ProductAvailabilityStatus>(
         product?.availability_status ?? 'in_stock',
     );
+    const [categoryList, setCategoryList] = useState<Category[]>(categories);
     const [categoryIds, setCategoryIds] = useState<number[]>(product?.categories.map((c) => c.id) ?? []);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [addingCategory, setAddingCategory] = useState(false);
+    const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
     const [variants, setVariants] = useState<VariantDraft[]>(
         product?.variants.map((v) => ({
             name: v.name,
@@ -71,6 +75,23 @@ export default function ListingForm({ categories, usage, limit, product }: Props
 
     function toggleCategory(id: number) {
         setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+    }
+
+    async function addCategory() {
+        if (!newCategoryName.trim()) return;
+        setAddingCategory(true);
+        setNewCategoryError(null);
+        try {
+            const created = await api.post<Category>('/seller/categories', { name: newCategoryName.trim() });
+            setCategoryList((prev) => [...prev, created]);
+            setCategoryIds((prev) => [...prev, created.id]);
+            setNewCategoryName('');
+        } catch (err) {
+            const apiError = err as { errors?: Record<string, string[]> };
+            setNewCategoryError(apiError.errors?.name?.[0] ?? 'Could not add category.');
+        } finally {
+            setAddingCategory(false);
+        }
     }
 
     function addVariant() {
@@ -232,7 +253,7 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                             <div className="space-y-2">
                                 <Label>Categories</Label>
                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                                    {categories.map((category) => (
+                                    {categoryList.map((category) => (
                                         <label
                                             key={category.id}
                                             className="flex min-h-11 items-center gap-2 rounded-md border p-2 text-sm"
@@ -249,6 +270,26 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                 {errors.category_ids && (
                                     <p className="text-sm text-destructive">{errors.category_ids[0]}</p>
                                 )}
+                                <div className="flex items-center gap-2 pt-1">
+                                    <Input
+                                        placeholder="Can't find your category? Add one"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        disabled={atLimit || addingCategory}
+                                        className="max-w-xs"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={addCategory}
+                                        disabled={atLimit || addingCategory || !newCategoryName.trim()}
+                                    >
+                                        {addingCategory && <Spinner className="mr-2" />}
+                                        Add category
+                                    </Button>
+                                </div>
+                                {newCategoryError && <p className="text-sm text-destructive">{newCategoryError}</p>}
                             </div>
 
                             <div className="space-y-2">

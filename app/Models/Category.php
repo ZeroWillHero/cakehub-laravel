@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'parent_id', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'slug', 'parent_id', 'sort_order', 'is_active', 'created_by'])]
 class Category extends Model
 {
     use HasFactory;
@@ -32,5 +32,10 @@ class Category extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_categories');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

@@ -23,6 +23,9 @@ class ListingController extends Controller
             )->resolve(),
             'usage' => $seller->listingUsage(),
             'limit' => $seller->listingLimit(),
+            'categories' => CategoryResource::collection(
+                Category::query()->where('is_active', true)->orderBy('sort_order')->get()
+            )->resolve(),
         ]);
     }
 
