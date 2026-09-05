@@ -83,7 +83,15 @@ export default function ProductDetail({ seller, product }: Props) {
                 </Link>
 
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <ImagePlaceholder label={product.name} className="aspect-square w-full" />
+                    {product.images[0] ? (
+                        <img
+                            src={product.images[0].url}
+                            alt={product.name}
+                            className="aspect-square w-full rounded-2xl object-cover"
+                        />
+                    ) : (
+                        <ImagePlaceholder label={product.name} className="aspect-square w-full" />
+                    )}
 
                     <div>
                         <h1 className="font-heading text-2xl font-semibold">{product.name}</h1>

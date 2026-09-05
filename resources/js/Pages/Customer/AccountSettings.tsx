@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddressMapPicker from '@/components/shared/AddressMapPicker';
+import PageHero from '@/components/shared/PageHero';
+import Section from '@/components/shared/Section';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { api } from '@/lib/api';
 import type { Address } from '@/types/address';
@@ -54,24 +57,36 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-heading">Profile</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex items-center gap-3 text-sm">
-                        <Avatar className="size-12">
-                            <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
-                            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-muted-foreground">{user.email}</p>
-                        </div>
-                    </CardContent>
-                </Card>
+            <PageHero size="sm" title="Account settings" />
 
-                <Card>
+            <Section className="pt-0">
+              <div className="mx-auto max-w-2xl">
+                <Tabs defaultValue="profile">
+                    <TabsList>
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="addresses">Saved addresses</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="profile" className="mt-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-heading">Profile</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex items-center gap-3 text-sm">
+                                <Avatar className="size-12">
+                                    <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
+                                    <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium">{user.name}</p>
+                                    <p className="text-muted-foreground">{user.email}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="addresses" className="mt-4">
+                        <Card>
                     <CardHeader>
                         <CardTitle className="font-heading">Saved addresses</CardTitle>
                     </CardHeader>
@@ -152,9 +167,12 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                                 {saving ? 'Saving…' : 'Add address'}
                             </Button>
                         </form>
-                    </CardContent>
-                </Card>
-            </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+              </div>
+            </Section>
         </CustomerLayout>
     );
 }

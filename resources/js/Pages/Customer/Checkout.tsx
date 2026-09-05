@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import PageHero from '@/components/shared/PageHero';
+import Section from '@/components/shared/Section';
 import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -49,19 +51,21 @@ export default function Checkout({ items, addresses }: Props) {
     if (items.length === 0) {
         return (
             <CustomerLayout>
-                <div className="mx-auto max-w-md px-4 py-8 text-center sm:px-6">
-                    <p className="text-muted-foreground">Your cart is empty.</p>
-                </div>
+                <PageHero size="sm" title="Checkout" />
+                <Section className="pt-0">
+                    <p className="text-center text-muted-foreground">Your cart is empty.</p>
+                </Section>
             </CustomerLayout>
         );
     }
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 className="font-heading text-2xl font-semibold">Checkout</h1>
+            <PageHero size="sm" title="Checkout" />
 
-                <Card className="mt-6">
+            <Section className="pt-0">
+              <div className="mx-auto max-w-2xl">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Order summary</CardTitle>
                     </CardHeader>
@@ -162,7 +166,8 @@ export default function Checkout({ items, addresses }: Props) {
                         {submitting ? 'Placing order…' : 'Place order'}
                     </Button>
                 </form>
-            </div>
+              </div>
+            </Section>
         </CustomerLayout>
     );
 }

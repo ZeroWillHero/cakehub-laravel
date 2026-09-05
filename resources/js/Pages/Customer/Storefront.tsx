@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
 import RatingStars from '@/components/shared/RatingStars';
+import Section from '@/components/shared/Section';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types/product';
 import type { Seller } from '@/types/seller';
@@ -72,19 +73,28 @@ export default function Storefront({ seller, products }: Props) {
                         Contact on WhatsApp
                     </a>
                 </div>
+            </div>
 
-                <h2 className="font-heading mt-8 text-xl font-semibold">Products</h2>
+            <Section title="Products" className="pt-0">
                 {products.length === 0 ? (
-                    <p className="mt-4 text-sm text-muted-foreground">No products listed yet.</p>
+                    <p className="text-sm text-muted-foreground">No products listed yet.</p>
                 ) : (
-                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {products.map((product) => (
                             <Link key={product.id} href={`/sellers/${seller.slug}/products/${product.id}`}>
                                 <Card className="h-full transition-shadow hover:shadow-md">
-                                    <ImagePlaceholder
-                                        label={product.name}
-                                        className="aspect-square w-full rounded-b-none"
-                                    />
+                                    {product.images[0] ? (
+                                        <img
+                                            src={product.images[0].url}
+                                            alt={product.name}
+                                            className="aspect-square w-full rounded-t-lg object-cover"
+                                        />
+                                    ) : (
+                                        <ImagePlaceholder
+                                            label={product.name}
+                                            className="aspect-square w-full rounded-b-none"
+                                        />
+                                    )}
                                     <CardContent className="py-4">
                                         <p className="font-medium">{product.name}</p>
                                         <p className="text-sm text-muted-foreground">
@@ -96,7 +106,7 @@ export default function Storefront({ seller, products }: Props) {
                         ))}
                     </div>
                 )}
-            </div>
+            </Section>
         </CustomerLayout>
     );
 }

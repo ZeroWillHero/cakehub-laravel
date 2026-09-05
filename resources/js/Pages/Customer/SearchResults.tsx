@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import PageHero from '@/components/shared/PageHero';
 import RatingStars from '@/components/shared/RatingStars';
+import Section from '@/components/shared/Section';
 import SellerMap from '@/components/shared/SellerMap';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -82,10 +84,10 @@ export default function SearchResults({ categories }: Props) {
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 className="font-heading text-2xl font-semibold">Search bakeries</h1>
+            <PageHero size="sm" title="Search bakeries" subtitle="Filter by category, price, rating, or location." />
 
-                <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Section className="pt-0">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
                         type="button"
                         variant={categoryId === null ? 'default' : 'outline'}
@@ -274,7 +276,7 @@ export default function SearchResults({ categories }: Props) {
                         </div>
                     )}
                 </div>
-            </div>
+            </Section>
         </CustomerLayout>
     );
 }

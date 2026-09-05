@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import RatingStars from '@/components/shared/RatingStars';
+import PageHero from '@/components/shared/PageHero';
+import Section from '@/components/shared/Section';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import { api, type ApiError } from '@/lib/api';
 import type { Order, OrderStatus, Review } from '@/types/order';
@@ -163,14 +165,18 @@ export default function OrderDetail({ order }: Props) {
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h1 className="font-heading text-2xl font-semibold">Order #{order.id}</h1>
+            <PageHero
+                size="sm"
+                title={`Order #${order.id}`}
+                actions={
                     <Badge variant={order.status === 'cancelled' ? 'destructive' : 'default'}>
                         {statusLabel[order.status]}
                     </Badge>
-                </div>
+                }
+            />
 
+            <Section className="pt-0">
+              <div className="mx-auto max-w-2xl">
                 {order.status !== 'cancelled' && (
                     <div className="mt-6 flex items-center">
                         {timeline.map((step, i) => (
@@ -234,7 +240,8 @@ export default function OrderDetail({ order }: Props) {
                 </Card>
 
                 <ReviewSection order={order} />
-            </div>
+              </div>
+            </Section>
         </CustomerLayout>
     );
 }

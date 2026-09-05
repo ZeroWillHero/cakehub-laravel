@@ -2,6 +2,8 @@ import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import PageHero from '@/components/shared/PageHero';
+import Section from '@/components/shared/Section';
 import type { Order, OrderStatus } from '@/types/order';
 
 interface Props {
@@ -21,9 +23,10 @@ const statusLabel: Record<OrderStatus, string> = {
 export default function OrderHistory({ orders }: Props) {
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 className="font-heading text-2xl font-semibold">Your orders</h1>
+            <PageHero size="sm" title="Your orders" />
 
+            <Section className="pt-0">
+              <div className="mx-auto max-w-2xl">
                 {orders.length === 0 ? (
                     <Card className="mt-6">
                         <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -52,7 +55,8 @@ export default function OrderHistory({ orders }: Props) {
                         ))}
                     </div>
                 )}
-            </div>
+              </div>
+            </Section>
         </CustomerLayout>
     );
 }
