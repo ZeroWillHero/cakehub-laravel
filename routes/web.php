@@ -10,6 +10,7 @@ use App\Http\Controllers\Customer\CartPageController;
 use App\Http\Controllers\Customer\CheckoutPageController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\Http\Controllers\Customer\ProductsController as CustomerProductsController;
 use App\Http\Controllers\Customer\SearchController;
 use App\Http\Controllers\Customer\StorefrontController;
 use App\Http\Controllers\OnboardingController;
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'account.active'])->group(function () {
     Route::middleware('role:customer')->group(function () {
         Route::get('/account', [AccountController::class, 'edit'])->name('customer.account.edit');
         Route::get('/search', [SearchController::class, 'index'])->name('search');
+        Route::get('/products', [CustomerProductsController::class, 'index'])->name('products.index');
         Route::get('/sellers/{seller:slug}', [StorefrontController::class, 'show'])->name('sellers.show');
         Route::get('/sellers/{seller:slug}/products/{product}', [StorefrontController::class, 'product'])
             ->name('sellers.products.show');

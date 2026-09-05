@@ -10,6 +10,7 @@ use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\ReviewController as CustomerReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductSearchController;
 use App\Http\Controllers\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\Seller\ProductController as SellerProductController;
 use App\Http\Controllers\Seller\ProductImageController as SellerProductImageController;
@@ -27,6 +28,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/sellers/nearby', [SellerSearchController::class, 'nearby']);
 Route::get('/sellers/search', [SellerSearchController::class, 'search']);
 Route::get('/sellers/{seller:slug}/products', [ProductController::class, 'bySeller']);
+Route::get('/products/search', [ProductSearchController::class, 'search']);
 
 Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);

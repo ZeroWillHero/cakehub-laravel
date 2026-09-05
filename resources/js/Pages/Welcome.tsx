@@ -8,10 +8,6 @@ export default function Welcome() {
     return (
         <CustomerLayout>
             <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-12 sm:px-6">
-                <ImagePlaceholder
-                    label="Hero cake photography"
-                    className="aspect-[4/3] w-full max-w-sm sm:max-w-md"
-                />
                 <Card className="w-full max-w-sm">
                     <CardHeader className="text-center">
                         <CardTitle className="font-heading text-3xl font-semibold">CakeHub</CardTitle>

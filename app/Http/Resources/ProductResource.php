@@ -41,6 +41,19 @@ class ProductResource extends JsonResource
                 'reviews',
                 fn () => ReviewResource::collection($this->reviews)->resolve(),
             ),
+            'seller' => $this->whenLoaded('seller', fn () => [
+                'id' => $this->seller->id,
+                'business_name' => $this->seller->business_name,
+                'slug' => $this->seller->slug,
+                'address_line' => $this->seller->address_line,
+                'average_rating' => (float) $this->seller->average_rating,
+            ]),
+            // Present only when the query computed a distance (in meters)
+            // via a location-filtered product search — see ProductSearchController.
+            'distance_km' => $this->when(
+                array_key_exists('distance', $this->resource->getAttributes()),
+                fn () => round(((float) $this->resource->getAttributes()['distance']) / 1000, 2),
+            ),
         ];
     }
 }

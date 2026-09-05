@@ -17,19 +17,44 @@ import HeroImage from '@/components/shared/HeroImage';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
 import RatingStars from '@/components/shared/RatingStars';
+import { cn } from '@/lib/utils';
 import type { Category } from '@/types/category';
 import type { Seller } from '@/types/seller';
+import type { SubscriptionPlan } from '@/types/subscriptionPlan';
+import { Button } from '@base-ui/react';
 
 interface Props {
     categories: Category[];
     featuredSellers: Seller[];
+    subscriptionPlans: SubscriptionPlan[];
 }
+
+function billingLabel(plan: SubscriptionPlan): string {
+    if (plan.price === 0) return 'Free';
+    return plan.billing_cycle === 'annual' ? `$${plan.price}/yr` : `$${plan.price}/mo`;
+}
+
+// Uneven, top-aligned filmstrip heights for the closing gallery — mirrors
+// the varied-height reference layout rather than a uniform grid.
+const GALLERY_HEIGHTS = ['h-64', 'h-80', 'h-72', 'h-64', 'h-80', 'h-72', 'h-64'];
+
+const GALLERY_IMAGES = [
+    '/images/pexels-diego-romero-471613950-37754294.jpg',
+    '/images/pexels-hilal-diken-2153971208-33759172.jpg',
+    '/images/pexels-rebornfilmes-31266998.jpg',
+    '/images/pexels-morgana-pozzi-2153094746-32552698.jpg',
+];
 
 interface NearbySeller extends Seller {
     distance_km?: number;
 }
 
-export default function CustomerHome({ categories, featuredSellers }: Props) {
+export default function CustomerHome({ categories, featuredSellers, subscriptionPlans }: Props) {
+    const galleryImages = [
+        ...GALLERY_IMAGES,
+        ...featuredSellers.filter((seller) => seller.cover_path).map((seller) => `/storage/${seller.cover_path}`),
+    ];
+
     const [nearMe, setNearMe] = useState(false);
     const [nearbySellers, setNearbySellers] = useState<NearbySeller[]>([]);
     const [nearMeStatus, setNearMeStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -78,37 +103,25 @@ export default function CustomerHome({ categories, featuredSellers }: Props) {
             <PageHero
                 size="lg"
                 title="Cake, made for the moment."
-                subtitle="Browse local bakers by category, or find the ones closest to you — order straight through CakeHub or message them directly."
-                actions={
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                        <Link href="/search" className="block flex-1">
-                            <Input
-                                placeholder="Search cakes, bakeries…"
-                                readOnly
-                                className="min-h-11 cursor-pointer bg-card"
-                            />
-                        </Link>
-                        <div className="flex items-center gap-2">
-                            <Switch id="near-me" checked={nearMe} onCheckedChange={handleNearMeToggle} />
-                            <Label htmlFor="near-me" className="text-sm font-medium">
-                                Near me
-                            </Label>
-                        </div>
-                    </div>
-                }
-                media={
-                    <div className="relative flex items-center justify-center">
-                        <div className="absolute inset-6 rounded-full bg-secondary/15 blur-2xl" aria-hidden="true" />
-                        <div className="absolute inset-x-10 bottom-2 top-16 -z-10 rounded-[3rem] bg-primary/10" aria-hidden="true" />
-                        <HeroImage
-                            src="/images/hero/hero.png"
-                            alt="Stacked slices of chocolate, strawberry, and red velvet cake"
-                            label="Hero cake photography"
-                            className="relative z-10 aspect-[4/5] w-full max-w-sm drop-shadow-xl"
-                        />
-                    </div>
-                }
+                subtitle="Browse local bakers by category, or find the ones closest to you order straight through CakeHub or message them directly."
             />
+
+            <Section className="pt-0">
+                <Carousel opts={{ align: 'start', dragFree: true }}>
+                    <CarouselContent className="items-start">
+                        {GALLERY_HEIGHTS.map((height, index) => (
+                            <CarouselItem key={index} className="basis-auto">
+                                <HeroImage
+                                    src={galleryImages[index % galleryImages.length]}
+                                    alt="Cake photography from CakeHub bakers"
+                                    label="Cake photo"
+                                    className={cn('w-auto rounded-3xl object-cover', height)}
+                                />
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                </Carousel>
+            </Section>
 
             {nearMe && (
                 <Section title="Near you" className="pb-0 pt-8 sm:pt-10">
@@ -224,6 +237,44 @@ export default function CustomerHome({ categories, featuredSellers }: Props) {
                                             </CardContent>
                                         </Card>
                                     </Link>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                    </Carousel>
+                </Section>
+            )}
+
+            {subscriptionPlans.length > 0 && (
+                <Section
+                    title="Sell your cakes on CakeHub"
+                    description="Reach local customers and manage your own storefront — pick a plan that fits your business."
+                    className="bg-accent/20"
+                >
+                    <Carousel opts={{ align: 'start' }}>
+                        <CarouselContent>
+                            {subscriptionPlans.map((plan) => (
+                                <CarouselItem key={plan.id} className="basis-4/5 sm:basis-1/2 lg:basis-1/3">
+                                    <Card className="flex h-full flex-col justify-between">
+                                        <CardContent className="space-y-3 py-4">
+                                            <p className="font-heading text-lg font-semibold">{plan.name}</p>
+                                            <p className="text-2xl font-semibold">{billingLabel(plan)}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {plan.listing_limit === null
+                                                    ? 'Unlimited listings'
+                                                    : `Up to ${plan.listing_limit} listings`}
+                                            </p>
+                                        </CardContent>
+                                        <CardContent className="pt-0">
+                                            <a
+                                                href="/onboarding"
+                                                className="block w-full rounded-lg bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground hover:opacity-90"
+                                            >
+                                                Become a seller
+                                            </a>
+                                        </CardContent>
+                                    </Card>
                                 </CarouselItem>
                             ))}
                         </CarouselContent>

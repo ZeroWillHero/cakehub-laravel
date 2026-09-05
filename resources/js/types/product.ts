@@ -16,6 +16,14 @@ export interface ProductImage {
     sort_order: number;
 }
 
+export interface ProductSeller {
+    id: number;
+    business_name: string;
+    slug: string;
+    address_line: string | null;
+    average_rating: number;
+}
+
 export interface Product {
     id: number;
     name: string;
@@ -29,4 +37,7 @@ export interface Product {
     variants: ProductVariant[];
     images: ProductImage[];
     reviews?: Review[];
+    seller?: ProductSeller;
+    /** Present only in location-filtered product search results. */
+    distance_km?: number;
 }

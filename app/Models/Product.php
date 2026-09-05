@@ -58,6 +58,11 @@ class Product extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeInStock($query)
+    {
+        return $query->where('availability_status', ProductAvailabilityStatus::InStock);
+    }
+
     public function recalculateAverageRating(): void
     {
         $this->average_rating = $this->reviews()->avg('rating') ?? 0;
