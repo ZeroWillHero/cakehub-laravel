@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Enums\OrderStatus;
+use App\Enums\SellerPayoutStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seller\FilterOrdersRequest;
 use App\Http\Requests\Seller\UpdateOrderStatusRequest;
@@ -42,7 +43,17 @@ class OrderController extends Controller
     {
         $this->authorize('updateStatus', $order);
 
-        $order->update(['status' => OrderStatus::from($request->validated('status'))]);
+        $status = OrderStatus::from($request->validated('status'));
+        $order->update(['status' => $status]);
+
+        if ($status === OrderStatus::Completed && ! $order->payout()->exists()) {
+            $order->payout()->create([
+                'seller_id' => $order->seller_id,
+                'amount' => $order->total,
+                'status' => SellerPayoutStatus::Pending,
+            ]);
+        }
+
         $order->load(['customer', 'items']);
         $order->customer->notify(new OrderStatusUpdated($order));
 

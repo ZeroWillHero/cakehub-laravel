@@ -1,7 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBankAccountController as AdminAdminBankAccountController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\PaymentVerificationController;
+use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
+use App\Http\Controllers\Api\AdminBankAccountController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SellerPayoutController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Seller\CategoryController as SellerCategoryController;
 use App\Http\Controllers\Customer\AddressController;
@@ -29,6 +35,7 @@ Route::get('/sellers/nearby', [SellerSearchController::class, 'nearby']);
 Route::get('/sellers/search', [SellerSearchController::class, 'search']);
 Route::get('/sellers/{seller:slug}/products', [ProductController::class, 'bySeller']);
 Route::get('/products/search', [ProductSearchController::class, 'search']);
+Route::get('/admin-bank-accounts', [AdminBankAccountController::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -49,6 +56,9 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/orders/{order}/reviews', [CustomerReviewController::class, 'store']);
     });
 
+    Route::post('/payments', [PaymentController::class, 'store']);
+    Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+
     Route::middleware('role:seller')->prefix('seller')->group(function () {
         Route::put('/profile', [SellerProfileController::class, 'update']);
         Route::post('/profile/logo', [SellerProfileController::class, 'uploadLogo']);
@@ -65,6 +75,9 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/subscription/checkout', [SellerSubscriptionController::class, 'checkout']);
         Route::put('/settings/payout', [SellerSettingsController::class, 'updatePayout']);
         Route::post('/categories', [SellerCategoryController::class, 'store']);
+        Route::get('/payouts', [SellerPayoutController::class, 'index']);
+        Route::get('/payouts/{payout}', [SellerPayoutController::class, 'show']);
+        Route::post('/payouts/{payout}/confirm', [SellerPayoutController::class, 'confirm']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
@@ -82,5 +95,14 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::delete('/subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'destroy']);
         Route::patch('/subscription-plans/{plan}/toggle', [AdminSubscriptionPlanController::class, 'toggleActive']);
         Route::patch('/subscription-plans/reorder', [AdminSubscriptionPlanController::class, 'reorder']);
+        Route::post('/bank-accounts', [AdminAdminBankAccountController::class, 'store']);
+        Route::put('/bank-accounts/{bankAccount}', [AdminAdminBankAccountController::class, 'update']);
+        Route::delete('/bank-accounts/{bankAccount}', [AdminAdminBankAccountController::class, 'destroy']);
+        Route::patch('/bank-accounts/{bankAccount}/toggle', [AdminAdminBankAccountController::class, 'toggleActive']);
+        Route::get('/payments/pending', [PaymentVerificationController::class, 'index']);
+        Route::post('/payments/{payment}/verify', [PaymentVerificationController::class, 'verify']);
+        Route::post('/payments/{payment}/reject', [PaymentVerificationController::class, 'reject']);
+        Route::get('/seller-payouts', [AdminSellerPayoutController::class, 'index']);
+        Route::post('/seller-payouts/{payout}/mark-paid', [AdminSellerPayoutController::class, 'markPaid']);
     });
 });

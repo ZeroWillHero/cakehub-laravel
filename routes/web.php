@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBankAccountController as AdminAdminBankAccountController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DashboardExportController;
+use App\Http\Controllers\Admin\PaymentVerificationController;
+use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\AccountController;
@@ -17,6 +20,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Seller\DashboardController as SellerDashboardController;
 use App\Http\Controllers\Seller\ListingController as SellerListingController;
 use App\Http\Controllers\Seller\OrderController as SellerOrderController;
+use App\Http\Controllers\Seller\PayoutPageController as SellerPayoutPageController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
@@ -61,6 +65,7 @@ Route::middleware(['auth', 'account.active'])->group(function () {
         Route::get('/reviews', [SellerReviewController::class, 'index'])->name('reviews.index');
         Route::get('/subscription', [SellerSubscriptionPageController::class, 'show'])->name('subscription.show');
         Route::get('/settings', [SellerSettingsController::class, 'edit'])->name('settings.edit');
+        Route::get('/payouts', [SellerPayoutPageController::class, 'index'])->name('payouts.index');
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -71,5 +76,8 @@ Route::middleware(['auth', 'account.active'])->group(function () {
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
         Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
         Route::get('/settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
+        Route::get('/bank-accounts', [AdminAdminBankAccountController::class, 'index'])->name('bank-accounts.index');
+        Route::get('/payment-verifications', [PaymentVerificationController::class, 'index'])->name('payment-verifications.index');
+        Route::get('/seller-payouts', [AdminSellerPayoutController::class, 'index'])->name('seller-payouts.index');
     });
 });

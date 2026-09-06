@@ -113,6 +113,11 @@ class Seller extends Model
         return $this->hasMany(SellerDocument::class);
     }
 
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(SellerPayout::class);
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);

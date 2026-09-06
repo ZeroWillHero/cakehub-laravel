@@ -34,8 +34,10 @@ class CheckoutController extends Controller
                 'subtotal' => $subtotal,
                 'delivery_fee' => 0,
                 'total' => $subtotal,
-                // Payment is stubbed for Phase 4 — no real gateway call.
-                'payment_status' => PaymentStatus::Paid,
+                // Manual bank-transfer payment (Phase 8): order starts unpaid until
+                // the customer submits a slip via POST /api/payments, which flips
+                // this to awaiting_verification pending admin review.
+                'payment_status' => PaymentStatus::Pending,
             ]);
 
             foreach ($cartItems as $item) {

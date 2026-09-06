@@ -2,7 +2,7 @@ import type { Address } from './address';
 
 export type OrderStatus = 'placed' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'completed' | 'cancelled';
 export type DeliveryType = 'delivery' | 'pickup';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type PaymentStatus = 'pending' | 'awaiting_verification' | 'paid' | 'failed' | 'refunded';
 
 export interface OrderItem {
     id: number;
