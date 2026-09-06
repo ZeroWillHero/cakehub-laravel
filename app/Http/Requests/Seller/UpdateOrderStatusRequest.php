@@ -39,6 +39,15 @@ class UpdateOrderStatusRequest extends FormRequest
                     'status',
                     "Cannot move an order from \"{$order->status->value}\" to \"{$requested}\".",
                 );
+
+                return;
+            }
+
+            if ($order->payment_status !== \App\Enums\PaymentStatus::Paid) {
+                $validator->errors()->add(
+                    'status',
+                    'This order cannot progress until its payment has been verified.',
+                );
             }
         });
     }

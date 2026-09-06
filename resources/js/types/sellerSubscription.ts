@@ -1,6 +1,6 @@
 import type { SubscriptionPlan } from './subscriptionPlan';
 
-export type SellerSubscriptionStatus = 'active' | 'cancelled' | 'expired';
+export type SellerSubscriptionStatus = 'pending' | 'active' | 'cancelled' | 'expired';
 
 export interface SellerSubscription {
     id: number;

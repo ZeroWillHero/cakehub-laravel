@@ -20,7 +20,7 @@ it('checks out a cart into an order with pickup', function () {
         ->assertCreated();
 
     $response->assertJsonPath('data.total', 30);
-    $response->assertJsonPath('data.payment_status', PaymentStatus::Paid->value);
+    $response->assertJsonPath('data.payment_status', PaymentStatus::Pending->value);
     $response->assertJsonCount(1, 'data.items');
 
     expect($customer->cartItems()->count())->toBe(0);

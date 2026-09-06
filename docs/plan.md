@@ -14,12 +14,12 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 - [x] Postgres hosting — local via Docker (`cakehub-postgres` container, `postgres:15.17-trixie` + manually-installed `postgresql-15-postgis-3`).
 - [x] Admin panel approach — **React/Inertia pages**, confirmed 2026-09-02. Same stack as Customer/Seller (one consistent codebase, reuses existing auth/routing/testing patterns); Filament was ruled out since it's Blade/Livewire-based and would introduce a second UI stack.
 - [x] Maps/geolocation provider — **OpenStreetMap** (Leaflet + Nominatim), confirmed 2026-09-02. Free, no API key needed.
-- [x] Payment gateway for order checkout — **deferred** (confirmed 2026-09-02). Phase 4 builds the full cart/checkout/order-status flow with the payment step **stubbed** (order marked `paid` without a real charge). A real gateway is wired up later as its own task. Subscription billing (Phase 7) is a separate decision, still open.
+- [x] Payment gateway for order checkout — **deferred** (confirmed 2026-09-02). Phase 4 built the cart/checkout/order-status flow with the payment step **stubbed**; Phase 8 (confirmed 2026-09-06) replaced that stub (and Phase 7's subscription stub) with a manual bank-transfer + slip-upload + admin-verification flow — still no real gateway. Swapping in a real gateway later stays open via `Payment.method`.
 - [x] Cart model — **single-seller-per-order**, confirmed 2026-09-02. Adding a product from a different seller starts a new cart (see Phase 4 for the exact UX).
 - [x] Delivery logistics ownership — **seller's own responsibility**, confirmed 2026-09-02. Platform captures address/time slot only; no rider dispatch system.
 - [x] Payment/fund flow — **sellers collect payment directly**, confirmed 2026-09-02 (no escrow/marketplace holding). This rules out a per-order commission model — see below.
 - [x] Commission model — **subscription-only**, confirmed 2026-09-02 (follows directly from "sellers collect directly" — the platform never touches order payments, so it can only monetize via the seller subscription tiers already in requirements.md §3.9).
-- [ ] Target region/currency — still open; not blocking while payment is stubbed (USD `$` used as a placeholder in the UI). Revisit when a real gateway is wired up.
+- [ ] Target region/currency — still open; not blocking (USD `$` used as a placeholder in the UI). Revisit when a real gateway is wired up.
 
 **What gets built once decided:**
 - `.env` configured for the chosen Postgres instance; PostGIS extension enabled and verified.
@@ -151,7 +151,7 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Builds on:** requirements.md §3.9 (including §3.9.1's dynamic-plan requirement). **Blocked on** Phase 0's payment-gateway decision.
 
-**Phase 0 decision confirmed 2026-09-02:** payment gateway deferred again — same stub-now-swap-later pattern as Phase 4's checkout. Subscribing marks a `seller_subscriptions` row `active` immediately with no real charge (`external_subscription_id` stays null); Cashier/a real gateway is wired up later as its own task. Target region/currency stays open, not blocking (USD placeholder).
+**Phase 0 decision confirmed 2026-09-02:** payment gateway deferred again — same stub-now-swap-later pattern as Phase 4's checkout. Subscribing originally marked a `seller_subscriptions` row `active` immediately with no real charge; **Phase 8 (2026-09-06) replaced that** with a manual bank-transfer + slip-upload + admin-verification flow — a subscription now starts `pending` and only becomes `active` once its payment is verified. `external_subscription_id` stays null pending a real gateway. Target region/currency stays open, not blocking (USD placeholder).
 
 **What gets built:**
 - Dynamic, DB-driven subscription plan model (no hard-coded tiers) — admin CRUD: add/edit/delete/enable-disable/reorder plans, mark a plan free.
@@ -167,12 +167,31 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 ---
 
-## Phase 8 — Cross-Cutting Testing & Hardening Pass
+## Phase 8 — Manual Bank-Transfer Payments (Slip Upload + Admin Verification)
+
+**Goal:** replace both of Phase 4's and Phase 7's payment stubs with a real (manual) payment process, without a payment gateway: customers/sellers pay by bank transfer and upload a slip; an admin verifies it before the order/subscription is treated as paid.
+
+**Builds on:** Phase 4's order checkout, Phase 7's subscription checkout, and the inert `payout_bank_name`/`payout_account_name`/`payout_account_number` fields on `sellers`. Confirmed 2026-09-06.
+
+**What gets built:**
+- `admin_bank_accounts` (admin-managed, dynamic list of accounts customers/sellers pay into), a polymorphic `payments` table (`payable_type`/`payable_id` → `Order` or `SellerSubscription`; `method` stays `bank_transfer` for now but is designed to accept a future `gateway` value without a data-model change), and `seller_payouts` (money out — one row per completed order, auto-created when an order is marked `Completed`).
+- `PaymentStatus` (on `Order`) gains `AwaitingVerification`; a separate `PaymentVerificationStatus` enum (`pending_verification`/`verified`/`rejected`) tracks the `Payment` row itself — the two are intentionally not the same enum. `SellerSubscriptionStatus` gains `Pending`.
+- Checkout (`Customer\CheckoutController`) and seller subscription checkout (`Seller\SubscriptionController`) no longer fake `paid`/`active` — an order starts `payment_status = pending` and a subscription starts `status = pending` until a slip is submitted (`POST /api/payments`) and an admin verifies it (`Admin\PaymentVerificationController@verify`), which is also where the previous-active-subscription-cancel and excess-listing-hiding logic now happens (moved out of the checkout step).
+- Sellers cannot progress an order's status until `payment_status = paid` — enforced server-side in `Seller\UpdateOrderStatusRequest`, not just the UI.
+- Seller payouts: an admin uploads a bank-transfer slip and marks a payout `paid`; the seller confirms receipt (`confirmed`).
+
+**Agents/skills:** [backend-agent](agents/backend-agent.md) → [frontend-agent](agents/frontend-agent.md) (Customer checkout + Seller subscription payment step, Seller Payouts page, Admin Bank Accounts / Payment Verifications / Seller Payouts pages) → [backend-integration-testing-agent](agents/backend-integration-testing-agent.md).
+
+**Exit criteria:** a customer can place an order, pay by bank transfer, get verified by an admin, and the seller can then progress the order to Completed, at which point a payout appears for the admin to pay out and the seller to confirm — all without a payment gateway.
+
+---
+
+## Phase 9 — Cross-Cutting Testing & Hardening Pass
 
 **Goal:** close test-coverage gaps and do a full HCI/design-checklist pass across all three surfaces before considering the MVP complete.
 
 **What gets done:**
-- Full pass of [frontend-design-skill](skills/frontend-design-skill.md)'s HCI checklist on every screen built in Phases 1–7.
+- Full pass of [frontend-design-skill](skills/frontend-design-skill.md)'s HCI checklist on every screen built in Phases 1–8.
 - [chrome-ui-testing-agent](agents/chrome-ui-testing-agent.md) run across Customer/Seller/Admin on mobile + desktop breakpoints.
 - Gap-fill for [frontend-unit-testing-agent](agents/frontend-unit-testing-agent.md) / [frontend-integration-testing-agent](agents/frontend-integration-testing-agent.md) coverage.
 - Accessibility spot-check (keyboard nav, contrast, screen-reader labels) per the checklist.
@@ -181,7 +200,7 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 ---
 
-## Phase 9 — Deployment
+## Phase 10 — Deployment
 
 **Goal:** ship to a real environment.
 

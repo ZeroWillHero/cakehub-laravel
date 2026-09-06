@@ -70,6 +70,17 @@ export default function SellerDashboard({ seller, usage, limit }: Props) {
 
                 <Card>
                     <CardHeader>
+                        <CardTitle className="text-base">Payouts</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <a href="/seller/payouts" className="text-sm text-primary underline">
+                            View payouts
+                        </a>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle className="text-base">Getting started</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">

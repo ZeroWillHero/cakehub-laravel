@@ -26,6 +26,15 @@ export default function AdminDashboard({ metrics }: Props) {
                         <Link href="/admin/subscription-plans" className="text-primary underline">
                             Subscription plans
                         </Link>
+                        <Link href="/admin/bank-accounts" className="text-primary underline">
+                            Bank accounts
+                        </Link>
+                        <Link href="/admin/payment-verifications" className="text-primary underline">
+                            Payment verifications
+                        </Link>
+                        <Link href="/admin/seller-payouts" className="text-primary underline">
+                            Seller payouts
+                        </Link>
                     </div>
                 </div>
 

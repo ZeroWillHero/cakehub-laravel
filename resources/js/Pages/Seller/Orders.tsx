@@ -50,9 +50,18 @@ export default function SellerOrders({ orders: initialOrders }: Props) {
                                 {order.total.toFixed(2)} · {new Date(order.scheduled_at).toLocaleString()}
                             </p>
                         </div>
-                        <Badge variant={order.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                            {statusLabel[order.status]}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                            {order.payment_status !== 'paid' && (
+                                <Badge variant="outline">
+                                    {order.payment_status === 'awaiting_verification'
+                                        ? 'Awaiting payment verification'
+                                        : 'Awaiting payment'}
+                                </Badge>
+                            )}
+                            <Badge variant={order.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                                {statusLabel[order.status]}
+                            </Badge>
+                        </div>
                     </div>
                     <ul className="text-sm text-muted-foreground">
                         {order.items.map((item) => (
@@ -63,7 +72,12 @@ export default function SellerOrders({ orders: initialOrders }: Props) {
                             </li>
                         ))}
                     </ul>
-                    {order.allowed_next_statuses.length > 0 && (
+                    {order.allowed_next_statuses.length > 0 && order.payment_status !== 'paid' && (
+                        <p className="text-sm text-muted-foreground">
+                            This order cannot progress until its payment has been verified.
+                        </p>
+                    )}
+                    {order.allowed_next_statuses.length > 0 && order.payment_status === 'paid' && (
                         <div className="flex flex-wrap gap-2">
                             {order.allowed_next_statuses.map((status) => (
                                 <Button

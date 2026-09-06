@@ -161,8 +161,8 @@ Fully dynamic, admin-managed (requirements.md §3.9.1 — **no hard-coded tiers*
 | id | bigint PK | |
 | seller_id | FK → sellers | |
 | subscription_plan_id | FK → subscription_plans | |
-| status | enum('active','cancelled','expired') | |
-| starts_at / ends_at | timestamp | |
+| status | enum('pending','active','cancelled','expired') | **Phase 8:** starts `pending` at checkout; flips to `active` (with `starts_at`/`ends_at` set) once its linked `payments` row is verified |
+| starts_at / ends_at | timestamp, nullable | null while `pending` |
 | external_subscription_id | string, nullable | payment-gateway reference (Cashier) |
 
 ### `cart_items`
@@ -190,9 +190,53 @@ Adding a product from a different seller than what's already in the cart **repla
 | delivery_address_id | FK → addresses, nullable | null when pickup |
 | scheduled_at | timestamp | requested delivery/pickup slot |
 | subtotal / delivery_fee / tax / total | decimal(10,2) | |
-| payment_status | enum('pending','paid','failed','refunded') | **stubbed for Phase 4** — set to `paid` at order creation, no real gateway call; revisit when a real gateway is wired up |
-| payment_reference | string, nullable | gateway transaction id — unused while payment is stubbed |
+| payment_status | enum('pending','awaiting_verification','paid','failed','refunded') | **Phase 8:** starts `pending` at checkout; `awaiting_verification` once a slip is submitted (`payments` row created); `paid` once an admin verifies it |
+| payment_reference | string, nullable | customer-supplied bank reference (Phase 8) or a future gateway transaction id |
 | cancelled_reason | text, nullable | |
+
+### `admin_bank_accounts` (Phase 8)
+Admin-managed list of bank accounts customers/sellers pay into. Multiple rows allowed; only `is_active` ones are shown at checkout/subscription time.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| bank_name | string | |
+| account_name | string | |
+| account_number | string | |
+| branch | string, nullable | |
+| is_active | boolean, default true | |
+| sort_order | integer, default 0 | |
+
+### `payments` (Phase 8)
+Polymorphic "money in" record — reusable for a future payment gateway without a schema change (`method` just gains a `gateway` value).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| payable_type / payable_id | morphs | `Order` or `SellerSubscription` today |
+| method | enum('bank_transfer') | future-proofed for a `gateway` value |
+| amount | decimal(10,2) | |
+| admin_bank_account_id | FK → admin_bank_accounts, nullable | which account it was paid into |
+| slip_path | string | private disk (`local`), gated download — same pattern as `seller_documents.file_path` |
+| status | enum('pending_verification','verified','rejected') | the `Payment`'s own status — distinct from `orders.payment_status` |
+| submitted_by | FK → users | the customer or seller who submitted it |
+| verified_by | FK → users, nullable | admin who verified/rejected it |
+| verified_at | timestamp, nullable | |
+| rejection_reason | text, nullable | |
+
+### `seller_payouts` (Phase 8)
+Money out — one row per completed order, auto-created (status `pending`, no slip) when an order transitions to `Completed`.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| order_id | FK → orders, unique | one payout per order |
+| seller_id | FK → sellers | |
+| amount | decimal(10,2) | |
+| slip_path | string, nullable | admin-uploaded proof of the bank transfer to the seller |
+| status | enum('pending','paid','confirmed') | `confirmed` once the seller acknowledges receipt |
+| paid_by | FK → users, nullable | admin who marked it paid |
+| paid_at / confirmed_at | timestamp, nullable | |
 
 ### `order_items`
 | Column | Type | Notes |
@@ -221,8 +265,11 @@ Adding a product from a different seller than what's already in the cart **repla
 - `users` 1:1 `customer_profiles` (role=customer) / 1:1 `sellers` (role=seller).
 - `sellers` 1:N `products`, `seller_documents`, `seller_subscriptions`, `reviews` (as reviewee).
 - `products` N:M `categories` via `product_categories`; 1:N `product_images`, `product_variants`.
-- `orders` N:1 `users` (customer), N:1 `sellers`, N:1 `addresses`; 1:N `order_items`; 1:1 `reviews`.
+- `orders` N:1 `users` (customer), N:1 `sellers`, N:1 `addresses`; 1:N `order_items`; 1:1 `reviews`; 1:N `payments` (polymorphic); 1:1 `seller_payouts`.
 - `subscription_plans` 1:N `seller_subscriptions`.
+- `seller_subscriptions` 1:N `payments` (polymorphic).
+- `admin_bank_accounts` 1:N `payments`.
+- `sellers` 1:N `seller_payouts`.
 
 ## Indexes to plan for
 
