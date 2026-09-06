@@ -74,6 +74,7 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/sellers/{seller}/suspend', [SellerVerificationController::class, 'suspend']);
         Route::post('/categories', [AdminCategoryController::class, 'store']);
         Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::post('/categories/{category}/image', [AdminCategoryController::class, 'uploadImage']);
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
         Route::patch('/categories/reorder', [AdminCategoryController::class, 'reorder']);
         Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store']);

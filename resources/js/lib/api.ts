@@ -21,6 +21,24 @@ async function primeCsrf(): Promise<void> {
     csrfPrimed = true;
 }
 
+/**
+ * The server is expected to always respond with JSON, but a fatal PHP error
+ * (e.g. exceeding the upload size limit) can print an HTML warning instead,
+ * which breaks `response.json()` with a cryptic "Unexpected token '<'"
+ * SyntaxError. Fall back to a readable message keyed off the HTTP status
+ * instead of letting that parse error leak up to the UI unhandled.
+ */
+async function parseJsonResponse<T>(response: Response): Promise<ApiSuccess<T> | ApiError> {
+    try {
+        return (await response.json()) as ApiSuccess<T> | ApiError;
+    } catch {
+        if (response.status === 413) {
+            return { message: 'That file is too large. Please choose a smaller one.' };
+        }
+        return { message: `Something went wrong (${response.status}). Please try again.` };
+    }
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
     if (method !== 'GET') {
         await primeCsrf();
@@ -37,7 +55,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
         body: body ? JSON.stringify(body) : undefined,
     });
 
-    const json = (await response.json()) as ApiSuccess<T> | ApiError;
+    const json = await parseJsonResponse<T>(response);
 
     if (!response.ok) {
         throw json as ApiError;
@@ -59,7 +77,7 @@ async function upload<T>(path: string, formData: FormData): Promise<T> {
         body: formData,
     });
 
-    const json = (await response.json()) as ApiSuccess<T> | ApiError;
+    const json = await parseJsonResponse<T>(response);
 
     if (!response.ok) {
         throw json as ApiError;

@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Requests\Seller;
+namespace App\Http\Requests\Admin;
 
+use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UploadSellerImageRequest extends FormRequest
+class UploadCategoryImageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->seller !== null;
+        return $this->user()?->role === UserRole::Admin;
     }
 
     public function rules(): array

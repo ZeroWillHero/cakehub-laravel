@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -21,7 +21,6 @@ import { cn } from '@/lib/utils';
 import type { Category } from '@/types/category';
 import type { Seller } from '@/types/seller';
 import type { SubscriptionPlan } from '@/types/subscriptionPlan';
-import { Button } from '@base-ui/react';
 
 interface Props {
     categories: Category[];
@@ -104,23 +103,47 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                 size="lg"
                 title="Cake, made for the moment."
                 subtitle="Browse local bakers by category, or find the ones closest to you order straight through CakeHub or message them directly."
+                actions={
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="flex flex-wrap justify-center gap-3">
+                            <Link href="/products" className={cn(buttonVariants({ size: 'lg' }), 'min-h-11')}>
+                                Shop now
+                            </Link>
+                            <a
+                                href="/onboarding"
+                                className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'min-h-11')}
+                            >
+                                Become a seller
+                            </a>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Switch id="near-me" checked={nearMe} onCheckedChange={handleNearMeToggle} />
+                            <Label htmlFor="near-me" className="text-sm font-medium">
+                                Near me
+                            </Label>
+                        </div>
+                    </div>
+                }
             />
 
             <Section className="pt-0">
-                <Carousel opts={{ align: 'start', dragFree: true }}>
-                    <CarouselContent className="items-start">
-                        {GALLERY_HEIGHTS.map((height, index) => (
-                            <CarouselItem key={index} className="basis-auto">
+                <div className="group/marquee overflow-hidden">
+                    <div className="animate-marquee flex w-max items-end gap-4 group-hover/marquee:[animation-play-state:paused]">
+                        {[...GALLERY_HEIGHTS, ...GALLERY_HEIGHTS].map((height, index) => (
+                            <div key={index} className="shrink-0">
                                 <HeroImage
                                     src={galleryImages[index % galleryImages.length]}
                                     alt="Cake photography from CakeHub bakers"
                                     label="Cake photo"
-                                    className={cn('w-auto rounded-3xl object-cover', height)}
+                                    className={cn(
+                                        'w-auto rounded-3xl object-cover transition-transform duration-300 ease-out hover:-translate-y-3',
+                                        height,
+                                    )}
                                 />
-                            </CarouselItem>
+                            </div>
                         ))}
-                    </CarouselContent>
-                </Carousel>
+                    </div>
+                </div>
             </Section>
 
             {nearMe && (
@@ -177,7 +200,16 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                     <CarouselContent>
                         {categories.slice(0, 6).map((category) => (
                             <CarouselItem key={category.id} className="basis-2/3 sm:basis-1/2 lg:basis-1/3">
-                                <ImagePlaceholder label={category.name} className="aspect-[16/10] w-full" />
+                                {category.image_path ? (
+                                    <img
+                                        src={`/storage/${category.image_path}`}
+                                        alt={category.name}
+                                        loading="lazy"
+                                        className="aspect-[16/10] w-full rounded-2xl object-cover"
+                                    />
+                                ) : (
+                                    <ImagePlaceholder label={category.name} className="aspect-[16/10] w-full" />
+                                )}
                             </CarouselItem>
                         ))}
                     </CarouselContent>
@@ -192,7 +224,16 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                         <Link key={category.id} href={`/search?category_id=${category.id}`}>
                             <Card className="transition-shadow hover:shadow-md">
                                 <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-                                    <ImagePlaceholder label={category.name} className="aspect-square w-full" />
+                                    {category.image_path ? (
+                                        <img
+                                            src={`/storage/${category.image_path}`}
+                                            alt={category.name}
+                                            loading="lazy"
+                                            className="aspect-square w-full rounded-2xl object-cover"
+                                        />
+                                    ) : (
+                                        <ImagePlaceholder label={category.name} className="aspect-square w-full" />
+                                    )}
                                     <span className="text-sm font-medium">{category.name}</span>
                                 </CardContent>
                             </Card>

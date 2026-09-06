@@ -52,6 +52,7 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | GET | `/api/sellers/nearby` | `SellerSearchController@nearby` | `?lat&lng&radius_km&category_id` — PostGIS `ST_DWithin` |
 | GET | `/api/sellers/search` | `SellerSearchController@search` | text search + filters (rating, price, open now) |
 | GET | `/api/sellers/{seller}/products` | `ProductController@bySeller` | for storefront grid AJAX refresh (category filter tabs) |
+| GET | `/api/products/search` | `ProductSearchController@search` | global product browse/search (C4b) — `?q` (product title or seller business name), `category_id`, `in_stock`, `lat&lng&radius_km` (filters to sellers within radius, adds `distance_km`) |
 | POST | `/api/cart/items` | `CartController@store` | add to cart |
 | PATCH | `/api/cart/items/{cartItem}` | `CartController@update` | change quantity |
 | DELETE | `/api/cart/items/{cartItem}` | `CartController@destroy` | remove |

@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/Layouts/AdminLayout';
+import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
 
@@ -33,6 +34,7 @@ export default function AdminCategories({ categories: initial }: Props) {
     const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
     const [busy, setBusy] = useState(false);
     const [search, setSearch] = useState('');
+    const [imageErrors, setImageErrors] = useState<Record<number, string>>({});
 
     const visibleCategories = categories.filter((c) =>
         c.name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -47,6 +49,22 @@ export default function AdminCategories({ categories: initial }: Props) {
             setNewName('');
         } finally {
             setBusy(false);
+        }
+    }
+
+    async function uploadImage(category: Category, file: File) {
+        setImageErrors((prev) => ({ ...prev, [category.id]: '' }));
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+            const updated = await api.upload<Category>(`/admin/categories/${category.id}/image`, formData);
+            setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+        } catch (err) {
+            const apiError = err as { message?: string; errors?: Record<string, string[]> };
+            setImageErrors((prev) => ({
+                ...prev,
+                [category.id]: apiError.errors?.image?.[0] ?? apiError.message ?? 'Could not upload image.',
+            }));
         }
     }
 
@@ -105,6 +123,28 @@ export default function AdminCategories({ categories: initial }: Props) {
                         return (
                         <div key={category.id} className="flex items-center justify-between gap-3 px-4 py-3">
                             <div className="flex items-center gap-2">
+                                <label className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-lg" aria-label={`Upload image for ${category.name}`}>
+                                    {category.image_path ? (
+                                        <img
+                                            src={`/storage/${category.image_path}`}
+                                            alt=""
+                                            loading="lazy"
+                                            className="size-10 rounded-lg object-cover"
+                                        />
+                                    ) : (
+                                        <ImagePlaceholder label="" className="size-10 rounded-lg" />
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp"
+                                        className="absolute inset-0 cursor-pointer opacity-0"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) uploadImage(category, file);
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                </label>
                                 <div className="flex flex-col">
                                     <button
                                         type="button"
@@ -125,8 +165,15 @@ export default function AdminCategories({ categories: initial }: Props) {
                                         <ChevronDown className="size-4" />
                                     </button>
                                 </div>
-                                <span className="font-medium">{category.name}</span>
-                                {!category.is_active && <Badge variant="secondary">Inactive</Badge>}
+                                <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium">{category.name}</span>
+                                        {!category.is_active && <Badge variant="secondary">Inactive</Badge>}
+                                    </div>
+                                    {imageErrors[category.id] && (
+                                        <p className="text-xs text-destructive">{imageErrors[category.id]}</p>
+                                    )}
+                                </div>
                                 {category.created_by !== null && <Badge variant="outline">Seller-added</Badge>}
                             </div>
                             <div className="flex items-center gap-3">
