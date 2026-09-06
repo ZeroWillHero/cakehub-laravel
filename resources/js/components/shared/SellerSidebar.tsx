@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { CreditCard, LayoutDashboard, Package, Settings, ShoppingBag, Star, Store } from 'lucide-react';
+import { CreditCard, LayoutDashboard, Package, Receipt, Settings, ShoppingBag, Star, Store } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -20,6 +20,7 @@ const navItems = [
     { title: 'Reviews', url: '/seller/reviews', icon: Star },
     { title: 'Store Profile', url: '/seller/profile', icon: Store },
     { title: 'Subscription', url: '/seller/subscription', icon: CreditCard },
+    { title: 'Payouts', url: '/seller/payouts', icon: Receipt },
 ];
 
 const settingsItem = { title: 'Settings', url: '/seller/settings', icon: Settings };

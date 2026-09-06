@@ -39,7 +39,7 @@ it('rejects a non-image file upload', function () {
 it('rejects an oversized image upload', function () {
     $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
     $product = Product::factory()->for($seller)->create();
-    $file = UploadedFile::fake()->image('big.jpg')->size(11000); // over the 10MB (10240KB) limit
+    $file = UploadedFile::fake()->image('big.jpg')->size(21000); // over the 20MB (20480KB) limit
 
     $this->actingAs($seller->user)
         ->postJson("/api/seller/products/{$product->id}/images", ['image' => $file])

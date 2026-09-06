@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import SellerLayout from '@/Layouts/SellerLayout';
 import { api } from '@/lib/api';
 import type { SellerPayout, SellerPayoutStatus } from '@/types/sellerPayout';
 
@@ -30,8 +31,8 @@ export default function SellerPayouts({ payouts: initial }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
+        <SellerLayout breadcrumb={['Payouts']}>
+            <div className="mx-auto w-full max-w-3xl space-y-6">
                 <h1 className="text-2xl font-semibold">Payouts</h1>
 
                 {payouts.length === 0 ? (
@@ -77,6 +78,6 @@ export default function SellerPayouts({ payouts: initial }: Props) {
                     </div>
                 )}
             </div>
-        </div>
+        </SellerLayout>
     );
 }

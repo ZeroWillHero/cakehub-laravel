@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { AdminBankAccount } from '@/types/adminBankAccount';
 
@@ -63,8 +64,8 @@ export default function AdminBankAccounts({ accounts: initial }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
+        <AdminLayout breadcrumb={['Bank Accounts']}>
+            <div className="mx-auto w-full max-w-2xl space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Bank accounts</h1>
                     <Button type="button" onClick={() => setCreateOpen(true)}>
@@ -171,6 +172,6 @@ export default function AdminBankAccounts({ accounts: initial }: Props) {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </div>
+        </AdminLayout>
     );
 }

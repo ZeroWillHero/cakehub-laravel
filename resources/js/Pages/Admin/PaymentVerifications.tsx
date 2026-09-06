@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { Payment } from '@/types/payment';
 
@@ -41,8 +42,8 @@ export default function AdminPaymentVerifications({ payments: initial }: Props) 
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
+        <AdminLayout breadcrumb={['Payment Verifications']}>
+            <div className="mx-auto w-full max-w-3xl space-y-6">
                 <h1 className="text-2xl font-semibold">Payment verifications</h1>
 
                 {payments.length === 0 ? (
@@ -118,6 +119,6 @@ export default function AdminPaymentVerifications({ payments: initial }: Props) 
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </AdminLayout>
     );
 }

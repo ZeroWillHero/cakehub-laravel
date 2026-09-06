@@ -13,26 +13,32 @@ Used by [frontend-agent](../agents/frontend-agent.md) (and checked by [chrome-ui
 - **Typography:** one primary typeface for UI text, a clear type scale (e.g. display/h1/h2/h3/body/caption), consistent line-height/weight usage — avoid ad hoc font sizes.
 - **Icons:** one icon set only (e.g. lucide-react, shadcn's default pairing) — no mixing icon libraries.
 
-## Modern, distinct-but-consistent look per surface
-Each surface should feel purpose-built, not a reskin of the others, while sharing the same component primitives:
-- **Customer portal** — warm bakery palette (confirmed 2026-09-02, reference: a pastel sage-green/cream/peach bakery site with serif display headings). Photography-forward (cake images are the hero — currently placeholder blocks via `ImagePlaceholder`, see Imagery below), generous whitespace, card-based browsing, prominent search/filter, mobile-first (most browsing happens on phones per [docs/requirements.md](../requirements.md) §3.12).
-- **Seller panel** — **default shadcn neutral palette** (explicitly kept separate from the Customer theme per 2026-09-02 decision). Utilitarian but polished dashboard feel: clear data tables/lists (orders, listings), status badges (verification, subscription, listing usage), forms optimized for frequent repeat use (add/edit listing) — efficiency over decoration.
-- **Admin panel** — **default shadcn neutral palette** (same as Seller). Dense, information-forward, dashboard/table-heavy (metrics, verification queue, plan management), clear bulk actions and filters, minimal decoration — optimized for a power user working through queues.
+## Look per surface (superseded 2026-09-05 by Phase 7.6 — see [plan.md](../plan.md))
+The three-distinct-palette design that used to live under this heading (a separate Customer bakery theme vs. a Seller/Admin neutral theme) **is no longer what's built.** Phase 7.6 replaced it with **one shared palette across all three surfaces**, plus a site-wide light/dark toggle. Surfaces are now differentiated by layout, not color:
+- **Customer portal** — shared palette (see Global theme below), header/hero layout with `FloatingNav` (a bottom pill nav that swaps in on scroll: Home/Search/Cart/Orders/Profile), real photography (Pexels images, replacing the old `ImagePlaceholder` blocks — see Imagery below), card-based browsing, prominent search/filter, mobile-first (most browsing happens on phones per [docs/requirements.md](../requirements.md) §3.12).
+- **Seller panel** — shared palette, persistent shadcn sidebar shell (Dashboard/Listings/Orders/Reviews/Store Profile/Subscription), "Surface / Page" breadcrumbs, `ChartAreaInteractive`-style dashboard charts with a 7d/30d/90d range toggle. Utilitarian but polished: clear data tables/lists, status badges, forms optimized for frequent repeat use.
+- **Admin panel** — shared palette, same sidebar-shell pattern as Seller (Dashboard/Verification Queue/Categories/Subscription Plans), breadcrumbs (seller name shown on SellerDetail specifically). Dense, information-forward, dashboard/table-heavy, clear bulk actions and filters.
 
-### Customer theme (bakery palette)
-Defined as CSS variable overrides in `resources/css/app.css` under the `.customer-theme` class, applied by wrapping every Customer-facing page in `resources/js/Layouts/CustomerLayout.tsx` — never apply this class to Seller/Admin pages, and never override these tokens ad hoc inline in a component.
+If a future request asks to differentiate Customer visually again (e.g. reintroduce a distinct brand palette), treat that as a new design decision to confirm per CLAUDE.md Rule 2 — don't silently partially-revert to the bakery theme.
 
-- **Background:** soft sage green (`oklch(0.94 0.025 122)`).
-- **Card/surface:** warm off-white cream (`oklch(0.985 0.01 90)`).
-- **Primary (CTA):** warm peach/terracotta (`oklch(0.72 0.11 55)`).
-- **Secondary:** deep forest green (`oklch(0.4 0.05 145)`).
-- **Radius:** `1rem` (softer, friendlier corners than the 0.625rem shadcn default used elsewhere).
-- **Heading typeface:** Playfair Display (serif, via `@fontsource/playfair-display`), applied with the `font-heading` utility class on headings/titles only — body text stays on the shared sans-serif (`--font-sans`). Do not apply `font-heading` on Seller/Admin pages.
+### Global theme (shared across Customer/Seller/Admin)
+Defined as the plain `:root`/`.dark` token set in `resources/css/app.css` — no per-surface CSS class override anymore (the old `.customer-theme` class was removed in Phase 7.6). Never hand-roll a surface-specific palette on top of this.
+
+- **Background:** white (`oklch(1 0 0)`) light / near-black (`oklch(0.141 0.005 285.823)`) dark.
+- **Card/surface:** white light / dark gray (`oklch(0.21 0.006 285.885)`) dark.
+- **Primary (CTA):** pink/rose (`#EF88AD`) — same hex in both light and dark mode, foreground kept dark (`oklch(0.141 0.005 285.823)`) in both. This is the one brand accent for the whole app now; don't introduce a second brand color per surface.
+- **Secondary/muted/accent:** light gray (`oklch(0.967 0.001 286.375)`) light / dark gray (`oklch(0.274 0.006 286.033)`) dark.
+- **Destructive:** red (`oklch(0.577 0.245 27.325)` light / `oklch(0.704 0.191 22.216)` dark).
+- **Charts:** a dedicated 5-step pink ramp (`--chart-1` through `--chart-5`, `#F8C1D6` → `#9C3A5C`) used by Recharts on Seller/Admin dashboards — same values in light and dark mode. (Fixed 2026-09-03: Recharts' own default `--chart-1` was too low-contrast against this palette to read as a line/bar color; don't revert to a library default without checking contrast.)
+- **Radius:** `0.625rem`, uniform across all three surfaces (the old Customer-specific `1rem` softer radius no longer exists).
+- **Typography:** the old Customer-only Playfair Display heading font is gone — `--font-sans` (`Inter Variable`) is used for both body and headings everywhere now, including Customer. Don't add a serif heading font back without confirming it's wanted.
+- **Light/dark toggle:** `ThemeToggle` (`resources/js/components/shared/ThemeToggle.tsx`) toggles the `.dark` class, persisted to `localStorage` (`cakehub-theme` key, see `resources/js/lib/theme.ts`) and applied pre-paint in `app.blade.php` to avoid a flash-of-wrong-theme. It's available site-wide (not Customer-only) — when adding a new page/surface, make sure it inherits the toggle rather than assuming light mode only, and check contrast for new colors in **both** modes.
 
 ### Imagery
-Real photography (eventually AI-generated per the reference style) is not available in this session — no image-generation tool exists here. Use `resources/js/components/shared/ImagePlaceholder.tsx` (a styled dashed-border block with a label) everywhere a cake/bakery photo would go on the Customer portal, so layouts are built correctly and swapping in real images later is a drop-in replacement, not a redesign. Do not fabricate placeholder image URLs (Unsplash links, `picsum.photos`, etc.) — use the component.
+Real photography (Pexels stock images, added Phase 7.6) is now used on the Customer home/gallery. `resources/js/components/shared/ImagePlaceholder.tsx` still exists and should still be used for any Customer-facing image slot that doesn't yet have a real asset (e.g. a seller's own product/storefront photos, which are user-uploaded and can't be stocked in advance) — but don't reach for it where a real Pexels/uploaded image is already wired in. Do not fabricate placeholder image URLs (Unsplash links, `picsum.photos`, etc.) for anything — use the component or a real uploaded asset.
 
-Use a single accent color (brand color) consistently within Seller/Admin, varying only secondary/neutral tones and layout density between them — this keeps those two feeling like one platform, distinct from the Customer portal's warmer identity.
+### Component import convention
+Every `resources/js/components/ui/*.tsx` shadcn primitive imports its `cn` helper from `@/lib/utils` (backed by the `cn` npm package, aliased via `components.json`) — a centralized import, not a per-file relative path. If Vite fails to resolve this import, that's a missing/stale `node_modules` (run `npm install`), not a code bug — don't hand-edit the import path.
 
 ## Responsiveness
 

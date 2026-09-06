@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { SellerPayout, SellerPayoutStatus } from '@/types/sellerPayout';
 
@@ -43,8 +44,8 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
+        <AdminLayout breadcrumb={['Seller Payouts']}>
+            <div className="mx-auto w-full max-w-3xl space-y-6">
                 <h1 className="text-2xl font-semibold">Seller payouts</h1>
 
                 {payouts.length === 0 ? (
@@ -108,6 +109,6 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
                     </DialogContent>
                 </Dialog>
             </div>
-        </div>
+        </AdminLayout>
     );
 }
