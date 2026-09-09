@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdController as AdminAdController;
 use App\Http\Controllers\Admin\AdminBankAccountController as AdminAdminBankAccountController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\PaymentVerificationController;
@@ -90,6 +91,12 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/categories/{category}/image', [AdminCategoryController::class, 'uploadImage']);
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
         Route::patch('/categories/reorder', [AdminCategoryController::class, 'reorder']);
+        Route::post('/ads', [AdminAdController::class, 'store']);
+        Route::patch('/ads/reorder', [AdminAdController::class, 'reorder']);
+        Route::put('/ads/setting', [AdminAdController::class, 'updateSetting']);
+        Route::put('/ads/{ad}', [AdminAdController::class, 'update']);
+        Route::post('/ads/{ad}/image', [AdminAdController::class, 'uploadImage']);
+        Route::delete('/ads/{ad}', [AdminAdController::class, 'destroy']);
         Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store']);
         Route::put('/subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'update']);
         Route::delete('/subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'destroy']);

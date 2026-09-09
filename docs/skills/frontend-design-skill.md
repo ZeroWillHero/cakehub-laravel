@@ -40,6 +40,16 @@ Real photography (Pexels stock images, added Phase 7.6) is now used on the Custo
 ### Component import convention
 Every `resources/js/components/ui/*.tsx` shadcn primitive imports its `cn` helper from `@/lib/utils` (backed by the `cn` npm package, aliased via `components.json`) — a centralized import, not a per-file relative path. If Vite fails to resolve this import, that's a missing/stale `node_modules` (run `npm install`), not a code bug — don't hand-edit the import path.
 
+### Status badge color convention (superseded 2026-09-07)
+Applies to every status badge in the app — payment verification, subscription status, order payment status, seller-payout status, order fulfillment status, seller-verification status — not just the ones introduced by Phase 8/8.1. **Literal traffic-light colors, confirmed 2026-09-07, replacing the earlier default/secondary/destructive-variant-only scheme:**
+
+- **Yellow** — any pending/waiting/in-progress state: `pending`, `pending_verification`, `awaiting_verification`, `grace_period`, `cancelling` (still active but winding down).
+- **Green** — any good/final/confirmed state: `verified`, `paid`, `active`, `confirmed`, `completed`.
+- **Red** — any negative/terminal state: `rejected`, `cancelled`, `expired`.
+- Implement as a small shared helper/variant map (e.g. a `statusTone` util returning Tailwind classes or a `Badge` wrapper) rather than hand-picking `bg-yellow-500`-style classes inline per page — one place to keep the yellow/green/red hex values theme-consistent (light and dark mode both need checking for contrast, per the Global theme section above) and to add a new status value's color later.
+- Per the HCI checklist below, color is still never the only signal — pair every colored badge with its literal status text (already the pattern in this codebase), not a bare colored dot.
+- This does not change the *shape* of a status badge (still `Badge`-based, not a custom pill), only its color source.
+
 ## Responsiveness
 
 Mandatory for every screen, not optional polish:

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import SellerLayout from '@/Layouts/SellerLayout';
+import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
 import { api } from '@/lib/api';
 import type { SellerPayout, SellerPayoutStatus } from '@/types/sellerPayout';
 
@@ -18,6 +19,7 @@ const statusLabel: Record<SellerPayoutStatus, string> = {
 
 export default function SellerPayouts({ payouts: initial }: Props) {
     const [payouts, setPayouts] = useState(initial);
+    const [previewTarget, setPreviewTarget] = useState<SellerPayout | null>(null);
     const [busy, setBusy] = useState<number | null>(null);
 
     async function confirm(payout: SellerPayout) {
@@ -47,14 +49,14 @@ export default function SellerPayouts({ payouts: initial }: Props) {
                                             Order #{payout.order_id} — ${payout.amount.toFixed(2)}
                                         </p>
                                         {payout.has_slip && (
-                                            <a
-                                                href={`/api/seller/payouts/${payout.id}`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-sm text-primary underline"
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="h-auto p-0 text-sm"
+                                                onClick={() => setPreviewTarget(payout)}
                                             >
                                                 View payment slip
-                                            </a>
+                                            </Button>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -77,6 +79,13 @@ export default function SellerPayouts({ payouts: initial }: Props) {
                         ))}
                     </div>
                 )}
+
+                <SlipPreviewDialog
+                    open={previewTarget !== null}
+                    onOpenChange={(open) => !open && setPreviewTarget(null)}
+                    slipUrl={previewTarget ? `/api/seller/payouts/${previewTarget.id}` : ''}
+                    title="Payout slip"
+                />
             </div>
         </SellerLayout>
     );

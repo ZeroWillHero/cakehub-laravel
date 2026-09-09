@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/Layouts/AdminLayout';
+import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
 import { api } from '@/lib/api';
 import type { Payment } from '@/types/payment';
 
@@ -14,28 +14,34 @@ interface Props {
 
 export default function AdminPaymentVerifications({ payments: initial }: Props) {
     const [payments, setPayments] = useState(initial);
-    const [rejectTarget, setRejectTarget] = useState<Payment | null>(null);
+    const [previewTarget, setPreviewTarget] = useState<Payment | null>(null);
+    const [rejecting, setRejecting] = useState(false);
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState<number | null>(null);
+
+    function closePreview() {
+        setPreviewTarget(null);
+        setRejecting(false);
+        setReason('');
+    }
 
     async function verify(payment: Payment) {
         setBusy(payment.id);
         try {
             await api.post(`/admin/payments/${payment.id}/verify`);
             setPayments((prev) => prev.filter((p) => p.id !== payment.id));
+            closePreview();
         } finally {
             setBusy(null);
         }
     }
 
-    async function reject() {
-        if (!rejectTarget) return;
-        setBusy(rejectTarget.id);
+    async function reject(payment: Payment) {
+        setBusy(payment.id);
         try {
-            await api.post(`/admin/payments/${rejectTarget.id}/reject`, { rejection_reason: reason });
-            setPayments((prev) => prev.filter((p) => p.id !== rejectTarget.id));
-            setRejectTarget(null);
-            setReason('');
+            await api.post(`/admin/payments/${payment.id}/reject`, { rejection_reason: reason });
+            setPayments((prev) => prev.filter((p) => p.id !== payment.id));
+            closePreview();
         } finally {
             setBusy(null);
         }
@@ -52,72 +58,82 @@ export default function AdminPaymentVerifications({ payments: initial }: Props) 
                     <div className="space-y-3">
                         {payments.map((payment) => (
                             <Card key={payment.id}>
-                                <CardContent className="space-y-3 py-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <div>
-                                            <p className="font-medium">
-                                                {payment.payable_type === 'order' ? 'Order' : 'Subscription'} #
-                                                {payment.payable_id} — ${payment.amount.toFixed(2)}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                Submitted by {payment.submitted_by?.name} into{' '}
-                                                {payment.admin_bank_account?.bank_name}
-                                            </p>
-                                        </div>
-                                        <a
-                                            href={`/api/payments/${payment.id}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-sm text-primary underline"
-                                        >
-                                            View slip
-                                        </a>
+                                <CardContent className="flex flex-wrap items-center justify-between gap-2 py-4">
+                                    <div>
+                                        <p className="font-medium">
+                                            {payment.payable_type === 'order' ? 'Order' : 'Subscription'} #
+                                            {payment.payable_id} — ${payment.amount.toFixed(2)}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Submitted by {payment.submitted_by?.name} into{' '}
+                                            {payment.admin_bank_account?.bank_name}
+                                        </p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            disabled={busy === payment.id}
-                                            onClick={() => verify(payment)}
-                                        >
-                                            Verify
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="outline"
-                                            disabled={busy === payment.id}
-                                            onClick={() => setRejectTarget(payment)}
-                                        >
-                                            Reject
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setPreviewTarget(payment)}
+                                    >
+                                        View slip
+                                    </Button>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
                 )}
 
-                <Dialog open={rejectTarget !== null} onOpenChange={(open) => !open && setRejectTarget(null)}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Reject payment</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-2">
-                            <Label htmlFor="rejection_reason">Reason</Label>
-                            <Textarea
-                                id="rejection_reason"
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="destructive" disabled={!reason} onClick={reject}>
-                                Reject
+                <SlipPreviewDialog
+                    open={previewTarget !== null}
+                    onOpenChange={(open) => !open && closePreview()}
+                    slipUrl={previewTarget ? `/api/payments/${previewTarget.id}` : ''}
+                    title="Payment slip"
+                >
+                    {previewTarget && !rejecting && (
+                        <>
+                            <Button
+                                type="button"
+                                disabled={busy === previewTarget.id}
+                                onClick={() => verify(previewTarget)}
+                            >
+                                Approve
                             </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={busy === previewTarget.id}
+                                onClick={() => setRejecting(true)}
+                            >
+                                Decline
+                            </Button>
+                        </>
+                    )}
+                    {previewTarget && rejecting && (
+                        <div className="w-full space-y-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="rejection_reason">Reason for declining</Label>
+                                <Textarea
+                                    id="rejection_reason"
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button type="button" variant="ghost" onClick={() => setRejecting(false)}>
+                                    Back
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={!reason || busy === previewTarget.id}
+                                    onClick={() => reject(previewTarget)}
+                                >
+                                    Confirm decline
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </SlipPreviewDialog>
             </div>
         </AdminLayout>
     );

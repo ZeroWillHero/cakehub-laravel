@@ -6,9 +6,12 @@ use App\Enums\StoreStatus;
 use App\Enums\UserRole;
 use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AdResource;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\SellerResource;
 use App\Http\Resources\SubscriptionPlanResource;
+use App\Models\Ad;
+use App\Models\AdSetting;
 use App\Models\Category;
 use App\Models\Seller;
 use App\Models\SubscriptionPlan;
@@ -50,6 +53,10 @@ class HomeController extends Controller
                 'subscriptionPlans' => SubscriptionPlanResource::collection(
                     SubscriptionPlan::query()->where('is_active', true)->orderBy('sort_order')->get()
                 )->resolve(),
+                'ads' => AdResource::collection(
+                    Ad::query()->eligible()->orderBy('sort_order')->get()
+                )->resolve(),
+                'adRotationSeconds' => AdSetting::current()->rotation_seconds,
             ]),
             UserRole::Seller => redirect()->route('seller.dashboard'),
             UserRole::Admin => redirect()->route('admin.dashboard'),

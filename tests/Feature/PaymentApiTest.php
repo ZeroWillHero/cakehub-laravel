@@ -94,6 +94,56 @@ it('lets a seller submit a payment slip for their own subscription', function ()
     expect($subscription->fresh()->status)->toBe(SellerSubscriptionStatus::Pending);
 });
 
+it('forbids submitting a payment slip for another seller\'s subscription', function () {
+    $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
+    $otherSeller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
+    $subscription = SellerSubscription::factory()->for($otherSeller, 'seller')->create(['status' => SellerSubscriptionStatus::Pending, 'starts_at' => null]);
+    $bankAccount = AdminBankAccount::factory()->create();
+
+    $this->actingAs($seller->user)
+        ->postJson('/api/payments', [
+            'payable_type' => 'subscription',
+            'payable_id' => $subscription->id,
+            'amount' => 10,
+            'admin_bank_account_id' => $bankAccount->id,
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['payable_id']);
+});
+
+it('rejects a payment submission referencing a non-existent order/subscription', function () {
+    $customer = User::factory()->customer()->create();
+    $bankAccount = AdminBankAccount::factory()->create();
+
+    $this->actingAs($customer)
+        ->postJson('/api/payments', [
+            'payable_type' => 'order',
+            'payable_id' => 999999,
+            'amount' => 10,
+            'admin_bank_account_id' => $bankAccount->id,
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['payable_id']);
+});
+
+it('rejects a payment submission with a non-existent bank account', function () {
+    $customer = User::factory()->customer()->create();
+    $order = Order::factory()->create(['customer_id' => $customer->id, 'payment_status' => PaymentStatus::Pending]);
+
+    $this->actingAs($customer)
+        ->postJson('/api/payments', [
+            'payable_type' => 'order',
+            'payable_id' => $order->id,
+            'amount' => (float) $order->total,
+            'admin_bank_account_id' => 999999,
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['admin_bank_account_id']);
+});
+
 it('rejects an unauthenticated payment submission', function () {
     $order = Order::factory()->create();
     $bankAccount = AdminBankAccount::factory()->create();
@@ -105,6 +155,22 @@ it('rejects an unauthenticated payment submission', function () {
         'admin_bank_account_id' => $bankAccount->id,
         'slip' => UploadedFile::fake()->image('slip.jpg'),
     ])->assertUnauthorized();
+});
+
+it('rejects an unauthenticated request to view a payment slip', function () {
+    $order = Order::factory()->create();
+    $payment = Payment::factory()->create([
+        'payable_type' => Order::class,
+        'payable_id' => $order->id,
+    ]);
+
+    $this->getJson("/api/payments/{$payment->id}")->assertUnauthorized();
+});
+
+it('returns 404 when viewing a payment that does not exist', function () {
+    $customer = User::factory()->customer()->create();
+
+    $this->actingAs($customer)->getJson('/api/payments/999999')->assertNotFound();
 });
 
 it('lets the submitting customer and an admin view the slip, but not a stranger', function () {
@@ -221,4 +287,48 @@ it('forbids a non-admin from verifying a payment', function () {
     $this->actingAs($customer)
         ->postJson("/api/admin/payments/{$payment->id}/verify")
         ->assertForbidden();
+});
+
+it('forbids a non-admin from rejecting a payment', function () {
+    $customer = User::factory()->customer()->create();
+    $payment = Payment::factory()->create();
+
+    $this->actingAs($customer)
+        ->postJson("/api/admin/payments/{$payment->id}/reject", ['rejection_reason' => 'Not valid.'])
+        ->assertForbidden();
+});
+
+it('returns 404 when verifying a payment that does not exist', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->postJson('/api/admin/payments/999999/verify')
+        ->assertNotFound();
+});
+
+it('returns 404 when rejecting a payment that does not exist', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->postJson('/api/admin/payments/999999/reject', ['rejection_reason' => 'Not valid.'])
+        ->assertNotFound();
+});
+
+it('remains idempotent when an admin re-verifies an already-verified order payment', function () {
+    $admin = User::factory()->admin()->create();
+    $order = Order::factory()->create(['payment_status' => PaymentStatus::Paid]);
+    $payment = Payment::factory()->create([
+        'payable_type' => Order::class,
+        'payable_id' => $order->id,
+        'status' => PaymentVerificationStatus::Verified,
+        'verified_by' => $admin->id,
+        'verified_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($admin)
+        ->postJson("/api/admin/payments/{$payment->id}/verify")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'verified');
+
+    expect($order->fresh()->payment_status)->toBe(PaymentStatus::Paid);
 });

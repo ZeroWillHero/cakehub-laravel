@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Banknote, ClipboardCheck, CreditCard, LayoutDashboard, Receipt, Settings, Tag } from 'lucide-react';
+import { Banknote, ClipboardCheck, CreditCard, LayoutDashboard, Megaphone, Receipt, Settings, Tag } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -21,6 +21,7 @@ const navItems = [
     { title: 'Bank Accounts', url: '/admin/bank-accounts', icon: Banknote },
     { title: 'Payment Verifications', url: '/admin/payment-verifications', icon: Receipt },
     { title: 'Seller Payouts', url: '/admin/seller-payouts', icon: Receipt },
+    { title: 'Ads', url: '/admin/ads', icon: Megaphone },
 ];
 
 const settingsItem = { title: 'Settings', url: '/admin/settings', icon: Settings };

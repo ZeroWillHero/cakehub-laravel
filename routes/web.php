@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdController as AdminAdController;
 use App\Http\Controllers\Admin\AdminBankAccountController as AdminAdminBankAccountController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -79,5 +80,6 @@ Route::middleware(['auth', 'account.active'])->group(function () {
         Route::get('/bank-accounts', [AdminAdminBankAccountController::class, 'index'])->name('bank-accounts.index');
         Route::get('/payment-verifications', [PaymentVerificationController::class, 'index'])->name('payment-verifications.index');
         Route::get('/seller-payouts', [AdminSellerPayoutController::class, 'index'])->name('seller-payouts.index');
+        Route::get('/ads', [AdminAdController::class, 'index'])->name('ads.index');
     });
 });

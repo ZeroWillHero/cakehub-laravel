@@ -20,18 +20,39 @@ interface Props {
 // Warm cocoa sampled from the hero cake photography's backdrop, blended
 // into the theme's primary/accent tokens so the hero background reads as
 // one piece with both the brand color and the photo — not theme-agnostic
-// by design, this gradient exists specifically to match that image.
+// by design, this gradient exists specifically to match that image. Kept
+// light (low background-mix %) so it reads as a subtle wash/scrim over the
+// actual hero photo (HERO_IMAGE), not a layer that hides it — the photo
+// should be clearly visible edge to edge, corners included.
 const HERO_GRADIENT = [
-    'radial-gradient(1100px 480px at 12% 0%, color-mix(in oklab, var(--primary) 18%, transparent) 0%, transparent 60%)',
-    'linear-gradient(135deg, var(--background) 0%, color-mix(in oklab, var(--accent) 55%, var(--background)) 55%, color-mix(in oklab, #7c5a41 32%, var(--background)) 100%)',
+    'radial-gradient(1100px 480px at 12% 0%, color-mix(in oklab, var(--primary) 12%, transparent) 0%, transparent 60%)',
+    'linear-gradient(135deg, color-mix(in oklab, var(--background) 30%, transparent) 0%, color-mix(in oklab, var(--accent) 30%, var(--background) 30%) 55%, color-mix(in oklab, #7c5a41 25%, var(--background) 30%) 100%)',
 ].join(', ');
+
+const HERO_IMAGE = '/images/hero/hero.png';
 
 export default function PageHero({ title, subtitle, actions, breadcrumb, media, size = 'sm', className }: Props) {
     const isLarge = size === 'lg';
     const centered = isLarge && !media;
 
     return (
-        <div className={cn('relative', className)} style={isLarge ? { backgroundImage: HERO_GRADIENT } : undefined}>
+        <div
+            className={cn(
+                'relative bg-cover bg-center bg-no-repeat',
+                // Pulls the hero up behind the sticky, transparent SiteHeader
+                // (h-16) so the background photo spans that strip too,
+                // instead of leaving the page's plain background showing
+                // through above the hero. pt-16 compensates so the title's
+                // own position is unchanged.
+                isLarge && '-mt-16 pt-16',
+                className,
+            )}
+            style={
+                isLarge
+                    ? { backgroundImage: `${HERO_GRADIENT}, url(${HERO_IMAGE})` }
+                    : undefined
+            }
+        >
             {isLarge && (
                 <div
                     className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background sm:h-32"

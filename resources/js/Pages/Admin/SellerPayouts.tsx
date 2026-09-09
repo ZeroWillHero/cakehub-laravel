@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/Layouts/AdminLayout';
+import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
 import { api } from '@/lib/api';
 import type { SellerPayout, SellerPayoutStatus } from '@/types/sellerPayout';
 
@@ -22,6 +23,7 @@ const statusLabel: Record<SellerPayoutStatus, string> = {
 export default function AdminSellerPayouts({ payouts: initial }: Props) {
     const [payouts, setPayouts] = useState(initial);
     const [payTarget, setPayTarget] = useState<SellerPayout | null>(null);
+    const [previewTarget, setPreviewTarget] = useState<SellerPayout | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [busy, setBusy] = useState(false);
 
@@ -61,14 +63,14 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
                                             {payout.amount.toFixed(2)}
                                         </p>
                                         {payout.has_slip && (
-                                            <a
-                                                href={`/api/seller/payouts/${payout.id}`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-sm text-primary underline"
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="h-auto p-0 text-sm"
+                                                onClick={() => setPreviewTarget(payout)}
                                             >
                                                 View slip
-                                            </a>
+                                            </Button>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -108,6 +110,13 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                <SlipPreviewDialog
+                    open={previewTarget !== null}
+                    onOpenChange={(open) => !open && setPreviewTarget(null)}
+                    slipUrl={previewTarget ? `/api/seller/payouts/${previewTarget.id}` : ''}
+                    title="Payout slip"
+                />
             </div>
         </AdminLayout>
     );

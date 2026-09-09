@@ -12,12 +12,14 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import AdsCarousel from '@/components/shared/AdsCarousel';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
 import HeroImage from '@/components/shared/HeroImage';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
 import RatingStars from '@/components/shared/RatingStars';
 import { cn } from '@/lib/utils';
+import type { Ad } from '@/types/ad';
 import type { Category } from '@/types/category';
 import type { Seller } from '@/types/seller';
 import type { SubscriptionPlan } from '@/types/subscriptionPlan';
@@ -26,6 +28,8 @@ interface Props {
     categories: Category[];
     featuredSellers: Seller[];
     subscriptionPlans: SubscriptionPlan[];
+    ads: Ad[];
+    adRotationSeconds: number;
 }
 
 function billingLabel(plan: SubscriptionPlan): string {
@@ -48,7 +52,7 @@ interface NearbySeller extends Seller {
     distance_km?: number;
 }
 
-export default function CustomerHome({ categories, featuredSellers, subscriptionPlans }: Props) {
+export default function CustomerHome({ categories, featuredSellers, subscriptionPlans, ads, adRotationSeconds }: Props) {
     const galleryImages = [
         ...GALLERY_IMAGES,
         ...featuredSellers.filter((seller) => seller.cover_path).map((seller) => `/storage/${seller.cover_path}`),
@@ -126,25 +130,33 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                 }
             />
 
-            <Section className="pt-0">
-                <div className="group/marquee overflow-hidden">
-                    <div className="animate-marquee flex w-max items-end gap-4 group-hover/marquee:[animation-play-state:paused]">
-                        {[...GALLERY_HEIGHTS, ...GALLERY_HEIGHTS].map((height, index) => (
-                            <div key={index} className="shrink-0">
-                                <HeroImage
-                                    src={galleryImages[index % galleryImages.length]}
-                                    alt="Cake photography from CakeHub bakers"
-                                    label="Cake photo"
-                                    className={cn(
-                                        'w-auto rounded-3xl object-cover transition-transform duration-300 ease-out hover:-translate-y-3',
-                                        height,
-                                    )}
-                                />
-                            </div>
-                        ))}
+            {ads.length > 0 ? (
+                <Section className="pt-0">
+                    <div className="mx-auto max-w-4xl">
+                        <AdsCarousel ads={ads} rotationSeconds={adRotationSeconds} />
                     </div>
-                </div>
-            </Section>
+                </Section>
+            ) : (
+                <Section className="pt-0">
+                    <div className="group/marquee overflow-hidden">
+                        <div className="animate-marquee flex w-max items-end gap-4 group-hover/marquee:[animation-play-state:paused]">
+                            {[...GALLERY_HEIGHTS, ...GALLERY_HEIGHTS].map((height, index) => (
+                                <div key={index} className="shrink-0">
+                                    <HeroImage
+                                        src={galleryImages[index % galleryImages.length]}
+                                        alt="Cake photography from CakeHub bakers"
+                                        label="Cake photo"
+                                        className={cn(
+                                            'w-auto rounded-3xl object-cover transition-transform duration-300 ease-out hover:-translate-y-3',
+                                            height,
+                                        )}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </Section>
+            )}
 
             {nearMe && (
                 <Section title="Near you" className="pb-0 pt-8 sm:pt-10">

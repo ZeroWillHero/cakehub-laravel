@@ -20,6 +20,7 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 - [x] Payment/fund flow — **sellers collect payment directly**, confirmed 2026-09-02 (no escrow/marketplace holding). This rules out a per-order commission model — see below.
 - [x] Commission model — **subscription-only**, confirmed 2026-09-02 (follows directly from "sellers collect directly" — the platform never touches order payments, so it can only monetize via the seller subscription tiers already in requirements.md §3.9).
 - [ ] Target region/currency — still open; not blocking while payment is stubbed (USD `$` used as a placeholder in the UI). Revisit when a real gateway is wired up.
+- [x] App timezone — **`Asia/Colombo`**, confirmed 2026-09-07. `config/app.php`'s `timezone` was hardcoded to `UTC` (Laravel's default), which lagged the server's actual local time (Sri Lanka, `+5:30`) by hours — surfaced as a bug where a newly created ad's `starts_at = today` (per the admin's local browser date) wasn't yet "today" by the app's UTC-based `now()`. Fixed by setting `'timezone' => 'Asia/Colombo'` directly (no `APP_TIMEZONE` env var existed to override); affects every date-based feature app-wide (ad eligibility windows, subscription renewal dates, order timestamps), not just Ads.
 
 **What gets built once decided:**
 - `.env` configured for the chosen Postgres instance; PostGIS extension enabled and verified.
@@ -226,12 +227,65 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 ---
 
+## Phase 8.1 — Recurring Subscription Renewal (Monthly Slip Cycle, Grace Period, Cancel-at-Period-End)
+
+**Goal:** turn Phase 8's one-time subscription slip-upload into a recurring monthly cycle: sellers re-submit a slip each period to stay on a paid plan, get a 7-day advance reminder and a 2-day grace period if they miss it, can cancel anytime without losing access until the period they already paid for ends, and get their pre-downgrade listings back (not just "not deleted") when they resubscribe. Confirmed 2026-09-07.
+
+**Builds on:** Phase 8's `payments`/`Payment` verification flow (reused as-is for each month's renewal slip) and Phase 7's `app:expire-seller-subscriptions` daily command and `Seller::hideExcessListings()`.
+
+**Confirmed decisions (2026-09-07):**
+- **Renewal, not recurring billing:** no Cashier/auto-charge — the seller submits a new payment slip each period (same `POST /api/payments` against the `SellerSubscription`, same admin verification step) roughly monthly, tracked by `seller_subscriptions.ends_at` (existing column, repurposed as "current period end" / renewal due date) rather than a fixed one-time expiry.
+- **7-day advance reminder:** starting 7 days before `ends_at`, the Seller Dashboard shows a "Renew in N days" banner/countdown prompting a new slip upload. Purely informational — no restriction yet.
+- **2-day grace period, fully active:** once `ends_at` passes with no new verified payment, the subscription enters a `grace_period` status for 2 days. During grace, the plan/listing-limit/features are **unchanged** — only a persistent warning banner ("Renew within 2 days or your plan will be cancelled") is added; nothing is hidden or blocked.
+- **Auto-cancel after grace:** if still unverified after the 2-day grace window, `app:expire-seller-subscriptions` (already runs daily) cancels the subscription and downgrades to Free, reusing the existing `hideExcessListings()` hide-not-delete behavior.
+- **Cancel-anytime, active-until-period-end:** a seller can cancel at any point; the subscription immediately gets a new `cancelling` status but keeps its current plan/limit/features until `ends_at` (the date already paid through) — e.g. bought Jan 1, cancels Jan 15, still fully on that plan until Feb 1, then auto-downgrades to Free exactly like a missed renewal. `cancelling` skips the 7-day-reminder/grace-period states (the seller already told the system not to renew).
+- **Listing restore on resubscribe:** currently `hideExcessListings()` sets `is_active = false` on excess listings with no way to distinguish "hidden by the system for exceeding a lower limit" from "the seller manually deactivated this listing" — both look identical today. Add a `hidden_for_subscription` boolean (or equivalent marker) on `products`, set only when the system hides a listing for exceeding a limit and cleared either when the seller manually re-activates it or when the seller's limit rises enough (resubscribing, upgrading) to fit it again. On resubscribe/upgrade, re-activate `hidden_for_subscription` listings — oldest-hidden-first — up to the new limit, before the seller needs to touch anything. Listings the seller deactivated themselves are never touched by this.
+
+**What gets built:**
+- `seller_subscriptions` gains a `SellerSubscriptionStatus` value or two to express the new states (`grace_period`, `cancelling` — exact naming TBD at implementation time) alongside the existing `active`/`pending`/`expired`.
+- `POST /seller/subscription/cancel` (or similar) — sets `cancelling`, does not touch `ends_at` or current features.
+- `app:expire-seller-subscriptions` extended: on `ends_at` passing for an `active` subscription, move to `grace_period` (not straight to expired); after grace period's 2 days, expire it (covers both a missed renewal and a `cancelling` subscription reaching its `ends_at`).
+- `products.hidden_for_subscription` (or equivalent) + updated `hideExcessListings()` to set it, plus a new `restoreListingsUpToLimit()` (name TBD) called on successful upgrade/renewal verification.
+- Seller Dashboard: 7-day countdown banner, grace-period warning banner, "Cancel subscription" action with the "active until [date]" confirmation copy.
+- Reuses Phase 8's existing `PaymentSlipForm`/verification UI for each month's renewal — no new slip-upload UI needed, just triggering it again when a renewal is due.
+
+**Agents/skills:** [backend-agent](agents/backend-agent.md) (subscription state machine, scheduled command changes, listing restore logic) → [frontend-agent](agents/frontend-agent.md) (Seller Dashboard renewal/grace/cancel UI, per [frontend-design-skill](skills/frontend-design-skill.md)'s status-color convention) → [backend-integration-testing-agent](agents/backend-integration-testing-agent.md) (renewal-due, grace-period, auto-cancel-after-grace, cancel-then-still-active-until-period-end, and restore-on-resubscribe as distinct test cases).
+
+**Exit criteria:** a seller sees the 7-day reminder, misses it into a 2-day grace period with no restriction, then gets auto-downgraded to Free with excess listings hidden (not deleted) if still unpaid; a seller who cancels mid-period keeps full access until their paid-through date, then downgrades the same way; a seller who resubscribes/upgrades gets their system-hidden listings back automatically, while listings they deactivated themselves stay untouched either way.
+
+---
+
+## Phase 8.2 — Ads Module + Payment-Slip Viewing Fix
+
+**Goal:** let admin run paid, curated image ads on the Customer homepage as an auto-rotating carousel (monetization beyond seller subscriptions), and fix payment/payout slip viewing across Admin/Seller — currently a `target="_blank"` new-tab link — into an in-context modal, with Verify/Decline moved onto that same surface for Payment Verifications. Confirmed 2026-09-07.
+
+**Confirmed decisions (2026-09-07):**
+- Admin-only ad entry — no public ad-submission form; outside requests for ad placement are handled off-platform and the admin types the ad in.
+- Ad visibility = `status = active` AND today within `[starts_at, ends_at]`, checked live via a query scope — no persisted "expired" flag, no daily scheduled command (unlike `app:expire-seller-subscriptions`), since nothing else needs historical ad-expiry state.
+- `ad_settings` is a dedicated single-row table (just `rotation_seconds`) rather than a general-purpose key-value settings system — no such system exists anywhere in the project yet and only one global value is needed.
+- Real drag-and-drop for ad priority (`@dnd-kit/core` + `@dnd-kit/sortable`, new dependency) — upgrading from the up/down-arrow pattern Categories/Subscription Plans use, per explicit request.
+- `embla-carousel-autoplay` (new dependency, official plugin for the already-installed `embla-carousel-react`) drives the homepage carousel's automatic right-to-left, one-at-a-time, infinite rotation.
+- Ads are delivered as `Customer\HomeController` Inertia props (`ads`, `adRotationSeconds`), not a separate REST endpoint — matches how Featured Cakes/Bakers are already loaded on that page.
+- For the slip-viewing fix: Verify/Reject move entirely into the new `SlipPreviewDialog` modal for Payment Verifications (row-level buttons removed). Seller Payouts / Seller's own Payouts page get the same modal for viewing only — "mark paid"/"confirm received" stay as-is, since those aren't a verify/reject decision. Customer-side slip viewing (customers currently have none at all) stays out of scope for this fix.
+
+**What gets built:**
+- `ads` table (name, description, image_path, link_url, paid_amount, status, starts_at, ends_at, sort_order, created_by) and `ad_settings` (rotation_seconds); `Ad` model with `scopeEligible()`; `Admin\AdController` (CRUD/reorder/uploadImage/updateSetting, mirroring `Admin\CategoryController` exactly) gated by `role:admin` middleware only (no new policy, matching Category's precedent); `AdResource`. `link_url` (nullable, validated as a URL) makes a carousel ad clickable — clicking it opens that URL in a new tab; ads with no URL just aren't clickable.
+- `Admin/Ads.tsx` (list/create/edit/delete, image upload, date-range inputs, dnd-kit drag-and-drop priority, an embedded rotation-seconds settings control) + an "Ads" entry in `AdminSidebar`.
+- `AdsCarousel` component wrapping the existing shadcn `Carousel` (`resources/js/components/ui/carousel.tsx`) with the Autoplay plugin, placed on `Customer/Home.tsx` immediately after `PageHero`, in the exact slot the photo marquee occupies — mutually exclusive with it (any ads present hides the marquee and shows the carousel instead; no ads shows the marquee). Slightly narrower than the page's other sections (`max-w-4xl`, vs. `Section`'s `max-w-6xl`) and taller (`h-96` at desktop), so it reads as a distinct banner — adjusted twice on 2026-09-07 (first from an initial full-bleed version, then narrower/taller again per explicit request). Preferred ad image size (1200×550px, ~2.2:1) shown as a hint on the Admin Ads page.
+- `SlipPreviewDialog` shared component (image render with an iframe fallback for PDF slips) replacing the `target="_blank"` link in `Admin/PaymentVerifications.tsx`, `Admin/SellerPayouts.tsx`, and `Seller/Payouts.tsx`; Verify/Reject relocated into it for Payment Verifications only.
+
+**Agents/skills:** [backend-agent](agents/backend-agent.md) (schema, CRUD, eligibility scope) → [frontend-agent](agents/frontend-agent.md) (Admin Ads page, AdsCarousel, SlipPreviewDialog, per [frontend-design-skill](skills/frontend-design-skill.md)) → [backend-integration-testing-agent](agents/backend-integration-testing-agent.md) + [frontend-unit-testing-agent](agents/frontend-unit-testing-agent.md) (Pest + Vitest coverage, including the ad-eligibility date-boundary cases).
+
+**Exit criteria:** admin creates an ad, drag-reorders its priority, and it appears/disappears on the Customer homepage carousel exactly within its date range and only while `active`; the carousel auto-rotates at the admin-set interval; opening "View slip" anywhere in the system shows a modal (not a new tab), and for Payment Verifications that modal's Approve/Decline actually verifies/rejects the payment.
+
+---
+
 ## Phase 9 — Cross-Cutting Testing & Hardening Pass
 
 **Goal:** close test-coverage gaps and do a full HCI/design-checklist pass across all three surfaces before considering the MVP complete.
 
 **What gets done:**
-- Full pass of [frontend-design-skill](skills/frontend-design-skill.md)'s HCI checklist on every screen built in Phases 1–8 — including the Phase 7.6 sidebar/chart redesign, settings/profile/review/category/filter pages, the Customer restyle (theme toggle, FloatingNav, real imagery), and Phase 8's payment/verification/payout screens, none of which had a dedicated verification pass when built.
+- Full pass of [frontend-design-skill](skills/frontend-design-skill.md)'s HCI checklist on every screen built in Phases 1–8.2 — including the Phase 7.6 sidebar/chart redesign, settings/profile/review/category/filter pages, the Customer restyle (theme toggle, FloatingNav, real imagery), Phase 8's payment/verification/payout screens, and Phase 8.2's Ads admin page/homepage carousel/slip modal, none of which had a dedicated verification pass when built.
 - [chrome-ui-testing-agent](agents/chrome-ui-testing-agent.md) run across Customer/Seller/Admin on mobile + desktop breakpoints, **in both light and dark mode** now that the theme toggle is site-wide (not just one Customer palette).
 - Gap-fill for [frontend-unit-testing-agent](agents/frontend-unit-testing-agent.md) / [frontend-integration-testing-agent](agents/frontend-integration-testing-agent.md) coverage, including the Phase 7.6 product-search endpoint, product-level reviews, and Phase 8's payment/payout flows.
 - Accessibility spot-check (keyboard nav, contrast, screen-reader labels) per the checklist — re-check contrast specifically, since the pink `#EF88AD` primary is new and wasn't checked against WCAG AA in either light or dark mode when introduced.
@@ -250,7 +304,7 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 - Production environment config, Postgres/PostGIS in production, queue/scheduler setup if needed, HTTPS/domain, backups.
 - CI pipeline (test suite gating deploys).
 
-**Exit criteria:** production deployment reachable, passes a smoke test of the Phase 9 golden paths (Phases 1–8's full screen set, verified in Phase 9).
+**Exit criteria:** production deployment reachable, passes a smoke test of the Phase 9 golden paths (Phases 1–8.2's full screen set, verified in Phase 9).
 
 ---
 
