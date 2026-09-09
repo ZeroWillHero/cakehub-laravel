@@ -110,6 +110,21 @@ export default function ListingForm({ categories, usage, limit, product }: Props
         const file = e.target.files?.[0];
         if (!file || !product) return;
 
+        // Validate file size
+        if (file.size > 20 * 1024 * 1024) {
+            setImageError('File size must be less than 20MB');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            setImageError('Please upload a valid image file (JPG, PNG, or WebP)');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
         setUploading(true);
         setImageError(null);
 
@@ -120,7 +135,7 @@ export default function ListingForm({ categories, usage, limit, product }: Props
             setImages((prev) => [...prev, uploaded]);
         } catch (err) {
             const apiError = err as { errors?: Record<string, string[]> };
-            setImageError(apiError.errors?.image?.[0] ?? 'Could not upload image.');
+            setImageError(apiError.errors?.image?.[0] ?? 'Could not upload image. Please try again.');
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -378,8 +393,9 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                 ))}
                             </div>
                             <div>
-                                <Label htmlFor="image-upload" className="mb-2 block">
+                                <Label htmlFor="image-upload" className="mb-2 flex items-center gap-2">
                                     Add a photo
+                                    {uploading && <Spinner size={16} />}
                                 </Label>
                                 <input
                                     ref={fileInputRef}
@@ -388,10 +404,15 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                     accept="image/png,image/jpeg,image/webp"
                                     onChange={uploadImage}
                                     disabled={uploading}
-                                    className="min-h-11 w-full text-sm file:mr-3 file:min-h-11 file:rounded-md file:border file:bg-background file:px-3 file:text-sm"
+                                    className="min-h-11 w-full text-sm file:mr-3 file:min-h-11 file:rounded-md file:border file:bg-background file:px-3 file:text-sm disabled:opacity-50"
                                 />
-                                {uploading && <p className="mt-1 text-sm text-muted-foreground">Uploading…</p>}
-                                {imageError && <p className="mt-1 text-sm text-destructive">{imageError}</p>}
+                                {uploading && (
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Spinner size={16} />
+                                        <span>Uploading image to cloud...</span>
+                                    </div>
+                                )}
+                                {imageError && <p className="mt-2 text-sm text-destructive">{imageError}</p>}
                             </div>
                         </CardContent>
                     </Card>

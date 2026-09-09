@@ -100,6 +100,11 @@ class CloudinaryHelper
 
         $cloudName = config('cloudinary.cloud_name');
 
+        // If not configured, return empty string instead of invalid test URL
+        if (!$cloudName || $cloudName === 'test-cloud') {
+            return '';
+        }
+
         // Build transformation string
         $transformString = '';
         if (!empty($transforms)) {
@@ -122,6 +127,11 @@ class CloudinaryHelper
         }
 
         $cloudName = config('cloudinary.cloud_name');
+
+        // If not configured, return empty string instead of invalid test URL
+        if (!$cloudName || $cloudName === 'test-cloud') {
+            return '';
+        }
 
         return "https://res.cloudinary.com/{$cloudName}/image/upload/{$publicId}";
     }
