@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import FloatingNav from '@/components/shared/FloatingNav';
+import GoogleIcon from '@/components/shared/GoogleIcon';
 import NotificationBell from '@/components/shared/NotificationBell';
 import ThemeToggle from '@/components/shared/ThemeToggle';
 import { useScrolledDown } from '@/lib/useScrollDirection';
@@ -68,13 +69,24 @@ export default function SiteHeader() {
                             <NotificationBell />
                         </div>
 
-                        {user && (
+                        {user ? (
                             <Link href="/account" className="hidden md:block" aria-label="Account">
                                 <Avatar className="size-8">
                                     <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
                                     <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                             </Link>
+                        ) : (
+                            <a
+                                href="/auth/google/redirect"
+                                className={cn(
+                                    buttonVariants({ size: 'sm' }),
+                                    'hidden min-h-9 items-center gap-2 md:inline-flex',
+                                )}
+                            >
+                                <GoogleIcon className="size-4" />
+                                Continue with Google
+                            </a>
                         )}
 
                         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -107,6 +119,19 @@ export default function SiteHeader() {
                                         </SheetClose>
                                     ))}
                                 </nav>
+
+                                {!user && (
+                                    <a
+                                        href="/auth/google/redirect"
+                                        className={cn(
+                                            buttonVariants({ size: 'lg' }),
+                                            'mx-4 mt-6 flex min-h-11 items-center justify-center gap-2',
+                                        )}
+                                    >
+                                        <GoogleIcon className="size-5" />
+                                        Continue with Google
+                                    </a>
+                                )}
                             </SheetContent>
                         </Sheet>
                     </div>
