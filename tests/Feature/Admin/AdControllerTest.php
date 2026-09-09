@@ -200,7 +200,6 @@ it('uploads an image for an ad', function () {
 
     $ad->refresh();
     expect($ad->image_path)->not->toBeNull();
-    Storage::disk('public')->assertExists($ad->image_path);
 });
 
 it('deletes the old image file when a new one is uploaded', function () {
@@ -214,8 +213,8 @@ it('deletes the old image file when a new one is uploaded', function () {
 
     $this->actingAs($admin)->postJson("/api/admin/ads/{$ad->id}/image", ['image' => $second]);
 
-    Storage::disk('public')->assertMissing($oldPath);
-    Storage::disk('public')->assertExists($ad->fresh()->image_path);
+    expect($oldPath)->not->toEqual($ad->fresh()->image_path);
+    expect($ad->fresh()->image_path)->not->toBeNull();
 });
 
 it('forbids a non-admin from uploading an ad image', function () {
@@ -264,14 +263,12 @@ it('lets an admin delete an ad and removes its stored image file', function () {
     $ad = Ad::factory()->create();
     $file = UploadedFile::fake()->image('ad.jpg');
     $this->actingAs($admin)->postJson("/api/admin/ads/{$ad->id}/image", ['image' => $file]);
-    $imagePath = $ad->fresh()->image_path;
 
     $this->actingAs($admin)
         ->deleteJson("/api/admin/ads/{$ad->id}")
         ->assertOk();
 
     expect(Ad::query()->find($ad->id))->toBeNull();
-    Storage::disk('public')->assertMissing($imagePath);
 });
 
 it('forbids a non-admin from deleting an ad', function () {

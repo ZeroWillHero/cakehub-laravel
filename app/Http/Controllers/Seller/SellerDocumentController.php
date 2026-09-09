@@ -8,8 +8,7 @@ use App\Http\Requests\Seller\StoreDocumentRequest;
 use App\Http\Resources\SellerDocumentResource;
 use App\Models\SellerDocument;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Http\RedirectResponse;
 
 class SellerDocumentController extends Controller
 {
@@ -31,7 +30,7 @@ class SellerDocumentController extends Controller
         return (new SellerDocumentResource($document))->response()->setStatusCode(201);
     }
 
-    public function show(SellerDocument $document): Response
+    public function show(SellerDocument $document): RedirectResponse
     {
         $this->authorize('view', $document);
 

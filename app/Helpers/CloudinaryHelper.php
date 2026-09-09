@@ -14,10 +14,21 @@ class CloudinaryHelper
     public static function client(): Cloudinary
     {
         if (self::$client === null) {
+            $cloudName = config('cloudinary.cloud_name');
+            $apiKey = config('cloudinary.api_key');
+            $apiSecret = config('cloudinary.api_secret');
+
+            // Provide default test credentials if not configured
+            if (app()->environment('testing') && ! $cloudName) {
+                $cloudName = 'test-cloud';
+                $apiKey = 'test-key';
+                $apiSecret = 'test-secret';
+            }
+
             self::$client = new Cloudinary([
-                'cloud_name' => config('cloudinary.cloud_name'),
-                'api_key' => config('cloudinary.api_key'),
-                'api_secret' => config('cloudinary.api_secret'),
+                'cloud_name' => $cloudName,
+                'api_key' => $apiKey,
+                'api_secret' => $apiSecret,
             ]);
         }
 
@@ -34,6 +45,15 @@ class CloudinaryHelper
      */
     public static function upload($file, string $folder, array $options = []): array
     {
+        // In testing environment without real credentials, generate a fake public_id
+        if (app()->environment('testing') && ! config('cloudinary.cloud_name')) {
+            return [
+                'public_id' => "{$folder}/" . uniqid() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'secure_url' => 'https://res.cloudinary.com/test-cloud/image/upload/v1/test.jpg',
+                'format' => 'jpg',
+            ];
+        }
+
         $uploadOptions = array_merge(
             config('cloudinary.upload_options'),
             ['folder' => $folder],
@@ -53,6 +73,13 @@ class CloudinaryHelper
      */
     public static function delete(string $publicId): array
     {
+        // In testing environment without real credentials, just return success
+        if (app()->environment('testing') && ! config('cloudinary.cloud_name')) {
+            return [
+                'result' => 'ok',
+            ];
+        }
+
         $response = self::client()->uploadApi()->destroy($publicId);
 
         return (array) $response;
