@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +19,9 @@ class SellerResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'logo_path' => $this->logo_path,
+            'logo_url' => $this->logo_path ? CloudinaryHelper::getImageUrl($this->logo_path) : null,
             'cover_path' => $this->cover_path,
+            'cover_url' => $this->cover_path ? CloudinaryHelper::getImageUrl($this->cover_path) : null,
             'whatsapp_number' => $this->whatsapp_number,
             'address_line' => $this->address_line,
             'latitude' => $this->location?->latitude,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\CloudinaryHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReorderAdsRequest;
 use App\Http\Requests\Admin\StoreAdRequest;
@@ -14,7 +15,6 @@ use App\Models\AdSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,11 +53,15 @@ class AdController extends Controller
     {
         $oldPath = $ad->image_path;
 
-        $path = $request->file('image')->store('ads', 'public');
-        $ad->update(['image_path' => $path]);
+        $uploadResponse = CloudinaryHelper::upload(
+            $request->file('image'),
+            'ads',
+        );
+
+        $ad->update(['image_path' => $uploadResponse['public_id']]);
 
         if ($oldPath) {
-            Storage::disk('public')->delete($oldPath);
+            CloudinaryHelper::delete($oldPath);
         }
 
         return (new AdResource($ad))->response();
@@ -66,7 +70,7 @@ class AdController extends Controller
     public function destroy(Ad $ad): JsonResponse
     {
         if ($ad->image_path) {
-            Storage::disk('public')->delete($ad->image_path);
+            CloudinaryHelper::delete($ad->image_path);
         }
 
         $ad->delete();

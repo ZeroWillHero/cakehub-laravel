@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\CloudinaryHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReorderCategoriesRequest;
 use App\Http\Requests\Admin\StoreCategoryRequest;
@@ -12,7 +13,6 @@ use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,11 +55,15 @@ class CategoryController extends Controller
     {
         $oldPath = $category->image_path;
 
-        $path = $request->file('image')->store('categories', 'public');
-        $category->update(['image_path' => $path]);
+        $uploadResponse = CloudinaryHelper::upload(
+            $request->file('image'),
+            'categories',
+        );
+
+        $category->update(['image_path' => $uploadResponse['public_id']]);
 
         if ($oldPath) {
-            Storage::disk('public')->delete($oldPath);
+            CloudinaryHelper::delete($oldPath);
         }
 
         return (new CategoryResource($category))->response();

@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\AdStatus;
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +24,13 @@ class Ad extends Model
             'starts_at' => 'date',
             'ends_at' => 'date',
         ];
+    }
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->image_path ? CloudinaryHelper::getImageUrl($this->image_path) : null,
+        );
     }
 
     /** Ads currently eligible for the homepage carousel: active and within their date range. */

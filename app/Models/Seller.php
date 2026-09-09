@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\SellerSubscriptionStatus;
 use App\Enums\StoreStatus;
 use App\Enums\VerificationStatus;
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +34,20 @@ class Seller extends Model
             'verified_at' => 'datetime',
             'average_rating' => 'decimal:2',
         ];
+    }
+
+    protected function logoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->logo_path ? CloudinaryHelper::getImageUrl($this->logo_path) : null,
+        );
+    }
+
+    protected function coverUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->cover_path ? CloudinaryHelper::getImageUrl($this->cover_path) : null,
+        );
     }
 
     public function user(): BelongsTo

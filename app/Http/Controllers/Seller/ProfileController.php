@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Seller;
 
+use App\Helpers\CloudinaryHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seller\StoreProfileRequest;
 use App\Http\Requests\Seller\UploadSellerImageRequest;
 use App\Http\Resources\SellerResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -56,11 +56,15 @@ class ProfileController extends Controller
 
         $oldPath = $seller->{$column};
 
-        $path = $request->file('image')->store("sellers/{$seller->id}", 'public');
-        $seller->update([$column => $path]);
+        $uploadResponse = CloudinaryHelper::upload(
+            $request->file('image'),
+            'sellers/' . $seller->id,
+        );
+
+        $seller->update([$column => $uploadResponse['public_id']]);
 
         if ($oldPath) {
-            Storage::disk('public')->delete($oldPath);
+            CloudinaryHelper::delete($oldPath);
         }
 
         return (new SellerResource($seller))->response();

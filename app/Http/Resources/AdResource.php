@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,7 @@ class AdResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'image_path' => $this->image_path,
+            'image_url' => $this->image_path ? CloudinaryHelper::getImageUrl($this->image_path) : null,
             'link_url' => $this->link_url,
             'paid_amount' => (float) $this->paid_amount,
             'status' => $this->status->value,
