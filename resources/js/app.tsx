@@ -3,6 +3,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import type { ResolvedComponent } from '@inertiajs/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import LoadingScreen from '@/components/shared/LoadingScreen';
 
 createInertiaApp({
     resolve: (name) => {
@@ -16,6 +17,7 @@ createInertiaApp({
         if (!el) return;
         createRoot(el).render(
             <TooltipProvider>
+                <LoadingScreen />
                 <App {...props} />
             </TooltipProvider>,
         );

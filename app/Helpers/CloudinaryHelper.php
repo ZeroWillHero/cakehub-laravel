@@ -45,12 +45,13 @@ class CloudinaryHelper
      */
     public static function upload($file, string $folder, array $options = []): array
     {
-        // In testing environment without real credentials, generate a fake public_id
-        if (app()->environment('testing') && ! config('cloudinary.cloud_name')) {
+        // In testing environment, generate a fake public_id without hitting Cloudinary
+        if (app()->environment('testing')) {
             return [
                 'public_id' => "{$folder}/" . uniqid() . '_' . pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
                 'secure_url' => 'https://res.cloudinary.com/test-cloud/image/upload/v1/test.jpg',
-                'format' => 'jpg',
+                'format' => pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION),
+                'size' => $file->getSize(),
             ];
         }
 
