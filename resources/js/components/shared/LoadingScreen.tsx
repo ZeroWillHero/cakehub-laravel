@@ -1,34 +1,17 @@
-import { useEffect, useState, useRef } from 'react';
-import { usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import { router } from '@inertiajs/react';
 import Spinner from '@/components/shared/Spinner';
 
 export default function LoadingScreen() {
     const [isLoading, setIsLoading] = useState(false);
-    const page = usePage();
-    const previousComponentRef = useRef(page.component);
 
     useEffect(() => {
-        // Detect page component changes (navigation)
-        if (previousComponentRef.current !== page.component) {
-            setIsLoading(false);
-        }
-        previousComponentRef.current = page.component;
-    }, [page.component]);
-
-    // Handle page navigation start by listening to link clicks
-    useEffect(() => {
-        const handleLinkClick = (e: MouseEvent) => {
-            const target = (e.target as HTMLElement).closest('a');
-            // Show loader on link clicks (except for links with data-no-loading attribute)
-            if (target && target.href && !target.getAttribute('data-no-loading')) {
-                setIsLoading(true);
-            }
-        };
-
-        document.addEventListener('click', handleLinkClick);
+        const removeStartListener = router.on('start', () => setIsLoading(true));
+        const removeFinishListener = router.on('finish', () => setIsLoading(false));
 
         return () => {
-            document.removeEventListener('click', handleLinkClick);
+            removeStartListener();
+            removeFinishListener();
         };
     }, []);
 

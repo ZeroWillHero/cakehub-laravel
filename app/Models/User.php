@@ -64,4 +64,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class, 'customer_id');
     }
+
+    public function notificationPreferences(): HasOne
+    {
+        return $this->hasOne(UserNotificationPreference::class);
+    }
 }

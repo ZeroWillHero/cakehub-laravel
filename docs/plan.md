@@ -298,11 +298,10 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 **Goal:** ship to a real environment.
 
-**Open decision:** hosting target has not been discussed at all yet (Vercel is available via this session's plugin, but Laravel is a full PHP app — Vercel is not a natural fit for a standard Laravel deployment; typical choices are Laravel Forge, a VPS, Railway, Render, or similar PHP-friendly hosts). **Do not assume Vercel just because tooling for it is present in this session** — ask before picking a host.
+**Decided (2026-09-16):** single AWS EC2 instance, Dockerized (`Dockerfile` + `docker-compose.yml` at repo root — app container, queue-worker container, Caddy reverse proxy for automatic HTTPS), database on Supabase (managed Postgres with the `postgis` extension enabled via the Supabase dashboard — Supabase Postgres/PostGIS only, no other Supabase products). Deploys are automated via GitHub Actions (`.github/workflows/deploy.yml`): build & push image to GHCR, then SSH into EC2 to `docker compose pull/up` and run migrations. All production env vars are shipped as a single base64-encoded `.env` GitHub Actions secret (`ENV_FILE_B64`), decoded on the instance during deploy. See [docs/deployment.md](deployment.md) for the full manual setup walkthrough.
 
-**What gets built (once host is chosen):**
-- Production environment config, Postgres/PostGIS in production, queue/scheduler setup if needed, HTTPS/domain, backups.
-- CI pipeline (test suite gating deploys).
+**What gets built:**
+- Production environment config, Postgres/PostGIS on Supabase, queue worker container (database-driven queue, no Redis), HTTPS via Caddy + Let's Encrypt, GitHub Actions CI/CD.
 
 **Exit criteria:** production deployment reachable, passes a smoke test of the Phase 9 golden paths (Phases 1–8.2's full screen set, verified in Phase 9).
 
