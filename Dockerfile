@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+
+FROM node:22-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --ignore-platform-reqs
+COPY . .
+RUN composer dump-autoload --optimize --no-dev
+
+FROM php:8.4-fpm-alpine AS app
+
+RUN apk add --no-cache \
+        nginx \
+        supervisor \
+        postgresql-dev \
+        libzip-dev \
+        libpng-dev \
+        icu-dev \
+        oniguruma-dev \
+    && docker-php-ext-install \
+        pdo_pgsql \
+        pgsql \
+        zip \
+        gd \
+        intl \
+        mbstring \
+        bcmath \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /var/www/html
+
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=assets /app/public/build ./public/build
+
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

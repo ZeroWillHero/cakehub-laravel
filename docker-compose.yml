@@ -1,0 +1,32 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  app:
+    image: ghcr.io/OWNER/cake-hub:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "80"
+
+  queue:
+    image: ghcr.io/OWNER/cake-hub:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: php artisan queue:work --tries=3 --sleep=3
+
+volumes:
+  caddy_data:
+  caddy_config:
