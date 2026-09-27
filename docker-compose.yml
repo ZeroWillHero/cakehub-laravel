@@ -11,6 +11,8 @@ services:
       - caddy_config:/config
     depends_on:
       - app
+    networks:
+      - app-network
 
   app:
     build: .
@@ -19,6 +21,11 @@ services:
       - .env
     expose:
       - "80"
+    networks:
+      - app-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   queue:
     build: .
@@ -26,7 +33,22 @@ services:
     env_file:
       - .env
     command: php artisan queue:work --tries=3 --sleep=3
+    networks:
+      - app-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 volumes:
   caddy_data:
   caddy_config:
+
+networks:
+  app-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+        - subnet: 2001:db8:1234::/64
