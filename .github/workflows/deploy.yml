@@ -30,7 +30,8 @@ jobs:
             set -e
             cd ~/cakehub-laravel
 
-            # Pull latest code
+            # Reset local changes and pull latest code
+            git reset --hard HEAD
             git pull origin main
 
             # Build Docker image on the server
