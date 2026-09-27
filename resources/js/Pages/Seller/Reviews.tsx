@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import SellerLayout from '@/Layouts/SellerLayout';
 import RatingStars from '@/components/shared/RatingStars';
 import { api } from '@/lib/api';
 import type { Review } from '@/types/order';
@@ -31,7 +33,15 @@ function ReviewCard({ review, onResponded }: { review: Review; onResponded: (r: 
         <Card>
             <CardContent className="space-y-2 py-4">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{review.customer?.name}</span>
+                    <div className="flex items-center gap-2">
+                        <Avatar className="size-6">
+                            <AvatarImage src={review.customer?.avatar_url ?? undefined} alt={review.customer?.name} />
+                            <AvatarFallback className="text-[10px]">
+                                {review.customer?.name?.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{review.customer?.name}</span>
+                    </div>
                     <RatingStars value={review.rating} />
                 </div>
                 {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
@@ -71,32 +81,30 @@ export default function SellerReviews({ reviews: initialReviews, averageRating }
     const [reviews, setReviews] = useState(initialReviews);
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Reviews</h1>
-                    <div className="flex items-center gap-2">
-                        <RatingStars value={Math.round(averageRating)} />
-                        <span className="text-sm text-muted-foreground">{averageRating.toFixed(1)} average</span>
-                    </div>
+        <SellerLayout breadcrumb={['Reviews']}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-semibold">Reviews</h1>
+                <div className="flex items-center gap-2">
+                    <RatingStars value={Math.round(averageRating)} />
+                    <span className="text-sm text-muted-foreground">{averageRating.toFixed(1)} average</span>
                 </div>
-
-                {reviews.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No reviews yet.</p>
-                ) : (
-                    <div className="space-y-3">
-                        {reviews.map((review) => (
-                            <ReviewCard
-                                key={review.id}
-                                review={review}
-                                onResponded={(updated) =>
-                                    setReviews((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
-                                }
-                            />
-                        ))}
-                    </div>
-                )}
             </div>
-        </div>
+
+            {reviews.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No reviews yet.</p>
+            ) : (
+                <div className="space-y-3">
+                    {reviews.map((review) => (
+                        <ReviewCard
+                            key={review.id}
+                            review={review}
+                            onResponded={(updated) =>
+                                setReviews((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+                            }
+                        />
+                    ))}
+                </div>
+            )}
+        </SellerLayout>
     );
 }

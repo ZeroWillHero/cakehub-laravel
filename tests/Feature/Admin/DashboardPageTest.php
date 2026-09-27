@@ -23,3 +23,41 @@ it('forbids a non-admin from viewing the admin dashboard', function () {
 
     $this->actingAs($customer)->get('/admin/dashboard')->assertForbidden();
 });
+
+it('includes a 30-day orders/new-sellers analytics series on the admin dashboard', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get('/admin/dashboard')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Dashboard')
+            ->has('analytics.ordersOverTime', 30)
+            ->has('analytics.newSellersOverTime', 30)
+            ->has('analytics.statusBreakdown'));
+});
+
+it('honors a valid range query param on the admin dashboard', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get('/admin/dashboard?range=90')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('analytics.range', 90)
+            ->has('analytics.ordersOverTime', 90)
+            ->has('analytics.newSellersOverTime', 90));
+});
+
+it('lets an admin download a CSV export of the dashboard stats', function () {
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin)->get('/admin/dashboard/export');
+
+    $response->assertOk();
+    expect($response->headers->get('Content-Type'))->toContain('text/csv');
+});
+
+it('forbids a non-admin from downloading the dashboard export', function () {
+    $customer = User::factory()->customer()->create();
+
+    $this->actingAs($customer)->get('/admin/dashboard/export')->assertForbidden();
+});

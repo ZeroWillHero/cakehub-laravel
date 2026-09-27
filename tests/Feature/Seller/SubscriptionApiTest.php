@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\SellerSubscriptionStatus;
-use App\Models\Product;
 use App\Models\Seller;
 use App\Models\SellerSubscription;
 use App\Models\SubscriptionPlan;
@@ -9,7 +8,7 @@ use App\Models\User;
 use App\Notifications\SubscriptionStatusUpdated;
 use Illuminate\Support\Facades\Notification;
 
-it('lets a seller subscribe to a plan', function () {
+it('lets a seller subscribe to a plan, starting pending until payment is verified', function () {
     Notification::fake();
     $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
     $plan = SubscriptionPlan::factory()->create(['name' => 'Pro', 'listing_limit' => 50, 'billing_cycle' => 'monthly']);
@@ -17,14 +16,16 @@ it('lets a seller subscribe to a plan', function () {
     $this->actingAs($seller->user)
         ->postJson('/api/seller/subscription/checkout', ['subscription_plan_id' => $plan->id])
         ->assertCreated()
-        ->assertJsonPath('data.status', 'active')
+        ->assertJsonPath('data.status', 'pending')
         ->assertJsonPath('data.plan.name', 'Pro');
 
-    expect($seller->activeSubscription()->subscription_plan_id)->toBe($plan->id);
-    Notification::assertSentTo($seller->user, SubscriptionStatusUpdated::class);
+    expect($seller->activeSubscription())->toBeNull();
+    // No gateway charge, no notification yet — that happens once an admin
+    // verifies the bank-transfer slip (Phase 8).
+    Notification::assertNotSentTo($seller->user, SubscriptionStatusUpdated::class);
 });
 
-it('cancels the previous active subscription when subscribing to a new plan', function () {
+it('keeps the previous active subscription untouched while the new one is pending', function () {
     $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
     $oldPlan = SubscriptionPlan::factory()->create(['name' => 'Basic']);
     $old = SellerSubscription::factory()->for($seller)->for($oldPlan, 'subscriptionPlan')->create();
@@ -34,22 +35,10 @@ it('cancels the previous active subscription when subscribing to a new plan', fu
         ->postJson('/api/seller/subscription/checkout', ['subscription_plan_id' => $newPlan->id])
         ->assertCreated();
 
-    expect($old->fresh()->status)->toBe(SellerSubscriptionStatus::Cancelled);
-});
-
-it('hides excess listings when downgrading to a lower limit', function () {
-    $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
-    $bigPlan = SubscriptionPlan::factory()->create(['listing_limit' => 10]);
-    SellerSubscription::factory()->for($seller)->for($bigPlan, 'subscriptionPlan')->create();
-    Product::factory()->count(3)->for($seller)->create(['is_active' => true]);
-    $smallPlan = SubscriptionPlan::factory()->create(['listing_limit' => 1]);
-
-    $this->actingAs($seller->user)
-        ->postJson('/api/seller/subscription/checkout', ['subscription_plan_id' => $smallPlan->id])
-        ->assertCreated();
-
-    expect($seller->products()->where('is_active', true)->count())->toBe(1);
-    expect($seller->products()->count())->toBe(3);
+    // The old subscription is only cancelled once the new one's payment is
+    // verified (Admin\PaymentVerificationController@verify) — see
+    // tests/Feature/PaymentApiTest.php.
+    expect($old->fresh()->status)->toBe(SellerSubscriptionStatus::Active);
 });
 
 it('rejects subscribing to an inactive plan', function () {

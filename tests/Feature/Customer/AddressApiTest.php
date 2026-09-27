@@ -22,6 +22,25 @@ it('creates an address for the authenticated customer', function () {
     expect(Address::where('user_id', $user->id)->count())->toBe(1);
 });
 
+it('stores latitude/longitude when provided from the map picker', function () {
+    $user = actingCustomer();
+
+    $this->actingAs($user)
+        ->postJson('/api/addresses', [
+            'line1' => '123 Main St',
+            'city' => 'Springfield',
+            'latitude' => 37.7749,
+            'longitude' => -122.4194,
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.latitude', 37.7749)
+        ->assertJsonPath('data.longitude', -122.4194);
+
+    $address = Address::where('user_id', $user->id)->first();
+    expect($address->location->latitude)->toBe(37.7749);
+    expect($address->location->longitude)->toBe(-122.4194);
+});
+
 it('rejects an address create request missing required fields', function () {
     $user = actingCustomer();
 

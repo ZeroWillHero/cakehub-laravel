@@ -2,9 +2,11 @@ import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
 import RatingStars from '@/components/shared/RatingStars';
+import Section from '@/components/shared/Section';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types/product';
 import type { Seller } from '@/types/seller';
@@ -23,14 +25,33 @@ function whatsappLink(seller: Seller): string {
 export default function Storefront({ seller, products }: Props) {
     return (
         <CustomerLayout>
-            <ImagePlaceholder label={`${seller.business_name} cover photo`} className="aspect-[3/1] w-full rounded-none" />
+            {seller.cover_path ? (
+                <img
+                    src={`/storage/${seller.cover_path}`}
+                    alt={`${seller.business_name} cover photo`}
+                    className="aspect-[3/1] w-full object-cover"
+                />
+            ) : (
+                <ImagePlaceholder label={`${seller.business_name} cover photo`} className="aspect-[3/1] w-full rounded-none" />
+            )}
 
             <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="font-heading text-2xl font-semibold">{seller.business_name}</h1>
-                            {seller.verification_status === 'verified' && <Badge>Verified</Badge>}
+                        <div className="flex items-center gap-3">
+                            <Avatar className="size-14 border">
+                                <AvatarImage
+                                    src={seller.logo_path ? `/storage/${seller.logo_path}` : undefined}
+                                    alt={seller.business_name}
+                                />
+                                <AvatarFallback>{seller.business_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h1 className="font-heading text-2xl font-semibold">{seller.business_name}</h1>
+                                    {seller.verification_status === 'verified' && <Badge>Verified</Badge>}
+                                </div>
+                            </div>
                         </div>
                         <div className="mt-1 flex items-center gap-2">
                             <RatingStars value={Math.round(seller.average_rating)} />
@@ -52,19 +73,28 @@ export default function Storefront({ seller, products }: Props) {
                         Contact on WhatsApp
                     </a>
                 </div>
+            </div>
 
-                <h2 className="font-heading mt-8 text-xl font-semibold">Products</h2>
+            <Section title="Products" className="pt-0">
                 {products.length === 0 ? (
-                    <p className="mt-4 text-sm text-muted-foreground">No products listed yet.</p>
+                    <p className="text-sm text-muted-foreground">No products listed yet.</p>
                 ) : (
-                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {products.map((product) => (
                             <Link key={product.id} href={`/sellers/${seller.slug}/products/${product.id}`}>
                                 <Card className="h-full transition-shadow hover:shadow-md">
-                                    <ImagePlaceholder
-                                        label={product.name}
-                                        className="aspect-square w-full rounded-b-none"
-                                    />
+                                    {product.images[0] ? (
+                                        <img
+                                            src={product.images[0].url}
+                                            alt={product.name}
+                                            className="aspect-square w-full rounded-t-lg object-cover"
+                                        />
+                                    ) : (
+                                        <ImagePlaceholder
+                                            label={product.name}
+                                            className="aspect-square w-full rounded-b-none"
+                                        />
+                                    )}
                                     <CardContent className="py-4">
                                         <p className="font-medium">{product.name}</p>
                                         <p className="text-sm text-muted-foreground">
@@ -76,7 +106,7 @@ export default function Storefront({ seller, products }: Props) {
                         ))}
                     </div>
                 )}
-            </div>
+            </Section>
         </CustomerLayout>
     );
 }

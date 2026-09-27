@@ -18,6 +18,7 @@ class StoreReviewRequest extends FormRequest
         return [
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['nullable', 'string', 'max:2000'],
+            'order_item_id' => ['nullable', 'integer', 'exists:order_items,id'],
         ];
     }
 
@@ -25,12 +26,21 @@ class StoreReviewRequest extends FormRequest
     {
         $validator->after(function (ValidatorContract $validator) {
             $order = $this->route('order');
+            $orderItemId = $this->input('order_item_id');
 
             if ($order->status !== OrderStatus::Completed) {
                 $validator->errors()->add('order', 'Only completed orders can be reviewed.');
             }
 
-            if ($order->review()->exists()) {
+            if ($orderItemId !== null) {
+                $item = $order->items->firstWhere('id', (int) $orderItemId);
+
+                if ($item === null) {
+                    $validator->errors()->add('order_item_id', 'That item does not belong to this order.');
+                } elseif ($item->review()->exists()) {
+                    $validator->errors()->add('order_item_id', 'This item has already been reviewed.');
+                }
+            } elseif ($order->review()->exists()) {
                 $validator->errors()->add('order', 'This order has already been reviewed.');
             }
         });

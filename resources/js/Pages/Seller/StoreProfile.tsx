@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AddressMapPicker from '@/components/shared/AddressMapPicker';
+import SellerLayout from '@/Layouts/SellerLayout';
 import { api } from '@/lib/api';
 import type { Seller } from '@/types/seller';
 import type { DocumentType, SellerDocument } from '@/types/sellerDocument';
@@ -23,6 +25,64 @@ const statusVariant: Record<SellerDocument['status'], 'default' | 'secondary' | 
     approved: 'default',
     rejected: 'destructive',
 };
+
+function SellerImageUpload({
+    label,
+    endpoint,
+    path: initialPath,
+    aspect,
+}: {
+    label: string;
+    endpoint: string;
+    path: string | null;
+    aspect: string;
+}) {
+    const [path, setPath] = useState(initialPath);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    async function upload(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        setError(null);
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const updated = await api.upload<Seller>(endpoint, formData);
+            setPath(endpoint.endsWith('logo') ? updated.logo_path : updated.cover_path);
+        } catch (err) {
+            const apiError = err as { message?: string };
+            setError(apiError.message ?? 'Upload failed.');
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
+    }
+
+    return (
+        <div className="space-y-2">
+            <Label>{label}</Label>
+            {path ? (
+                <img src={`/storage/${path}`} alt={label} className={`w-full rounded-lg border object-cover ${aspect}`} />
+            ) : (
+                <div className={`flex w-full items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground ${aspect}`}>
+                    No {label.toLowerCase()} uploaded
+                </div>
+            )}
+            <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                disabled={uploading}
+                onChange={upload}
+                className="text-sm"
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+    );
+}
 
 function DocumentUpload({ documents: initialDocuments }: { documents: SellerDocument[] }) {
     const [documents, setDocuments] = useState(initialDocuments);
@@ -111,6 +171,8 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
         description: initialSeller.description ?? '',
         whatsapp_number: initialSeller.whatsapp_number,
         address_line: initialSeller.address_line ?? '',
+        latitude: initialSeller.latitude,
+        longitude: initialSeller.longitude,
     });
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [saving, setSaving] = useState(false);
@@ -133,8 +195,28 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl">
+        <SellerLayout breadcrumb={['Store Profile']}>
+            <div className="mx-auto w-full max-w-2xl space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Logo & cover photo</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <SellerImageUpload
+                            label="Logo"
+                            endpoint="/seller/profile/logo"
+                            path={initialSeller.logo_path}
+                            aspect="aspect-square"
+                        />
+                        <SellerImageUpload
+                            label="Cover photo"
+                            endpoint="/seller/profile/cover"
+                            path={initialSeller.cover_path}
+                            aspect="aspect-video"
+                        />
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Store profile</CardTitle>
@@ -173,6 +255,21 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
                                     onChange={(e) => setForm({ ...form, address_line: e.target.value })}
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label>Store location</Label>
+                                <AddressMapPicker
+                                    latitude={form.latitude}
+                                    longitude={form.longitude}
+                                    onChange={(latitude, longitude, label) =>
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            latitude,
+                                            longitude,
+                                            address_line: label ?? prev.address_line,
+                                        }))
+                                    }
+                                />
+                            </div>
                             <div className="flex items-center gap-3">
                                 <Button type="submit" disabled={saving} className="min-h-11">
                                     {saving ? 'Saving…' : 'Save changes'}
@@ -185,6 +282,6 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
 
                 <DocumentUpload documents={initialSeller.documents ?? []} />
             </div>
-        </div>
+        </SellerLayout>
     );
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,9 +17,12 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'image_path' => $this->image_path,
+            'image_url' => $this->image_path ? CloudinaryHelper::getImageUrl($this->image_path) : null,
             'parent_id' => $this->parent_id,
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
+            'created_by' => $this->created_by,
         ];
     }
 }

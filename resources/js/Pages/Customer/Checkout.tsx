@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import PaymentSlipForm from '@/components/shared/PaymentSlipForm';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import PageHero from '@/components/shared/PageHero';
+import Section from '@/components/shared/Section';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { Address } from '@/types/address';
@@ -22,6 +26,7 @@ export default function Checkout({ items, addresses }: Props) {
     const [scheduledAt, setScheduledAt] = useState('');
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [submitting, setSubmitting] = useState(false);
+    const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
     const total = useMemo(() => items.reduce((sum, i) => sum + i.line_total, 0), [items]);
 
@@ -36,7 +41,7 @@ export default function Checkout({ items, addresses }: Props) {
                 delivery_address_id: deliveryType === 'delivery' ? addressId : null,
                 scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
             });
-            router.visit(`/orders/${order.id}?placed=1`);
+            setPlacedOrder(order);
         } catch (err) {
             const apiError = err as { errors?: Record<string, string[]> };
             setErrors(apiError.errors ?? {});
@@ -45,22 +50,40 @@ export default function Checkout({ items, addresses }: Props) {
         }
     };
 
+    if (placedOrder) {
+        return (
+            <CustomerLayout>
+                <div className="mx-auto max-w-lg space-y-6 px-4 py-8 sm:px-6">
+                    <h1 className="font-heading text-2xl font-semibold">Pay for your order</h1>
+                    <PaymentSlipForm
+                        payableType="order"
+                        payableId={placedOrder.id}
+                        amount={placedOrder.total}
+                        onSubmitted={() => router.visit(`/orders/${placedOrder.id}?placed=1`)}
+                    />
+                </div>
+            </CustomerLayout>
+        );
+    }
+
     if (items.length === 0) {
         return (
             <CustomerLayout>
-                <div className="mx-auto max-w-md px-4 py-8 text-center sm:px-6">
-                    <p className="text-muted-foreground">Your cart is empty.</p>
-                </div>
+                <PageHero size="sm" title="Checkout" />
+                <Section className="pt-0">
+                    <p className="text-center text-muted-foreground">Your cart is empty.</p>
+                </Section>
             </CustomerLayout>
         );
     }
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 className="font-heading text-2xl font-semibold">Checkout</h1>
+            <PageHero size="sm" title="Checkout" />
 
-                <Card className="mt-6">
+            <Section className="pt-0">
+              <div className="mx-auto max-w-2xl">
+                <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Order summary</CardTitle>
                     </CardHeader>
@@ -78,7 +101,8 @@ export default function Checkout({ items, addresses }: Props) {
                             <span>${total.toFixed(2)}</span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Payment is handled directly with the seller — this step only reserves your order.
+                            After placing your order, you'll pay by bank transfer and upload a slip for
+                            verification.
                         </p>
                     </CardContent>
                 </Card>
@@ -157,10 +181,12 @@ export default function Checkout({ items, addresses }: Props) {
                     {errors.cart && <p className="text-sm text-destructive">{errors.cart[0]}</p>}
 
                     <Button type="submit" size="lg" className="w-full min-h-11" disabled={submitting}>
+                        {submitting && <Spinner className="mr-2" />}
                         {submitting ? 'Placing order…' : 'Place order'}
                     </Button>
                 </form>
-            </div>
+              </div>
+            </Section>
         </CustomerLayout>
     );
 }

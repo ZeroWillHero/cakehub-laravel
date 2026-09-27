@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\CloudinaryHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReorderCategoriesRequest;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
+use App\Http\Requests\Admin\UploadCategoryImageRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
@@ -45,6 +47,24 @@ class CategoryController extends Controller
         }
 
         $category->update($data);
+
+        return (new CategoryResource($category))->response();
+    }
+
+    public function uploadImage(UploadCategoryImageRequest $request, Category $category): JsonResponse
+    {
+        $oldPath = $category->image_path;
+
+        $uploadResponse = CloudinaryHelper::upload(
+            $request->file('image'),
+            'categories',
+        );
+
+        $category->update(['image_path' => $uploadResponse['public_id']]);
+
+        if ($oldPath) {
+            CloudinaryHelper::delete($oldPath);
+        }
 
         return (new CategoryResource($category))->response();
     }

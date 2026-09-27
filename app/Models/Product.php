@@ -22,6 +22,7 @@ class Product extends Model
     {
         return [
             'base_price' => 'decimal:2',
+            'average_rating' => 'decimal:2',
             'availability_status' => ProductAvailabilityStatus::class,
             'is_active' => 'boolean',
         ];
@@ -47,8 +48,24 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeInStock($query)
+    {
+        return $query->where('availability_status', ProductAvailabilityStatus::InStock);
+    }
+
+    public function recalculateAverageRating(): void
+    {
+        $this->average_rating = $this->reviews()->avg('rating') ?? 0;
+        $this->save();
     }
 }

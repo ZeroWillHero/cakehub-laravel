@@ -12,7 +12,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
+import PaymentSlipForm from '@/components/shared/PaymentSlipForm';
 import { api } from '@/lib/api';
 import type { SellerSubscription } from '@/types/sellerSubscription';
 import type { SubscriptionPlan } from '@/types/subscriptionPlan';
@@ -37,9 +39,11 @@ export default function SellerSubscriptionPage({
     usage,
     limit: initialLimit,
 }: Props) {
-    const [currentSubscription, setCurrentSubscription] = useState(initialSubscription);
-    const [limit, setLimit] = useState(initialLimit);
+    const [currentSubscription] = useState(initialSubscription);
+    const [limit] = useState(initialLimit);
     const [confirmPlan, setConfirmPlan] = useState<SubscriptionPlan | null>(null);
+    const [pendingSubscription, setPendingSubscription] = useState<SellerSubscription | null>(null);
+    const [pendingAmount, setPendingAmount] = useState(0);
     const [busy, setBusy] = useState(false);
 
     async function subscribe() {
@@ -49,20 +53,37 @@ export default function SellerSubscriptionPage({
             const subscription = await api.post<SellerSubscription>('/seller/subscription/checkout', {
                 subscription_plan_id: confirmPlan.id,
             });
-            setCurrentSubscription(subscription);
-            setLimit(confirmPlan.listing_limit);
+            // The subscription starts pending — it only becomes active once
+            // an admin verifies the bank-transfer slip submitted below.
+            setPendingAmount(confirmPlan.price);
+            setPendingSubscription(subscription);
             setConfirmPlan(null);
         } finally {
             setBusy(false);
         }
     }
 
-    return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
-                <h1 className="text-2xl font-semibold">Subscription</h1>
+    if (pendingSubscription) {
+        return (
+            <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-lg space-y-6">
+                    <h1 className="text-2xl font-semibold">Pay for your subscription</h1>
+                    <PaymentSlipForm
+                        payableType="subscription"
+                        payableId={pendingSubscription.id}
+                        amount={pendingAmount}
+                        onSubmitted={() => window.location.reload()}
+                    />
+                </div>
+            </div>
+        );
+    }
 
-                <Card>
+    return (
+        <SellerLayout breadcrumb={['Subscription']}>
+            <h1 className="text-2xl font-semibold">Subscription</h1>
+
+            <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Current plan</CardTitle>
                     </CardHeader>
@@ -140,8 +161,8 @@ export default function SellerSubscriptionPage({
                             <AlertDialogTitle>Switch to {confirmPlan?.name}?</AlertDialogTitle>
                             <AlertDialogDescription>
                                 {confirmPlan && confirmPlan.listing_limit !== null && limit !== null && confirmPlan.listing_limit < limit
-                                    ? "This plan's listing limit is lower than your current one. If you're over the new limit, your most recent listings will be hidden (not deleted) until you're back under it."
-                                    : 'Payment is stubbed for now — no real charge will be made.'}
+                                    ? "This plan's listing limit is lower than your current one. If you're over the new limit, your most recent listings will be hidden (not deleted) once the switch takes effect."
+                                    : "You'll pay by bank transfer on the next step — your current plan stays active until an admin verifies the payment."}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -150,7 +171,6 @@ export default function SellerSubscriptionPage({
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
-        </div>
+        </SellerLayout>
     );
 }

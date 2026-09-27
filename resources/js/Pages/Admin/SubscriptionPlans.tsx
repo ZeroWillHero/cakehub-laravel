@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { api } from '@/lib/api';
 import type { ApiError } from '@/lib/api';
 import type { BillingCycle, SubscriptionPlan } from '@/types/subscriptionPlan';
@@ -41,6 +42,13 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
     const [deleteTarget, setDeleteTarget] = useState<SubscriptionPlan | null>(null);
     const [migrateTo, setMigrateTo] = useState<number | null>(null);
     const [busy, setBusy] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+    const visiblePlans = plans.filter((plan) => {
+        if (statusFilter === 'active') return plan.is_active;
+        if (statusFilter === 'inactive') return !plan.is_active;
+        return true;
+    });
 
     async function createPlan() {
         setBusy(true);
@@ -85,9 +93,10 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
         }
     }
 
-    async function move(index: number, direction: -1 | 1) {
+    async function move(planId: number, direction: -1 | 1) {
+        const index = plans.findIndex((p) => p.id === planId);
         const target = index + direction;
-        if (target < 0 || target >= plans.length) return;
+        if (index === -1 || target < 0 || target >= plans.length) return;
 
         const reordered = [...plans];
         [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
@@ -97,24 +106,54 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Subscription plans</h1>
-                    <Button type="button" onClick={() => setFormOpen(true)}>
-                        Add plan
+        <AdminLayout breadcrumb={['Subscription Plans']}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-2xl font-semibold">Subscription plans</h1>
+                <Button type="button" onClick={() => setFormOpen(true)}>
+                    Add plan
+                </Button>
+            </div>
+
+            {plans.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        type="button"
+                        variant={statusFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setStatusFilter('all')}
+                    >
+                        All
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={statusFilter === 'active' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setStatusFilter('active')}
+                    >
+                        Active
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={statusFilter === 'inactive' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setStatusFilter('inactive')}
+                    >
+                        Inactive
                     </Button>
                 </div>
+            )}
 
-                <div className="divide-y rounded-lg border">
-                    {plans.map((plan, index) => (
+            <div className="divide-y rounded-lg border">
+                    {visiblePlans.map((plan) => {
+                        const index = plans.findIndex((p) => p.id === plan.id);
+                        return (
                         <div key={plan.id} className="flex items-center justify-between gap-3 px-4 py-3">
                             <div className="flex items-center gap-2">
                                 <div className="flex flex-col">
                                     <button
                                         type="button"
                                         disabled={index === 0}
-                                        onClick={() => move(index, -1)}
+                                        onClick={() => move(plan.id, -1)}
                                         className="disabled:opacity-30"
                                         aria-label="Move up"
                                     >
@@ -123,7 +162,7 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
                                     <button
                                         type="button"
                                         disabled={index === plans.length - 1}
-                                        onClick={() => move(index, 1)}
+                                        onClick={() => move(plan.id, 1)}
                                         className="disabled:opacity-30"
                                         aria-label="Move down"
                                     >
@@ -161,9 +200,12 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
                                 </Button>
                             </div>
                         </div>
-                    ))}
-                    {plans.length === 0 && (
-                        <p className="px-4 py-6 text-center text-sm text-muted-foreground">No plans yet.</p>
+                        );
+                    })}
+                    {visiblePlans.length === 0 && (
+                        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                            {plans.length === 0 ? 'No plans yet.' : 'No plans match this filter.'}
+                        </p>
                     )}
                 </div>
 
@@ -273,7 +315,6 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
-        </div>
+        </AdminLayout>
     );
 }

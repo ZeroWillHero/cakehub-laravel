@@ -1,7 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AdController as AdminAdController;
+use App\Http\Controllers\Admin\AdminBankAccountController as AdminAdminBankAccountController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DashboardExportController;
+use App\Http\Controllers\Admin\PaymentVerificationController;
+use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\AccountController;
@@ -9,16 +14,20 @@ use App\Http\Controllers\Customer\CartPageController;
 use App\Http\Controllers\Customer\CheckoutPageController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\Http\Controllers\Customer\ProductsController as CustomerProductsController;
 use App\Http\Controllers\Customer\SearchController;
 use App\Http\Controllers\Customer\StorefrontController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Seller\DashboardController as SellerDashboardController;
 use App\Http\Controllers\Seller\ListingController as SellerListingController;
 use App\Http\Controllers\Seller\OrderController as SellerOrderController;
+use App\Http\Controllers\Seller\PayoutPageController as SellerPayoutPageController;
 use App\Http\Controllers\Seller\ProfileController as SellerProfileController;
 use App\Http\Controllers\Seller\ReviewController as SellerReviewController;
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Seller\SellerDocumentController;
+use App\Http\Controllers\Seller\SettingsController as SellerSettingsController;
 use App\Http\Controllers\Seller\SubscriptionPageController as SellerSubscriptionPageController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,7 +38,7 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->
 // their role-appropriate landing (see CustomerHomeController).
 Route::get('/', [CustomerHomeController::class, 'index'])->name('home');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'account.active'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
     Route::get('/seller-documents/{document}', [SellerDocumentController::class, 'show'])->name('seller-documents.show');
@@ -37,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:customer')->group(function () {
         Route::get('/account', [AccountController::class, 'edit'])->name('customer.account.edit');
         Route::get('/search', [SearchController::class, 'index'])->name('search');
+        Route::get('/products', [CustomerProductsController::class, 'index'])->name('products.index');
         Route::get('/sellers/{seller:slug}', [StorefrontController::class, 'show'])->name('sellers.show');
         Route::get('/sellers/{seller:slug}/products/{product}', [StorefrontController::class, 'product'])
             ->name('sellers.products.show');
@@ -55,13 +65,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [SellerOrderController::class, 'index'])->name('orders.index');
         Route::get('/reviews', [SellerReviewController::class, 'index'])->name('reviews.index');
         Route::get('/subscription', [SellerSubscriptionPageController::class, 'show'])->name('subscription.show');
+        Route::get('/settings', [SellerSettingsController::class, 'edit'])->name('settings.edit');
+        Route::get('/payouts', [SellerPayoutPageController::class, 'index'])->name('payouts.index');
     });
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/export', [DashboardExportController::class, 'export'])->name('dashboard.export');
         Route::get('/sellers/pending', [SellerVerificationController::class, 'pending'])->name('sellers.pending');
         Route::get('/sellers/{seller}', [SellerVerificationController::class, 'show'])->name('sellers.show');
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
         Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+        Route::get('/settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
+        Route::get('/bank-accounts', [AdminAdminBankAccountController::class, 'index'])->name('bank-accounts.index');
+        Route::get('/payment-verifications', [PaymentVerificationController::class, 'index'])->name('payment-verifications.index');
+        Route::get('/seller-payouts', [AdminSellerPayoutController::class, 'index'])->name('seller-payouts.index');
+        Route::get('/ads', [AdminAdController::class, 'index'])->name('ads.index');
     });
 });

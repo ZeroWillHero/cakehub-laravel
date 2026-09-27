@@ -26,6 +26,21 @@ class SellerSearchController extends Controller
                     fn ($q) => $q->where('categories.id', $categoryId),
                 ),
             )
+            ->when(
+                isset($data['min_price']) || isset($data['max_price']),
+                fn ($query) => $query->whereHas('products', function ($q) use ($data) {
+                    if (isset($data['min_price'])) {
+                        $q->where('base_price', '>=', $data['min_price']);
+                    }
+                    if (isset($data['max_price'])) {
+                        $q->where('base_price', '<=', $data['max_price']);
+                    }
+                }),
+            )
+            ->when(
+                $data['rating_min'] ?? null,
+                fn ($query, $ratingMin) => $query->where('average_rating', '>=', $ratingMin),
+            )
             // ->withDistance/whereDistance cast to ::geometry, computing
             // planar (degree-unit) distance rather than real-world meters
             // even though `location` is a geography column — use the
@@ -53,6 +68,21 @@ class SellerSearchController extends Controller
                     'products.categories',
                     fn ($q) => $q->where('categories.id', $categoryId),
                 ),
+            )
+            ->when(
+                isset($data['min_price']) || isset($data['max_price']),
+                fn ($query) => $query->whereHas('products', function ($q) use ($data) {
+                    if (isset($data['min_price'])) {
+                        $q->where('base_price', '>=', $data['min_price']);
+                    }
+                    if (isset($data['max_price'])) {
+                        $q->where('base_price', '<=', $data['max_price']);
+                    }
+                }),
+            )
+            ->when(
+                $data['rating_min'] ?? null,
+                fn ($query, $ratingMin) => $query->where('average_rating', '>=', $ratingMin),
             )
             ->orderByDesc('average_rating')
             ->get();

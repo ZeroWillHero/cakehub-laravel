@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Seller;
 
+use App\Helpers\CloudinaryHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seller\StoreProductImageRequest;
 use App\Http\Resources\ProductImageResource;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
 
 class ProductImageController extends Controller
 {
@@ -16,10 +16,13 @@ class ProductImageController extends Controller
     {
         $this->authorize('update', $product);
 
-        $path = $request->file('image')->store("products/{$product->id}", 'public');
+        $uploadResponse = CloudinaryHelper::upload(
+            $request->file('image'),
+            'products/' . $product->seller_id,
+        );
 
         $image = $product->images()->create([
-            'path' => $path,
+            'path' => $uploadResponse['public_id'],
             'sort_order' => $product->images()->count(),
         ]);
 
@@ -32,7 +35,7 @@ class ProductImageController extends Controller
 
         abort_unless($image->product_id === $product->id, 404);
 
-        Storage::disk('public')->delete($image->path);
+        CloudinaryHelper::delete($image->path);
         $image->delete();
 
         return response()->json(['data' => ['deleted' => true]]);

@@ -22,7 +22,6 @@ it('uploads an image for the seller\'s own product', function () {
         ->assertJsonPath('data.sort_order', 0);
 
     expect($product->images()->count())->toBe(1);
-    Storage::disk('public')->assertExists($product->images()->first()->path);
 });
 
 it('rejects a non-image file upload', function () {
@@ -39,7 +38,7 @@ it('rejects a non-image file upload', function () {
 it('rejects an oversized image upload', function () {
     $seller = Seller::factory()->for(User::factory()->seller(), 'user')->create();
     $product = Product::factory()->for($seller)->create();
-    $file = UploadedFile::fake()->image('big.jpg')->size(6000); // over the 5MB (5120KB) limit
+    $file = UploadedFile::fake()->image('big.jpg')->size(21000); // over the 20MB (20480KB) limit
 
     $this->actingAs($seller->user)
         ->postJson("/api/seller/products/{$product->id}/images", ['image' => $file])
@@ -78,7 +77,6 @@ it('lets a seller delete their own product image', function () {
         ->assertOk();
 
     expect(ProductImage::query()->find($image->id))->toBeNull();
-    Storage::disk('public')->assertMissing('products/1/existing.jpg');
 });
 
 it('forbids deleting another seller\'s product image', function () {

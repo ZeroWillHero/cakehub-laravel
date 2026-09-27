@@ -18,7 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
 import type { Product, ProductAvailabilityStatus, ProductImage } from '@/types/product';
@@ -52,7 +54,11 @@ export default function ListingForm({ categories, usage, limit, product }: Props
     const [availabilityStatus, setAvailabilityStatus] = useState<ProductAvailabilityStatus>(
         product?.availability_status ?? 'in_stock',
     );
+    const [categoryList, setCategoryList] = useState<Category[]>(categories);
     const [categoryIds, setCategoryIds] = useState<number[]>(product?.categories.map((c) => c.id) ?? []);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [addingCategory, setAddingCategory] = useState(false);
+    const [newCategoryError, setNewCategoryError] = useState<string | null>(null);
     const [variants, setVariants] = useState<VariantDraft[]>(
         product?.variants.map((v) => ({
             name: v.name,
@@ -71,6 +77,23 @@ export default function ListingForm({ categories, usage, limit, product }: Props
         setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
     }
 
+    async function addCategory() {
+        if (!newCategoryName.trim()) return;
+        setAddingCategory(true);
+        setNewCategoryError(null);
+        try {
+            const created = await api.post<Category>('/seller/categories', { name: newCategoryName.trim() });
+            setCategoryList((prev) => [...prev, created]);
+            setCategoryIds((prev) => [...prev, created.id]);
+            setNewCategoryName('');
+        } catch (err) {
+            const apiError = err as { errors?: Record<string, string[]> };
+            setNewCategoryError(apiError.errors?.name?.[0] ?? 'Could not add category.');
+        } finally {
+            setAddingCategory(false);
+        }
+    }
+
     function addVariant() {
         setVariants((prev) => [...prev, { name: '', price_modifier: '0', is_default: prev.length === 0 }]);
     }
@@ -87,6 +110,21 @@ export default function ListingForm({ categories, usage, limit, product }: Props
         const file = e.target.files?.[0];
         if (!file || !product) return;
 
+        // Validate file size
+        if (file.size > 20 * 1024 * 1024) {
+            setImageError('File size must be less than 20MB');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            setImageError('Please upload a valid image file (JPG, PNG, or WebP)');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
         setUploading(true);
         setImageError(null);
 
@@ -97,7 +135,7 @@ export default function ListingForm({ categories, usage, limit, product }: Props
             setImages((prev) => [...prev, uploaded]);
         } catch (err) {
             const apiError = err as { errors?: Record<string, string[]> };
-            setImageError(apiError.errors?.image?.[0] ?? 'Could not upload image.');
+            setImageError(apiError.errors?.image?.[0] ?? 'Could not upload image. Please try again.');
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -144,9 +182,8 @@ export default function ListingForm({ categories, usage, limit, product }: Props
     };
 
     return (
-        <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl space-y-6">
-                <Card>
+        <SellerLayout breadcrumb={['Listings', isEdit ? 'Edit listing' : 'Add product']}>
+            <Card>
                     <CardHeader>
                         <CardTitle>{isEdit ? 'Edit listing' : 'Add product'}</CardTitle>
                     </CardHeader>
@@ -211,7 +248,11 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                         disabled={atLimit}
                                     >
                                         <SelectTrigger id="availability_status" className="w-full">
-                                            <SelectValue />
+                                            <SelectValue>
+                                                {(value: ProductAvailabilityStatus) =>
+                                                    availabilityOptions.find((opt) => opt.value === value)?.label
+                                                }
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {availabilityOptions.map((opt) => (
@@ -227,7 +268,7 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                             <div className="space-y-2">
                                 <Label>Categories</Label>
                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                                    {categories.map((category) => (
+                                    {categoryList.map((category) => (
                                         <label
                                             key={category.id}
                                             className="flex min-h-11 items-center gap-2 rounded-md border p-2 text-sm"
@@ -244,6 +285,26 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                 {errors.category_ids && (
                                     <p className="text-sm text-destructive">{errors.category_ids[0]}</p>
                                 )}
+                                <div className="flex items-center gap-2 pt-1">
+                                    <Input
+                                        placeholder="Can't find your category? Add one"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        disabled={atLimit || addingCategory}
+                                        className="max-w-xs"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={addCategory}
+                                        disabled={atLimit || addingCategory || !newCategoryName.trim()}
+                                    >
+                                        {addingCategory && <Spinner className="mr-2" />}
+                                        Add category
+                                    </Button>
+                                </div>
+                                {newCategoryError && <p className="text-sm text-destructive">{newCategoryError}</p>}
                             </div>
 
                             <div className="space-y-2">
@@ -289,6 +350,7 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                             </div>
 
                             <Button type="submit" disabled={saving || atLimit} className="min-h-11">
+                                {saving && <Spinner className="mr-2" />}
                                 {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add product'}
                             </Button>
                         </form>
@@ -331,8 +393,9 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                 ))}
                             </div>
                             <div>
-                                <Label htmlFor="image-upload" className="mb-2 block">
+                                <Label htmlFor="image-upload" className="mb-2 flex items-center gap-2">
                                     Add a photo
+                                    {uploading && <Spinner size={16} />}
                                 </Label>
                                 <input
                                     ref={fileInputRef}
@@ -341,15 +404,19 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                     accept="image/png,image/jpeg,image/webp"
                                     onChange={uploadImage}
                                     disabled={uploading}
-                                    className="min-h-11 w-full text-sm file:mr-3 file:min-h-11 file:rounded-md file:border file:bg-background file:px-3 file:text-sm"
+                                    className="min-h-11 w-full text-sm file:mr-3 file:min-h-11 file:rounded-md file:border file:bg-background file:px-3 file:text-sm disabled:opacity-50"
                                 />
-                                {uploading && <p className="mt-1 text-sm text-muted-foreground">Uploading…</p>}
-                                {imageError && <p className="mt-1 text-sm text-destructive">{imageError}</p>}
+                                {uploading && (
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Spinner size={16} />
+                                        <span>Uploading image to cloud...</span>
+                                    </div>
+                                )}
+                                {imageError && <p className="mt-2 text-sm text-destructive">{imageError}</p>}
                             </div>
                         </CardContent>
                     </Card>
                 )}
-            </div>
-        </div>
+        </SellerLayout>
     );
 }

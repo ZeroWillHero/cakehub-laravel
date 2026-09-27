@@ -22,7 +22,13 @@ class OrderStatusUpdated extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $channels = ['database'];
+
+        if (! $notifiable instanceof User || $notifiable->wantsEmailFor('order_status')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toMail(object $notifiable): MailMessage

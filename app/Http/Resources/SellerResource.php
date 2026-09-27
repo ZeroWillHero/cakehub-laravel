@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +19,9 @@ class SellerResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'logo_path' => $this->logo_path,
+            'logo_url' => $this->logo_path ? CloudinaryHelper::getImageUrl($this->logo_path) : null,
             'cover_path' => $this->cover_path,
+            'cover_url' => $this->cover_path ? CloudinaryHelper::getImageUrl($this->cover_path) : null,
             'whatsapp_number' => $this->whatsapp_number,
             'address_line' => $this->address_line,
             'latitude' => $this->location?->latitude,
@@ -27,7 +30,12 @@ class SellerResource extends JsonResource
             'store_status' => $this->store_status?->value,
             'verification_status' => $this->verification_status?->value,
             'average_rating' => (float) $this->average_rating,
+            'created_at' => $this->created_at?->toIso8601String(),
             'documents' => $this->whenLoaded('documents', fn () => SellerDocumentResource::collection($this->documents)->resolve()),
+            // Payout details are sensitive — only ever exposed to the owning seller, never on public storefront/search responses.
+            'payout_bank_name' => $this->when($request->user()?->id === $this->user_id, $this->payout_bank_name),
+            'payout_account_name' => $this->when($request->user()?->id === $this->user_id, $this->payout_account_name),
+            'payout_account_number' => $this->when($request->user()?->id === $this->user_id, $this->payout_account_number),
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,

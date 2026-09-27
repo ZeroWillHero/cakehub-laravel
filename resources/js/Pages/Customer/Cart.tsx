@@ -14,6 +14,8 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import PageHero from '@/components/shared/PageHero';
+import Section from '@/components/shared/Section';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { CartItem } from '@/types/cart';
@@ -39,9 +41,10 @@ export default function Cart({ items: initialItems }: Props) {
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-                <h1 className="font-heading text-2xl font-semibold">Your cart</h1>
+            <PageHero size="sm" title="Your cart" />
 
+            <Section className="pt-0">
+              <div className="mx-auto max-w-2xl">
                 {items.length === 0 ? (
                     <Card className="mt-6">
                         <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -140,7 +143,8 @@ export default function Cart({ items: initialItems }: Props) {
                         </Link>
                     </>
                 )}
-            </div>
+              </div>
+            </Section>
         </CustomerLayout>
     );
 }

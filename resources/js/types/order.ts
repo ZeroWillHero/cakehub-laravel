@@ -2,7 +2,7 @@ import type { Address } from './address';
 
 export type OrderStatus = 'placed' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'completed' | 'cancelled';
 export type DeliveryType = 'delivery' | 'pickup';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type PaymentStatus = 'pending' | 'awaiting_verification' | 'paid' | 'failed' | 'refunded';
 
 export interface OrderItem {
     id: number;
@@ -38,11 +38,14 @@ export interface Order {
     };
     items: OrderItem[];
     review?: Review | null;
+    reviews?: Review[];
 }
 
 export interface Review {
     id: number;
     order_id: number;
+    order_item_id: number | null;
+    product_id: number | null;
     rating: number;
     comment: string | null;
     seller_response: string | null;
@@ -50,6 +53,7 @@ export interface Review {
     customer?: {
         id: number;
         name: string;
+        avatar_url: string | null;
     };
     seller?: {
         id: number;

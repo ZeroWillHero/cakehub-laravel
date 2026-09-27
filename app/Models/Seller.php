@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\SellerSubscriptionStatus;
 use App\Enums\StoreStatus;
 use App\Enums\VerificationStatus;
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +18,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 #[Fillable([
     'user_id', 'business_name', 'slug', 'description', 'logo_path', 'cover_path',
     'whatsapp_number', 'location', 'address_line', 'operating_hours', 'store_status',
+    'payout_bank_name', 'payout_account_name', 'payout_account_number',
 ])]
 class Seller extends Model
 {
@@ -31,6 +34,20 @@ class Seller extends Model
             'verified_at' => 'datetime',
             'average_rating' => 'decimal:2',
         ];
+    }
+
+    protected function logoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->logo_path ? CloudinaryHelper::getImageUrl($this->logo_path) : null,
+        );
+    }
+
+    protected function coverUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->cover_path ? CloudinaryHelper::getImageUrl($this->cover_path) : null,
+        );
     }
 
     public function user(): BelongsTo
@@ -86,6 +103,22 @@ class Seller extends Model
         return $this->products()->count();
     }
 
+    /**
+     * Whether the seller's current plan includes sales analytics
+     * (requirements.md §3.9.1: Free/Basic = none, Pro = basic, Premium =
+     * advanced). Driven by the plan's admin-editable `features` jsonb —
+     * never hard-code which plan names get analytics.
+     */
+    public function hasAnalyticsAccess(): bool
+    {
+        $plan = $this->activeSubscription()?->subscriptionPlan
+            ?? SubscriptionPlan::query()->where('price', 0)->where('is_active', true)->first();
+
+        $features = $plan?->features ?? [];
+
+        return ($features['basic_analytics'] ?? false) || ($features['advanced_analytics'] ?? false);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
@@ -94,6 +127,11 @@ class Seller extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(SellerDocument::class);
+    }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(SellerPayout::class);
     }
 
     public function reviews(): HasMany

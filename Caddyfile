@@ -1,0 +1,3 @@
+cakehub.lk {
+    reverse_proxy app:80
+}

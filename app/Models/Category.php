@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'parent_id', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'slug', 'image_path', 'parent_id', 'sort_order', 'is_active', 'created_by'])]
 class Category extends Model
 {
     use HasFactory;
@@ -17,6 +19,13 @@ class Category extends Model
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];
+    }
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->image_path ? CloudinaryHelper::getImageUrl($this->image_path) : null,
+        );
     }
 
     public function parent(): BelongsTo
@@ -32,5 +41,10 @@ class Category extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_categories');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

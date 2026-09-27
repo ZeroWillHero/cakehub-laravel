@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin \App\Models\ProductImage
@@ -15,7 +15,7 @@ class ProductImageResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'url' => Storage::disk('public')->url($this->path),
+            'url' => CloudinaryHelper::getImageUrl($this->path),
             'sort_order' => $this->sort_order,
         ];
     }
