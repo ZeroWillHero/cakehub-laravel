@@ -16,14 +16,16 @@ RUN composer dump-autoload --optimize --no-dev
 
 FROM php:8.4-fpm-alpine AS app
 
-RUN apk add --no-cache \
+RUN apk update && apk add --no-cache \
         nginx \
-        supervisor \
+        python3 \
+        py3-pip \
         postgresql-dev \
         libzip-dev \
         libpng-dev \
         icu-dev \
         oniguruma-dev \
+    && pip3 install --no-cache-dir supervisor \
     && docker-php-ext-install \
         pdo_pgsql \
         pgsql \
@@ -32,7 +34,7 @@ RUN apk add --no-cache \
         intl \
         mbstring \
         bcmath \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* /var/cache/pip*
 
 WORKDIR /var/www/html
 
