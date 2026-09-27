@@ -20,21 +20,23 @@ RUN apk update && apk add --no-cache \
         nginx \
         python3 \
         py3-pip \
+        postgresql-client \
         postgresql-dev \
         libzip-dev \
         libpng-dev \
         icu-dev \
+        oniguruma \
         oniguruma-dev \
-    && pip3 install --no-cache-dir supervisor \
+        ca-certificates \
+    && pip3 install --no-cache-dir --break-system-packages supervisor \
     && docker-php-ext-install \
         pdo_pgsql \
-        pgsql \
         zip \
         gd \
         intl \
         mbstring \
         bcmath \
-    && rm -rf /var/cache/apk/* /var/cache/pip*
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /var/www/html
 
