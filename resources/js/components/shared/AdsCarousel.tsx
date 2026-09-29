@@ -53,9 +53,9 @@ export default function AdsCarousel({ ads, rotationSeconds }: Props) {
                 {ads.map((ad) => (
                     <CarouselItem key={ad.id} className="basis-full pl-0">
                         <AdSlide ad={ad}>
-                            {ad.image_path ? (
+                            {ad.image_url ? (
                                 <img
-                                    src={`/storage/${ad.image_path}`}
+                                    src={ad.image_url}
                                     alt={ad.name}
                                     className="h-56 w-full object-cover sm:h-72 md:h-96"
                                 />

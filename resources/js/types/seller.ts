@@ -9,7 +9,9 @@ export interface Seller {
     slug: string;
     description: string | null;
     logo_path: string | null;
+    logo_url: string | null;
     cover_path: string | null;
+    cover_url: string | null;
     whatsapp_number: string;
     address_line: string | null;
     latitude: number | null;

@@ -25,9 +25,9 @@ function whatsappLink(seller: Seller): string {
 export default function Storefront({ seller, products }: Props) {
     return (
         <CustomerLayout>
-            {seller.cover_path ? (
+            {seller.cover_url ? (
                 <img
-                    src={`/storage/${seller.cover_path}`}
+                    src={seller.cover_url}
                     alt={`${seller.business_name} cover photo`}
                     className="aspect-[3/1] w-full object-cover"
                 />
@@ -41,7 +41,7 @@ export default function Storefront({ seller, products }: Props) {
                         <div className="flex items-center gap-3">
                             <Avatar className="size-14 border">
                                 <AvatarImage
-                                    src={seller.logo_path ? `/storage/${seller.logo_path}` : undefined}
+                                    src={seller.logo_url ?? undefined}
                                     alt={seller.business_name}
                                 />
                                 <AvatarFallback>{seller.business_name.slice(0, 2).toUpperCase()}</AvatarFallback>

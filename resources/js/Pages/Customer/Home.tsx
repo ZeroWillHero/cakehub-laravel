@@ -55,7 +55,7 @@ interface NearbySeller extends Seller {
 export default function CustomerHome({ categories, featuredSellers, subscriptionPlans, ads, adRotationSeconds }: Props) {
     const galleryImages = [
         ...GALLERY_IMAGES,
-        ...featuredSellers.filter((seller) => seller.cover_path).map((seller) => `/storage/${seller.cover_path}`),
+        ...featuredSellers.filter((seller) => seller.cover_url).map((seller) => seller.cover_url as string),
     ];
 
     const [nearMe, setNearMe] = useState(false);
@@ -178,9 +178,9 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                                 <Link key={seller.id} href={`/sellers/${seller.slug}`}>
                                     <Card className="transition-shadow hover:shadow-md">
                                         <CardContent className="flex items-center gap-3 py-4">
-                                            {seller.cover_path ? (
+                                            {seller.cover_url ? (
                                                 <img
-                                                    src={`/storage/${seller.cover_path}`}
+                                                    src={seller.cover_url}
                                                     alt={seller.business_name}
                                                     className="size-14 shrink-0 rounded-lg object-cover"
                                                 />
@@ -212,9 +212,9 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                     <CarouselContent>
                         {categories.slice(0, 6).map((category) => (
                             <CarouselItem key={category.id} className="basis-2/3 sm:basis-1/2 lg:basis-1/3">
-                                {category.image_path ? (
+                                {category.image_url ? (
                                     <img
-                                        src={`/storage/${category.image_path}`}
+                                        src={category.image_url}
                                         alt={category.name}
                                         loading="lazy"
                                         className="aspect-[16/10] w-full rounded-2xl object-cover"
@@ -236,9 +236,9 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                         <Link key={category.id} href={`/search?category_id=${category.id}`}>
                             <Card className="transition-shadow hover:shadow-md">
                                 <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-                                    {category.image_path ? (
+                                    {category.image_url ? (
                                         <img
-                                            src={`/storage/${category.image_path}`}
+                                            src={category.image_url}
                                             alt={category.name}
                                             loading="lazy"
                                             className="aspect-square w-full rounded-2xl object-cover"
@@ -263,9 +263,9 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                                     <Link href={`/sellers/${seller.slug}`}>
                                         <Card className="h-full transition-shadow hover:shadow-md">
                                             <CardContent className="flex flex-col gap-3 py-4">
-                                                {seller.cover_path ? (
+                                                {seller.cover_url ? (
                                                     <img
-                                                        src={`/storage/${seller.cover_path}`}
+                                                        src={seller.cover_url}
                                                         alt={seller.business_name}
                                                         className="aspect-[16/9] w-full rounded-lg object-cover"
                                                     />

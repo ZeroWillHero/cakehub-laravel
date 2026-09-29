@@ -237,9 +237,9 @@ export default function SearchResults({ categories }: Props) {
                             {filteredSellers.map((seller) => (
                                 <Link key={seller.id} href={`/sellers/${seller.slug}`}>
                                     <Card className="h-full transition-shadow hover:shadow-md">
-                                        {seller.cover_path ? (
+                                        {seller.cover_url ? (
                                             <img
-                                                src={`/storage/${seller.cover_path}`}
+                                                src={seller.cover_url}
                                                 alt={seller.business_name}
                                                 className="aspect-video w-full rounded-t-lg object-cover"
                                             />

@@ -29,15 +29,15 @@ const statusVariant: Record<SellerDocument['status'], 'default' | 'secondary' | 
 function SellerImageUpload({
     label,
     endpoint,
-    path: initialPath,
+    url: initialUrl,
     aspect,
 }: {
     label: string;
     endpoint: string;
-    path: string | null;
+    url: string | null;
     aspect: string;
 }) {
-    const [path, setPath] = useState(initialPath);
+    const [url, setUrl] = useState(initialUrl);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +52,7 @@ function SellerImageUpload({
 
         try {
             const updated = await api.upload<Seller>(endpoint, formData);
-            setPath(endpoint.endsWith('logo') ? updated.logo_path : updated.cover_path);
+            setUrl(endpoint.endsWith('logo') ? updated.logo_url : updated.cover_url);
         } catch (err) {
             const apiError = err as { message?: string };
             setError(apiError.message ?? 'Upload failed.');
@@ -65,8 +65,8 @@ function SellerImageUpload({
     return (
         <div className="space-y-2">
             <Label>{label}</Label>
-            {path ? (
-                <img src={`/storage/${path}`} alt={label} className={`w-full rounded-lg border object-cover ${aspect}`} />
+            {url ? (
+                <img src={url} alt={label} className={`w-full rounded-lg border object-cover ${aspect}`} />
             ) : (
                 <div className={`flex w-full items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground ${aspect}`}>
                     No {label.toLowerCase()} uploaded
@@ -205,13 +205,13 @@ export default function StoreProfile({ seller: initialSeller }: Props) {
                         <SellerImageUpload
                             label="Logo"
                             endpoint="/seller/profile/logo"
-                            path={initialSeller.logo_path}
+                            url={initialSeller.logo_url}
                             aspect="aspect-square"
                         />
                         <SellerImageUpload
                             label="Cover photo"
                             endpoint="/seller/profile/cover"
-                            path={initialSeller.cover_path}
+                            url={initialSeller.cover_url}
                             aspect="aspect-video"
                         />
                     </CardContent>
