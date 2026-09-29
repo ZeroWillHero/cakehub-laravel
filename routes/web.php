@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardExportController;
 use App\Http\Controllers\Admin\PaymentVerificationController;
 use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
+use App\Http\Controllers\Auth\DevLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\AccountController;
 use App\Http\Controllers\Customer\CartPageController;
@@ -33,6 +34,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+
+// TEMPORARY, Phase 9 Chrome UI audit only — see DevLoginController's class
+// docblock. Registered only when the app boots in the `local` environment
+// (belt-and-braces alongside the controller's own environment() guard), so
+// it cannot exist as a routable URL in staging/production at all.
+if (app()->environment('local')) {
+    Route::get('/dev-login/{slug}', [DevLoginController::class, 'login'])->name('dev-login');
+}
 
 // Public root: shows sign-in for guests, redirects authenticated users to
 // their role-appropriate landing (see CustomerHomeController).
