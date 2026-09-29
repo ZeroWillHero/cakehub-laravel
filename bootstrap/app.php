@@ -13,6 +13,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust the Caddy reverse proxy in front of the app container so
+        // X-Forwarded-Proto/Host are honored — without this, Laravel sees
+        // every request as plain HTTP (Caddy terminates TLS and forwards
+        // HTTP internally), which corrupts redirect()->route(...) URLs
+        // (e.g. the post-OAuth /onboarding redirect) and breaks Secure
+        // session cookies. Trusting '*' is safe here: the app container is
+        // never published to the host (docker-compose.yml only `expose`s
+        // it), so Caddy is the only possible proxy hop.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
