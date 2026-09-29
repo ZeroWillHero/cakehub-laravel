@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutContro
 use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\Auth\DevLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Customer\AccountController;
 use App\Http\Controllers\Customer\CartPageController;
 use App\Http\Controllers\Customer\CheckoutPageController;
@@ -34,6 +35,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+
+Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');
 
 // TEMPORARY, Phase 9 Chrome UI audit only — see DevLoginController's class
 // docblock. Registered only when the app boots in the `local` environment

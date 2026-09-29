@@ -13,6 +13,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import FloatingNav from '@/components/shared/FloatingNav';
 import GoogleIcon from '@/components/shared/GoogleIcon';
+import LogoutButton from '@/components/shared/LogoutButton';
 import NotificationBell from '@/components/shared/NotificationBell';
 import ThemeToggle from '@/components/shared/ThemeToggle';
 import { useScrolledDown } from '@/lib/useScrollDirection';
@@ -70,12 +71,15 @@ export default function SiteHeader() {
                         </div>
 
                         {user ? (
-                            <Link href="/account" className="hidden md:block" aria-label="Account">
-                                <Avatar className="size-8">
-                                    <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
-                                    <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                            </Link>
+                            <div className="hidden items-center gap-1 md:flex">
+                                <Link href="/account" aria-label="Account">
+                                    <Avatar className="size-8">
+                                        <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
+                                        <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                </Link>
+                                <LogoutButton iconOnly />
+                            </div>
                         ) : (
                             <a
                                 href="/auth/google/redirect"
@@ -120,7 +124,11 @@ export default function SiteHeader() {
                                     ))}
                                 </nav>
 
-                                {!user && (
+                                {user ? (
+                                    <div className="mx-4 mt-6 border-t border-border pt-4">
+                                        <LogoutButton className="w-full justify-center border" />
+                                    </div>
+                                ) : (
                                     <a
                                         href="/auth/google/redirect"
                                         className={cn(
