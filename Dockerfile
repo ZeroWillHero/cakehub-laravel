@@ -28,6 +28,7 @@ RUN apk update && apk add --no-cache \
         oniguruma \
         oniguruma-dev \
         ca-certificates \
+        iputils \
     && pip3 install --no-cache-dir --break-system-packages supervisor \
     && docker-php-ext-install \
         pdo_pgsql \
@@ -36,6 +37,7 @@ RUN apk update && apk add --no-cache \
         intl \
         mbstring \
         bcmath \
+    && echo "net.ipv6.conf.all.disable_ipv6 = 0" >> /etc/sysctl.conf \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /var/www/html
