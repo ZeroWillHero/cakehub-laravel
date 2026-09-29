@@ -16,7 +16,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.yml,Caddyfile,Dockerfile,.dockerignore,app/"
+          source: "docker-compose.yml,Caddyfile,Dockerfile,.dockerignore"
           target: "~/cakehub-laravel"
           strip_components: 0
 
@@ -30,8 +30,11 @@ jobs:
             set -e
             cd ~/cakehub-laravel
 
-            # Reset local changes and pull latest code
+            # Reset local changes, drop any untracked cruft under app/ (e.g.
+            # left over from an older deploy step that used to scp app/
+            # directly instead of relying on git), then pull latest code.
             git reset --hard HEAD
+            git clean -fd -- app/
             git pull origin main
 
             # Build Docker image on the server
