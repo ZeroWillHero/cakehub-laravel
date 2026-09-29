@@ -25,6 +25,7 @@ function ad(overrides: Partial<Ad>): Ad {
         name: 'Birthday Bash',
         description: 'Get 10% off',
         image_path: null,
+        image_url: null,
         link_url: null,
         paid_amount: 100,
         status: 'active',

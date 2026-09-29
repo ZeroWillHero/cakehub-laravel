@@ -5,6 +5,7 @@ export interface Ad {
     name: string;
     description: string | null;
     image_path: string | null;
+    image_url: string | null;
     link_url: string | null;
     paid_amount: number;
     status: AdStatus;

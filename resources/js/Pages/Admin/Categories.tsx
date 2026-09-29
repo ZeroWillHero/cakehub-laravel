@@ -124,9 +124,9 @@ export default function AdminCategories({ categories: initial }: Props) {
                         <div key={category.id} className="flex items-center justify-between gap-3 px-4 py-3">
                             <div className="flex items-center gap-2">
                                 <label className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-lg" aria-label={`Upload image for ${category.name}`}>
-                                    {category.image_path ? (
+                                    {category.image_url ? (
                                         <img
-                                            src={`/storage/${category.image_path}`}
+                                            src={category.image_url}
                                             alt=""
                                             loading="lazy"
                                             className="size-10 rounded-lg object-cover"

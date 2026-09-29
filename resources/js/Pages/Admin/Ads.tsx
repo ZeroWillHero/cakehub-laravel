@@ -80,9 +80,9 @@ function SortableAdRow({
                     aria-label={`Upload image for ${ad.name}`}
                     title="Preferred size: 1200 × 550px (landscape banner, ~2.2:1)"
                 >
-                    {ad.image_path ? (
+                    {ad.image_url ? (
                         <img
-                            src={`/storage/${ad.image_path}`}
+                            src={ad.image_url}
                             alt=""
                             loading="lazy"
                             className="size-10 rounded-lg object-cover"
