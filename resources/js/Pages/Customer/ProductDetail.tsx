@@ -15,7 +15,8 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import ProductGallery from '@/components/shared/ProductGallery';
+import Spinner from '@/components/shared/Spinner';
 import RatingStars from '@/components/shared/RatingStars';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -77,21 +78,16 @@ export default function ProductDetail({ seller, product }: Props) {
 
     return (
         <CustomerLayout>
-            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-                <Link href={`/sellers/${seller.slug}`} className="text-sm text-primary underline">
-                    ← {seller.business_name}
+            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+                <Link
+                    href={`/sellers/${seller.slug}`}
+                    className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                    ← Back to {seller.business_name}
                 </Link>
 
-                <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    {product.images[0] ? (
-                        <img
-                            src={product.images[0].url}
-                            alt={product.name}
-                            className="aspect-square w-full rounded-2xl object-cover"
-                        />
-                    ) : (
-                        <ImagePlaceholder label={product.name} className="aspect-square w-full" />
-                    )}
+                <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
+                    <ProductGallery images={product.images} name={product.name} />
 
                     <div>
                         <h1 className="font-heading text-2xl font-semibold">{product.name}</h1>
@@ -104,7 +100,7 @@ export default function ProductDetail({ seller, product }: Props) {
                                 </span>
                             </div>
                         )}
-                        <p className="mt-1 text-lg">${price.toFixed(2)}</p>
+                        <p className="mt-2 text-2xl font-semibold">${price.toFixed(2)}</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {availabilityLabel[product.availability_status]}
                         </p>
@@ -119,9 +115,12 @@ export default function ProductDetail({ seller, product }: Props) {
                                             key={v.id}
                                             type="button"
                                             onClick={() => setSelectedVariant(v.id)}
+                                            aria-pressed={selectedVariant === v.id}
                                             className={cn(
-                                                'min-h-9 rounded-md border px-3 text-sm',
-                                                selectedVariant === v.id ? 'border-primary bg-primary/5' : '',
+                                                'min-h-11 rounded-lg border px-4 text-sm transition-colors',
+                                                selectedVariant === v.id
+                                                    ? 'border-primary bg-primary/10 font-medium ring-1 ring-primary'
+                                                    : 'hover:bg-muted',
                                             )}
                                         >
                                             {v.name}
@@ -143,7 +142,11 @@ export default function ProductDetail({ seller, product }: Props) {
                             />
                         </div>
 
-                        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+                        {error && (
+                            <p className="mt-3 text-sm text-destructive" role="alert">
+                                {error}
+                            </p>
+                        )}
 
                         <Button
                             type="button"
@@ -152,6 +155,7 @@ export default function ProductDetail({ seller, product }: Props) {
                             disabled={adding || unavailable}
                             onClick={() => addToCart(false)}
                         >
+                            {adding && <Spinner className="mr-2" />}
                             {unavailable ? 'Unavailable' : adding ? 'Adding…' : 'Add to cart'}
                         </Button>
 

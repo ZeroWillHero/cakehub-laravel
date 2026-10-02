@@ -3,11 +3,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AdminLayout from '@/Layouts/AdminLayout';
+import FileDropzone from '@/components/shared/FileDropzone';
+import SelectedFile from '@/components/shared/SelectedFile';
 import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
+import { errorMessage } from '@/lib/errors';
+import { SLIP_RULE } from '@/lib/files';
+import { statusTone } from '@/lib/statusTone';
 import type { SellerPayout, SellerPayoutStatus } from '@/types/sellerPayout';
 
 interface Props {
@@ -26,10 +30,18 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
     const [previewTarget, setPreviewTarget] = useState<SellerPayout | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    function closePayDialog() {
+        setPayTarget(null);
+        setFile(null);
+        setError(null);
+    }
 
     async function markPaid() {
         if (!payTarget || !file) return;
         setBusy(true);
+        setError(null);
         try {
             const formData = new FormData();
             formData.append('slip', file);
@@ -38,8 +50,9 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
                 formData,
             );
             setPayouts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-            setPayTarget(null);
-            setFile(null);
+            closePayDialog();
+        } catch (err) {
+            setError(errorMessage(err, 'slip', "We couldn't save this payout. Please try again."));
         } finally {
             setBusy(false);
         }
@@ -74,7 +87,7 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <Badge variant={payout.status === 'pending' ? 'secondary' : 'default'}>
+                                        <Badge className={statusTone(payout.status)}>
                                             {statusLabel[payout.status]}
                                         </Badge>
                                         {payout.status === 'pending' && (
@@ -89,23 +102,35 @@ export default function AdminSellerPayouts({ payouts: initial }: Props) {
                     </div>
                 )}
 
-                <Dialog open={payTarget !== null} onOpenChange={(open) => !open && setPayTarget(null)}>
-                    <DialogContent>
+                <Dialog open={payTarget !== null} onOpenChange={(open) => !open && closePayDialog()}>
+                    <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>Mark payout as paid</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-2">
-                            <Label htmlFor="payout_slip">Payment slip</Label>
-                            <Input
-                                id="payout_slip"
-                                type="file"
-                                accept="image/*,application/pdf"
-                                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                            />
-                        </div>
+                        {payTarget && (
+                            <p className="text-sm text-muted-foreground">
+                                Upload the bank slip for the ${payTarget.amount.toFixed(2)} transfer to{' '}
+                                <span className="font-medium text-foreground">{payTarget.seller?.business_name}</span>{' '}
+                                (Order #{payTarget.order_id}). The seller will be able to see it.
+                            </p>
+                        )}
+                        {file ? (
+                            <SelectedFile file={file} onClear={() => setFile(null)} disabled={busy} />
+                        ) : (
+                            <FileDropzone id="payout_slip" label="Upload payment slip" rule={SLIP_RULE} onFiles={([f]) => setFile(f)} />
+                        )}
+                        {error && (
+                            <p className="text-sm text-destructive" role="alert">
+                                {error}
+                            </p>
+                        )}
                         <DialogFooter>
+                            <Button type="button" variant="outline" onClick={closePayDialog} disabled={busy}>
+                                Cancel
+                            </Button>
                             <Button type="button" disabled={!file || busy} onClick={markPaid}>
-                                Mark paid
+                                {busy && <Spinner className="mr-2" />}
+                                {busy ? 'Saving…' : 'Mark paid'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

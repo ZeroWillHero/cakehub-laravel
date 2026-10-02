@@ -1,6 +1,17 @@
 import { useState, type SubmitEventHandler } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +20,10 @@ import AddressMapPicker from '@/components/shared/AddressMapPicker';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
+import { errorMessage } from '@/lib/errors';
+import { cn } from '@/lib/utils';
 import type { Address } from '@/types/address';
 import type { AuthUser } from '@/types/user';
 
@@ -50,9 +64,16 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
         }
     };
 
+    const [removeError, setRemoveError] = useState<string | null>(null);
+
     async function remove(id: number) {
-        await api.delete(`/addresses/${id}`);
-        setAddresses((prev) => prev.filter((a) => a.id !== id));
+        setRemoveError(null);
+        try {
+            await api.delete(`/addresses/${id}`);
+            setAddresses((prev) => prev.filter((a) => a.id !== id));
+        } catch (err) {
+            setRemoveError(errorMessage(err, undefined, "We couldn't remove that address. Please try again."));
+        }
     }
 
     return (
@@ -91,6 +112,11 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                         <CardTitle className="font-heading">Saved addresses</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {removeError && (
+                            <p className="text-sm text-destructive" role="alert">
+                                {removeError}
+                            </p>
+                        )}
                         {addresses.length === 0 && (
                             <p className="text-sm text-muted-foreground">No addresses saved yet.</p>
                         )}
@@ -105,15 +131,30 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                                         {address.line1}, {address.city}
                                     </p>
                                 </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="min-h-11 sm:min-h-8"
-                                    onClick={() => remove(address.id)}
-                                >
-                                    Remove
-                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger
+                                        className={cn(
+                                            buttonVariants({ variant: 'ghost', size: 'sm' }),
+                                            'min-h-11 text-destructive hover:text-destructive sm:min-h-8',
+                                        )}
+                                    >
+                                        Remove
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Remove this address?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                &ldquo;{address.label || address.line1}&rdquo; will be removed from your saved addresses.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Keep it</AlertDialogCancel>
+                                            <AlertDialogAction variant="destructive" onClick={() => remove(address.id)}>
+                                                Remove address
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         ))}
 
@@ -164,6 +205,7 @@ export default function AccountSettings({ user, addresses: initialAddresses }: P
                                 />
                             </div>
                             <Button type="submit" disabled={saving} className="w-full min-h-11 sm:w-auto">
+                                {saving && <Spinner className="mr-2" />}
                                 {saving ? 'Saving…' : 'Add address'}
                             </Button>
                         </form>

@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import {
     Carousel,
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/carousel';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import AdsCarousel from '@/components/shared/AdsCarousel';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import SmartImage from '@/components/shared/SmartImage';
 import HeroImage from '@/components/shared/HeroImage';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
@@ -88,6 +89,7 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                         headers: { Accept: 'application/json' },
                         credentials: 'include',
                     });
+                    if (!response.ok) throw new Error(String(response.status));
                     const json = await response.json();
                     setNearbySellers(json.data ?? []);
                     setNearMeStatus('idle');
@@ -161,7 +163,20 @@ export default function CustomerHome({ categories, featuredSellers, subscription
             {nearMe && (
                 <Section title="Near you" className="pb-0 pt-8 sm:pt-10">
                     {nearMeStatus === 'loading' && (
-                        <p className="text-sm text-muted-foreground">Finding bakers near you…</p>
+                        <div role="status" aria-label="Finding bakers near you">
+                            <p className="mb-3 text-sm text-muted-foreground">Finding bakers near you…</p>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {[0, 1, 2].map((i) => (
+                                    <div key={i} className="flex items-center gap-3 rounded-xl border p-4">
+                                        <Skeleton className="size-14 shrink-0 rounded-lg" />
+                                        <div className="flex-1 space-y-2">
+                                            <Skeleton className="h-4 w-2/3" />
+                                            <Skeleton className="h-3 w-1/3" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
                     {nearMeStatus === 'error' && (
                         <p className="text-sm text-muted-foreground">
@@ -178,15 +193,7 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                                 <Link key={seller.id} href={`/sellers/${seller.slug}`}>
                                     <Card className="transition-shadow hover:shadow-md">
                                         <CardContent className="flex items-center gap-3 py-4">
-                                            {seller.cover_url ? (
-                                                <img
-                                                    src={seller.cover_url}
-                                                    alt={seller.business_name}
-                                                    className="size-14 shrink-0 rounded-lg object-cover"
-                                                />
-                                            ) : (
-                                                <ImagePlaceholder label={seller.business_name} className="size-14 shrink-0" />
-                                            )}
+                                            <SmartImage src={seller.cover_url} alt={seller.business_name} className="size-14 shrink-0 rounded-lg" />
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-medium">{seller.business_name}</p>
                                                 <div className="mt-1 flex items-center gap-2">
@@ -212,16 +219,7 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                     <CarouselContent>
                         {categories.slice(0, 6).map((category) => (
                             <CarouselItem key={category.id} className="basis-2/3 sm:basis-1/2 lg:basis-1/3">
-                                {category.image_url ? (
-                                    <img
-                                        src={category.image_url}
-                                        alt={category.name}
-                                        loading="lazy"
-                                        className="aspect-[16/10] w-full rounded-2xl object-cover"
-                                    />
-                                ) : (
-                                    <ImagePlaceholder label={category.name} className="aspect-[16/10] w-full" />
-                                )}
+                                <SmartImage src={category.image_url} alt={category.name} fallbackLabel="" className="aspect-[16/10] w-full rounded-2xl" />
                             </CarouselItem>
                         ))}
                     </CarouselContent>
@@ -236,16 +234,7 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                         <Link key={category.id} href={`/search?category_id=${category.id}`}>
                             <Card className="transition-shadow hover:shadow-md">
                                 <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-                                    {category.image_url ? (
-                                        <img
-                                            src={category.image_url}
-                                            alt={category.name}
-                                            loading="lazy"
-                                            className="aspect-square w-full rounded-2xl object-cover"
-                                        />
-                                    ) : (
-                                        <ImagePlaceholder label={category.name} className="aspect-square w-full" />
-                                    )}
+                                    <SmartImage src={category.image_url} alt={category.name} fallbackLabel="" className="aspect-square w-full rounded-2xl" />
                                     <span className="text-sm font-medium">{category.name}</span>
                                 </CardContent>
                             </Card>
@@ -263,18 +252,7 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                                     <Link href={`/sellers/${seller.slug}`}>
                                         <Card className="h-full transition-shadow hover:shadow-md">
                                             <CardContent className="flex flex-col gap-3 py-4">
-                                                {seller.cover_url ? (
-                                                    <img
-                                                        src={seller.cover_url}
-                                                        alt={seller.business_name}
-                                                        className="aspect-[16/9] w-full rounded-lg object-cover"
-                                                    />
-                                                ) : (
-                                                    <ImagePlaceholder
-                                                        label={seller.business_name}
-                                                        className="aspect-[16/9] w-full"
-                                                    />
-                                                )}
+                                                <SmartImage src={seller.cover_url} alt={seller.business_name} className="aspect-[16/9] w-full rounded-lg" />
                                                 <div>
                                                     <p className="font-medium">{seller.business_name}</p>
                                                     <div className="mt-1 flex items-center gap-2">

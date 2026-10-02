@@ -4,7 +4,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import SmartImage from '@/components/shared/SmartImage';
 import RatingStars from '@/components/shared/RatingStars';
 import Section from '@/components/shared/Section';
 import { cn } from '@/lib/utils';
@@ -26,13 +26,9 @@ export default function Storefront({ seller, products }: Props) {
     return (
         <CustomerLayout>
             {seller.cover_url ? (
-                <img
-                    src={seller.cover_url}
-                    alt={`${seller.business_name} cover photo`}
-                    className="aspect-[3/1] w-full object-cover"
-                />
+                <SmartImage src={seller.cover_url} alt={`${seller.business_name} cover photo`} loading="eager" className="aspect-[3/1] max-h-80 w-full" />
             ) : (
-                <ImagePlaceholder label={`${seller.business_name} cover photo`} className="aspect-[3/1] w-full rounded-none" />
+                <div aria-hidden="true" className="aspect-[4/1] max-h-48 w-full bg-gradient-to-br from-primary/30 via-primary/10 to-background" />
             )}
 
             <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
@@ -83,18 +79,7 @@ export default function Storefront({ seller, products }: Props) {
                         {products.map((product) => (
                             <Link key={product.id} href={`/sellers/${seller.slug}/products/${product.id}`}>
                                 <Card className="h-full transition-shadow hover:shadow-md">
-                                    {product.images[0] ? (
-                                        <img
-                                            src={product.images[0].url}
-                                            alt={product.name}
-                                            className="aspect-square w-full rounded-t-lg object-cover"
-                                        />
-                                    ) : (
-                                        <ImagePlaceholder
-                                            label={product.name}
-                                            className="aspect-square w-full rounded-b-none"
-                                        />
-                                    )}
+                                    <SmartImage src={product.images[0]?.url} alt={product.name} className="aspect-square w-full rounded-t-lg" />
                                     <CardContent className="py-4">
                                         <p className="font-medium">{product.name}</p>
                                         <p className="text-sm text-muted-foreground">

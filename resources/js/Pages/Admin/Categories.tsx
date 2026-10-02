@@ -17,7 +17,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/Layouts/AdminLayout';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import ImageThumbUpload from '@/components/shared/ImageThumbUpload';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { Category } from '@/types/category';
 
@@ -47,6 +49,9 @@ export default function AdminCategories({ categories: initial }: Props) {
             setCategories((prev) => [...prev, created]);
             setCreateOpen(false);
             setNewName('');
+            toast.success('Category added.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't add the category."));
         } finally {
             setBusy(false);
         }
@@ -69,10 +74,14 @@ export default function AdminCategories({ categories: initial }: Props) {
     }
 
     async function toggleActive(category: Category) {
-        const updated = await api.put<Category>(`/admin/categories/${category.id}`, {
-            is_active: !category.is_active,
-        });
-        setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+        try {
+            const updated = await api.put<Category>(`/admin/categories/${category.id}`, {
+                is_active: !category.is_active,
+            });
+            setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't update the category."));
+        }
     }
 
     async function remove() {
@@ -82,6 +91,9 @@ export default function AdminCategories({ categories: initial }: Props) {
             await api.delete(`/admin/categories/${deleteTarget.id}`);
             setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
             setDeleteTarget(null);
+            toast.success('Category deleted.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't delete the category."));
         } finally {
             setBusy(false);
         }
@@ -96,7 +108,12 @@ export default function AdminCategories({ categories: initial }: Props) {
         [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
         setCategories(reordered);
 
-        await api.patch('/admin/categories/reorder', { order: reordered.map((c) => c.id) });
+        try {
+            await api.patch('/admin/categories/reorder', { order: reordered.map((c) => c.id) });
+        } catch (err) {
+            setCategories(categories);
+            toast.error(errorMessage(err, undefined, "Couldn't save the new order. Please try again."));
+        }
     }
 
     return (
@@ -121,37 +138,21 @@ export default function AdminCategories({ categories: initial }: Props) {
                     {visibleCategories.map((category) => {
                         const index = categories.findIndex((c) => c.id === category.id);
                         return (
-                        <div key={category.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                            <div className="flex items-center gap-2">
-                                <label className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-lg" aria-label={`Upload image for ${category.name}`}>
-                                    {category.image_url ? (
-                                        <img
-                                            src={category.image_url}
-                                            alt=""
-                                            loading="lazy"
-                                            className="size-10 rounded-lg object-cover"
-                                        />
-                                    ) : (
-                                        <ImagePlaceholder label="" className="size-10 rounded-lg" />
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/png,image/jpeg,image/webp"
-                                        className="absolute inset-0 cursor-pointer opacity-0"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) uploadImage(category, file);
-                                            e.target.value = '';
-                                        }}
-                                    />
-                                </label>
+                        <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <ImageThumbUpload
+                                    name={category.name}
+                                    url={category.image_url}
+                                    onUpload={(file) => uploadImage(category, file)}
+                                    onInvalid={(message) => setImageErrors((prev) => ({ ...prev, [category.id]: message }))}
+                                />
                                 <div className="flex flex-col">
                                     <button
                                         type="button"
                                         disabled={index === 0}
                                         onClick={() => move(category.id, -1)}
-                                        className="disabled:opacity-30"
-                                        aria-label="Move up"
+                                        className="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted disabled:opacity-30"
+                                        aria-label={`Move ${category.name} up`}
                                     >
                                         <ChevronUp className="size-4" />
                                     </button>
@@ -159,8 +160,8 @@ export default function AdminCategories({ categories: initial }: Props) {
                                         type="button"
                                         disabled={index === categories.length - 1}
                                         onClick={() => move(category.id, 1)}
-                                        className="disabled:opacity-30"
-                                        aria-label="Move down"
+                                        className="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted disabled:opacity-30"
+                                        aria-label={`Move ${category.name} down`}
                                     >
                                         <ChevronDown className="size-4" />
                                     </button>
@@ -177,11 +178,14 @@ export default function AdminCategories({ categories: initial }: Props) {
                                 {category.created_by !== null && <Badge variant="outline">Seller-added</Badge>}
                             </div>
                             <div className="flex items-center gap-3">
-                                <Checkbox
-                                    checked={category.is_active}
-                                    onCheckedChange={() => toggleActive(category)}
-                                    aria-label="Active"
-                                />
+                                <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm">
+                                    <Checkbox
+                                        checked={category.is_active}
+                                        onCheckedChange={() => toggleActive(category)}
+                                        aria-label="Active"
+                                    />
+                                    <span aria-hidden="true">Active</span>
+                                </label>
                                 <Button
                                     type="button"
                                     variant="ghost"

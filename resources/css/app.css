@@ -171,3 +171,12 @@
     @apply font-sans;
     }
 }
+/*
+ * Inertia's page-change progress bar (#nprogress) — a touch thicker than
+ * the 2px default so it's noticeable for people who don't know to look
+ * for it, with a soft glow in the brand pink.
+ */
+#nprogress .bar {
+    height: 3px !important;
+    box-shadow: 0 0 8px #EF88AD;
+}

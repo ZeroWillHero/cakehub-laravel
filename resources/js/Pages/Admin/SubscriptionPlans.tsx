@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { ApiError } from '@/lib/api';
 import type { BillingCycle, SubscriptionPlan } from '@/types/subscriptionPlan';
@@ -71,8 +73,12 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
     }
 
     async function toggleActive(plan: SubscriptionPlan) {
-        const updated = await api.patch<SubscriptionPlan>(`/admin/subscription-plans/${plan.id}/toggle`);
-        setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        try {
+            const updated = await api.patch<SubscriptionPlan>(`/admin/subscription-plans/${plan.id}/toggle`);
+            setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't update the plan."));
+        }
     }
 
     async function remove() {
@@ -102,7 +108,12 @@ export default function AdminSubscriptionPlans({ plans: initial }: Props) {
         [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
         setPlans(reordered);
 
-        await api.patch('/admin/subscription-plans/reorder', { order: reordered.map((p) => p.id) });
+        try {
+            await api.patch('/admin/subscription-plans/reorder', { order: reordered.map((p) => p.id) });
+        } catch (err) {
+            setPlans(plans);
+            toast.error(errorMessage(err, undefined, "Couldn't save the new order. Please try again."));
+        }
     }
 
     return (

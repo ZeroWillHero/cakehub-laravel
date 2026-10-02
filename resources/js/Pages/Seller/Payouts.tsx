@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import SellerLayout from '@/Layouts/SellerLayout';
 import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { SellerPayout, SellerPayoutStatus } from '@/types/sellerPayout';
 
@@ -27,6 +29,9 @@ export default function SellerPayouts({ payouts: initial }: Props) {
         try {
             const updated = await api.post<SellerPayout>(`/seller/payouts/${payout.id}/confirm`);
             setPayouts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+            toast.success('Thanks — payout confirmed.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't confirm the payout."));
         } finally {
             setBusy(null);
         }

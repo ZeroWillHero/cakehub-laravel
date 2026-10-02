@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,7 +17,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
+import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
+import { errorMessage } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import type { CartItem } from '@/types/cart';
 
@@ -28,15 +31,34 @@ export default function Cart({ items: initialItems }: Props) {
     const [items, setItems] = useState(initialItems);
     const total = useMemo(() => items.reduce((sum, i) => sum + i.line_total, 0), [items]);
 
+    const [busyId, setBusyId] = useState<number | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
     async function updateQuantity(id: number, quantity: number) {
         if (quantity < 1) return;
-        const updated = await api.put<CartItem>(`/cart/${id}`, { quantity });
-        setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
+        setBusyId(id);
+        setError(null);
+        try {
+            const updated = await api.put<CartItem>(`/cart/${id}`, { quantity });
+            setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
+        } catch (err) {
+            setError(errorMessage(err, 'quantity', "We couldn't update the quantity. Please try again."));
+        } finally {
+            setBusyId(null);
+        }
     }
 
     async function remove(id: number) {
-        await api.delete(`/cart/${id}`);
-        setItems((prev) => prev.filter((i) => i.id !== id));
+        setBusyId(id);
+        setError(null);
+        try {
+            await api.delete(`/cart/${id}`);
+            setItems((prev) => prev.filter((i) => i.id !== id));
+        } catch (err) {
+            setError(errorMessage(err, undefined, "We couldn't remove that item. Please try again."));
+        } finally {
+            setBusyId(null);
+        }
     }
 
     return (
@@ -47,10 +69,12 @@ export default function Cart({ items: initialItems }: Props) {
               <div className="mx-auto max-w-2xl">
                 {items.length === 0 ? (
                     <Card className="mt-6">
-                        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                            Your cart is empty.{' '}
-                            <Link href="/search" className="text-primary underline">
-                                Find a bakery
+                        <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+                            <ShoppingBag className="size-10 text-muted-foreground" aria-hidden="true" />
+                            <p className="font-medium">Your cart is empty</p>
+                            <p className="text-sm text-muted-foreground">Browse cakes from local bakers and add your favorites.</p>
+                            <Link href="/products" className={cn(buttonVariants(), 'mt-2 min-h-11')}>
+                                Browse cakes
                             </Link>
                         </CardContent>
                     </Card>
@@ -59,6 +83,12 @@ export default function Cart({ items: initialItems }: Props) {
                         <p className="mt-1 text-sm text-muted-foreground">
                             From <span className="font-medium">{items[0].seller.business_name}</span>
                         </p>
+
+                        {error && (
+                            <p className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                                {error}
+                            </p>
+                        )}
 
                         <div className="mt-4 space-y-3">
                             {items.map((item) => (
@@ -84,18 +114,22 @@ export default function Cart({ items: initialItems }: Props) {
                                             <div className="flex items-center rounded-md border">
                                                 <button
                                                     type="button"
-                                                    className="min-h-9 min-w-9 px-2"
+                                                    className="min-h-11 min-w-11 px-2 text-lg disabled:opacity-40"
                                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                    aria-label="Decrease quantity"
+                                                    disabled={busyId === item.id || item.quantity <= 1}
+                                                    aria-label={`Decrease quantity of ${item.product_name}`}
                                                 >
                                                     −
                                                 </button>
-                                                <span className="min-w-6 text-center text-sm">{item.quantity}</span>
+                                                <span className="inline-flex min-w-8 justify-center text-sm font-medium" aria-live="polite">
+                                                    {busyId === item.id ? <Spinner size={14} /> : item.quantity}
+                                                </span>
                                                 <button
                                                     type="button"
-                                                    className="min-h-9 min-w-9 px-2"
+                                                    className="min-h-11 min-w-11 px-2 text-lg disabled:opacity-40"
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    aria-label="Increase quantity"
+                                                    disabled={busyId === item.id}
+                                                    aria-label={`Increase quantity of ${item.product_name}`}
                                                 >
                                                     +
                                                 </button>
@@ -104,7 +138,7 @@ export default function Cart({ items: initialItems }: Props) {
                                                 ${item.line_total.toFixed(2)}
                                             </span>
                                             <AlertDialog>
-                                                <AlertDialogTrigger className="min-h-9 px-2 text-sm text-destructive">
+                                                <AlertDialogTrigger className="min-h-11 px-2 text-sm font-medium text-destructive disabled:opacity-40" disabled={busyId === item.id}>
                                                     Remove
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>

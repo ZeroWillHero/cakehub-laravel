@@ -20,10 +20,15 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Eye, FileText } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
+import { statusTone } from '@/lib/statusTone';
 import type { Seller, VerificationStatus } from '@/types/seller';
-import type { DocumentType } from '@/types/sellerDocument';
+import type { DocumentType, SellerDocument } from '@/types/sellerDocument';
 
 interface Props {
     seller: Seller;
@@ -33,6 +38,12 @@ const documentLabel: Record<DocumentType, string> = {
     business_registration: 'Business registration',
     food_safety_cert: 'Food safety certificate',
     address_proof: 'Address proof',
+};
+
+const documentStatusLabel: Record<SellerDocument['status'], string> = {
+    pending: 'Pending review',
+    approved: 'Approved',
+    rejected: 'Rejected',
 };
 
 const statusVariant: Record<VerificationStatus, 'default' | 'secondary' | 'destructive'> = {
@@ -51,12 +62,16 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
     const [infoOpen, setInfoOpen] = useState(false);
     const [infoMessage, setInfoMessage] = useState('');
     const [busy, setBusy] = useState(false);
+    const [viewingDoc, setViewingDoc] = useState<SellerDocument | null>(null);
 
     async function verify() {
         setBusy(true);
         try {
             setSeller(await api.post<Seller>(`/admin/sellers/${seller.id}/verify`));
             setConfirmVerify(false);
+            toast.success('Seller verified.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't verify the seller."));
         } finally {
             setBusy(false);
         }
@@ -68,6 +83,9 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
             setSeller(await api.post<Seller>(`/admin/sellers/${seller.id}/reject`, { reason: rejectReason }));
             setRejectOpen(false);
             setRejectReason('');
+            toast.success('Seller rejected.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't reject the seller."));
         } finally {
             setBusy(false);
         }
@@ -79,6 +97,9 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
             await api.post(`/admin/sellers/${seller.id}/request-info`, { message: infoMessage });
             setInfoOpen(false);
             setInfoMessage('');
+            toast.success('Message sent to the seller.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't send the message."));
         } finally {
             setBusy(false);
         }
@@ -89,6 +110,9 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
         try {
             setSeller(await api.post<Seller>(`/admin/sellers/${seller.id}/suspend`));
             setConfirmSuspend(false);
+            toast.success('Seller suspended.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't suspend the seller."));
         } finally {
             setBusy(false);
         }
@@ -130,18 +154,22 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
                         {!seller.documents || seller.documents.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No documents submitted yet.</p>
                         ) : (
-                            <ul className="space-y-2">
+                            <ul className="divide-y rounded-lg border">
                                 {seller.documents.map((doc) => (
-                                    <li key={doc.id} className="flex items-center justify-between text-sm">
-                                        <a
-                                            href={`/seller-documents/${doc.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-primary underline"
-                                        >
-                                            {documentLabel[doc.type]}
-                                        </a>
-                                        <Badge variant="secondary">{doc.status}</Badge>
+                                    <li key={doc.id} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm">
+                                        <span className="flex items-center gap-3">
+                                            <span className="inline-flex size-9 items-center justify-center rounded-lg bg-muted">
+                                                <FileText className="size-4" aria-hidden="true" />
+                                            </span>
+                                            <span className="font-medium">{documentLabel[doc.type]}</span>
+                                        </span>
+                                        <span className="flex items-center gap-2">
+                                            <Badge className={statusTone(doc.status)}>{documentStatusLabel[doc.status]}</Badge>
+                                            <Button type="button" variant="outline" size="sm" className="min-h-9" onClick={() => setViewingDoc(doc)}>
+                                                <Eye aria-hidden="true" />
+                                                View
+                                            </Button>
+                                        </span>
                                     </li>
                                 ))}
                             </ul>
@@ -234,6 +262,12 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+            <SlipPreviewDialog
+                open={viewingDoc !== null}
+                onOpenChange={(open) => !open && setViewingDoc(null)}
+                slipUrl={viewingDoc ? `/seller-documents/${viewingDoc.id}` : ''}
+                title={viewingDoc ? `${documentLabel[viewingDoc.type]} — ${seller.business_name}` : 'Document'}
+            />
         </AdminLayout>
     );
 }
