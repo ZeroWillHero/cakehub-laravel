@@ -15,7 +15,6 @@ import {
 import CustomerLayout from '@/Layouts/CustomerLayout';
 import HeroAdsCarousel from '@/components/shared/HeroAdsCarousel';
 import SmartImage from '@/components/shared/SmartImage';
-import HeroImage from '@/components/shared/HeroImage';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
 import RatingStars from '@/components/shared/RatingStars';
@@ -39,27 +38,11 @@ function billingLabel(plan: SubscriptionPlan): string {
     return plan.billing_cycle === 'annual' ? `$${plan.price}/yr` : `$${plan.price}/mo`;
 }
 
-// Uneven, top-aligned filmstrip heights for the closing gallery — mirrors
-// the varied-height reference layout rather than a uniform grid.
-const GALLERY_HEIGHTS = ['h-64', 'h-80', 'h-72', 'h-64', 'h-80', 'h-72', 'h-64'];
-
-const GALLERY_IMAGES = [
-    '/images/pexels-diego-romero-471613950-37754294.jpg',
-    '/images/pexels-hilal-diken-2153971208-33759172.jpg',
-    '/images/pexels-rebornfilmes-31266998.jpg',
-    '/images/pexels-morgana-pozzi-2153094746-32552698.jpg',
-];
-
 interface NearbySeller extends Seller {
     distance_km?: number;
 }
 
 export default function CustomerHome({ categories, featuredSellers, subscriptionPlans, ads, adRotationSeconds }: Props) {
-    const galleryImages = [
-        ...GALLERY_IMAGES,
-        ...featuredSellers.filter((seller) => seller.cover_url).map((seller) => seller.cover_url as string),
-    ];
-
     // Only guests are pitched on selling — signed-in customers never see the
     // "Become a seller" CTAs or the subscription plans (the server also
     // sends them no plans).
@@ -187,26 +170,6 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                 </div>
             </Section>
 
-            <Section className="pt-0">
-                <div className="group/marquee overflow-hidden">
-                    <div className="animate-marquee flex w-max items-end gap-4 group-hover/marquee:[animation-play-state:paused]">
-                        {[...GALLERY_HEIGHTS, ...GALLERY_HEIGHTS].map((height, index) => (
-                            <div key={index} className="shrink-0">
-                                <HeroImage
-                                    src={galleryImages[index % galleryImages.length]}
-                                    alt="Cake photography from CakeHub bakers"
-                                    label="Cake photo"
-                                    className={cn(
-                                        'w-auto rounded-3xl object-cover transition-transform duration-300 ease-out hover:-translate-y-3',
-                                        height,
-                                    )}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </Section>
-
             {nearMe && (
                 <Section title="Near you" className="pb-0 pt-8 sm:pt-10">
                     {nearMeStatus === 'loading' && (
@@ -260,20 +223,6 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                     )}
                 </Section>
             )}
-
-            <Section title="Featured cakes">
-                <Carousel opts={{ align: 'start' }}>
-                    <CarouselContent>
-                        {categories.slice(0, 6).map((category) => (
-                            <CarouselItem key={category.id} className="basis-2/3 sm:basis-1/2 lg:basis-1/3">
-                                <SmartImage src={category.image_url} alt={category.name} fallbackLabel="" className="aspect-[16/10] w-full rounded-2xl" />
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                </Carousel>
-            </Section>
 
             {featuredSellers.length > 0 && (
                 <Section title="Featured bakers" description="Our highest-rated sellers right now.">

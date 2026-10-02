@@ -76,11 +76,11 @@ describe('Customer Home', () => {
         expect(screen.getByText('Birthday Cakes')).toHaveClass('font-bold');
     });
 
-    it('places the categories directly under the hero, before the featured sections', () => {
-        renderHome([], [category]);
+    it('places the categories directly under the hero, before the sections that follow', () => {
+        renderHome([plan], [category]);
 
         const categoriesHeading = screen.getByRole('heading', { name: 'Categories' });
-        const featuredHeading = screen.getByRole('heading', { name: 'Featured cakes' });
-        expect(categoriesHeading.compareDocumentPosition(featuredHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        const sellHeading = screen.getByRole('heading', { name: 'Sell your cakes on CakeHub' });
+        expect(categoriesHeading.compareDocumentPosition(sellHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 });
