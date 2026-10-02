@@ -67,7 +67,7 @@ export default function SiteHeader() {
         <>
             <header
                 className={cn(
-                    'sticky top-0 z-40 bg-transparent transition-transform duration-300',
+                    'sticky top-0 z-40 bg-background bg-linear-to-b from-primary/20 to-transparent transition-transform duration-300',
                     scrolledDown ? '-translate-y-full' : 'translate-y-0',
                 )}
             >
