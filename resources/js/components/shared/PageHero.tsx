@@ -29,7 +29,7 @@ const HERO_GRADIENT = [
     'linear-gradient(135deg, color-mix(in oklab, var(--background) 30%, transparent) 0%, color-mix(in oklab, var(--accent) 30%, var(--background) 30%) 55%, color-mix(in oklab, #7c5a41 25%, var(--background) 30%) 100%)',
 ].join(', ');
 
-const HERO_IMAGE = '/images/hero/hero.png';
+export const HERO_IMAGE = '/images/hero/hero.png';
 
 export default function PageHero({ title, subtitle, actions, breadcrumb, media, size = 'sm', className }: Props) {
     const isLarge = size === 'lg';
