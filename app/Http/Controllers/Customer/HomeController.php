@@ -29,7 +29,7 @@ class HomeController extends Controller
         // sign-in is only asked for at checkout
         // (docs/plan-public-browsing-guest-cart.md D1).
         if ($user === null) {
-            return Inertia::render('Customer/Home', $this->homeProps());
+            return Inertia::render('Customer/Home', $this->homeProps(forGuest: true));
         }
 
         if ($user->role === null) {
@@ -37,7 +37,7 @@ class HomeController extends Controller
         }
 
         return match ($user->role) {
-            UserRole::Customer => Inertia::render('Customer/Home', $this->homeProps()),
+            UserRole::Customer => Inertia::render('Customer/Home', $this->homeProps(forGuest: false)),
             UserRole::Seller => redirect()->route('seller.dashboard'),
             UserRole::Admin => redirect()->route('admin.dashboard'),
         };
@@ -46,7 +46,7 @@ class HomeController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function homeProps(): array
+    private function homeProps(bool $forGuest): array
     {
         return [
             'categories' => CategoryResource::collection(
@@ -63,10 +63,14 @@ class HomeController extends Controller
                     ->get()
             )->resolve(),
             // Shown in the "Sell on CakeHub" section so prospective sellers
-            // can see pricing before starting onboarding.
-            'subscriptionPlans' => SubscriptionPlanResource::collection(
-                SubscriptionPlan::query()->where('is_active', true)->orderBy('sort_order')->get()
-            )->resolve(),
+            // can see pricing before starting onboarding. Guests only — a
+            // signed-in customer has already chosen to be a buyer, so they
+            // get no seller plans or "Become a seller" prompts at all.
+            'subscriptionPlans' => $forGuest
+                ? SubscriptionPlanResource::collection(
+                    SubscriptionPlan::query()->where('is_active', true)->orderBy('sort_order')->get()
+                )->resolve()
+                : [],
             'ads' => AdResource::collection(
                 Ad::query()->eligible()->orderBy('sort_order')->get()
             )->resolve(),

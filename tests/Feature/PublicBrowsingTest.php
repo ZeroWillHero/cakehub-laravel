@@ -3,6 +3,7 @@
 use App\Enums\VerificationStatus;
 use App\Models\Product;
 use App\Models\Seller;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
@@ -17,6 +18,24 @@ it('shows the customer home to a guest', function () {
             ->has('categories')
             ->has('featuredSellers')
             ->where('auth.user', null));
+});
+
+it('shows active subscription plans to a guest on the home page', function () {
+    SubscriptionPlan::factory()->create(['is_active' => true]);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Customer/Home')->has('subscriptionPlans', 1));
+});
+
+it('sends no subscription plans to a signed-in customer on the home page', function () {
+    SubscriptionPlan::factory()->create(['is_active' => true]);
+    $customer = User::factory()->customer()->create();
+
+    $this->actingAs($customer)
+        ->get('/')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Customer/Home')->has('subscriptionPlans', 0));
 });
 
 it('lets a guest open the search and all-products pages', function () {

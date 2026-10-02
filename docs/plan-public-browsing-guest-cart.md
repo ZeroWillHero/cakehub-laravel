@@ -21,6 +21,7 @@ Companion to [plan.md](plan.md) (listed there as **Phase 11**). Requested 2026-1
 | D2 | When is a guest asked to sign in? | **At checkout.** Guests get a real cart stored in their **session** (no new table). At sign-in it merges into their account's cart, and they land on `/checkout`. |
 | D3 | After sign-in, the account already has a cart from a different seller (orders are single-seller only). | **Ask them.** Neither cart is replaced automatically. The visitor lands on `/cart` with a "which cart do you want to keep?" dialog. |
 | D4 | Should unverified or suspended sellers be publicly visible? | **Verified sellers only.** Storefront and product pages return 404 unless `verification_status = verified`, for guests and signed-in users alike. Public search and listing APIs apply the same filter so search never links to a page that 404s. |
+| D5 | Who sees the seller pitch on Home ("Become a seller" CTAs + the "Sell your cakes on CakeHub" subscription plans)? | **Guests only** (confirmed 2026-10-03, branch `home-hero-ads`). A signed-in customer sees neither — `HomeController` sends them an empty `subscriptionPlans`, and `Customer/Home` hides both CTAs. |
 
 "Chat" in the original request means the existing **WhatsApp deep link** ([requirements.md](requirements.md) §3.7). It already works on the storefront and product pages because it's a plain link, so the only change is that those pages become public. In-app chat stays out of scope.
 
