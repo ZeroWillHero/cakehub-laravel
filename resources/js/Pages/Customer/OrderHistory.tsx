@@ -34,10 +34,10 @@ export default function OrderHistory({ orders }: Props) {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="mt-6 space-y-3">
+                    <div className="mt-6 flex flex-col gap-4">
                         {orders.map((order) => (
                             <Link key={order.id} href={`/orders/${order.id}`}>
-                                <Card className="transition-shadow hover:shadow-md">
+                                <Card className="bg-primary/10 transition-[background-color,box-shadow] hover:bg-primary/15 hover:shadow-md">
                                     <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
                                         <div>
                                             <p className="font-medium">{order.seller?.business_name}</p>
