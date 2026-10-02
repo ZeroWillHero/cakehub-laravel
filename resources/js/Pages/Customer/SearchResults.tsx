@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import SmartImage from '@/components/shared/SmartImage';
 import PageHero from '@/components/shared/PageHero';
 import RatingStars from '@/components/shared/RatingStars';
 import Section from '@/components/shared/Section';
@@ -237,18 +237,7 @@ export default function SearchResults({ categories }: Props) {
                             {filteredSellers.map((seller) => (
                                 <Link key={seller.id} href={`/sellers/${seller.slug}`}>
                                     <Card className="h-full transition-shadow hover:shadow-md">
-                                        {seller.cover_url ? (
-                                            <img
-                                                src={seller.cover_url}
-                                                alt={seller.business_name}
-                                                className="aspect-video w-full rounded-t-lg object-cover"
-                                            />
-                                        ) : (
-                                            <ImagePlaceholder
-                                                label={seller.business_name}
-                                                className="aspect-video w-full rounded-b-none"
-                                            />
-                                        )}
+                                        <SmartImage src={seller.cover_url} alt={seller.business_name} className="aspect-video w-full rounded-t-lg" />
                                         <CardContent className="space-y-1 py-4">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="font-medium">{seller.business_name}</span>

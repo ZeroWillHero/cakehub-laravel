@@ -21,7 +21,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/Layouts/AdminLayout';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import ImageThumbUpload from '@/components/shared/ImageThumbUpload';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { Ad, AdStatus } from '@/types/ad';
 
@@ -43,12 +45,14 @@ function SortableAdRow({
     onDelete,
     onStatusChange,
     onUploadImage,
+    onImageInvalid,
     imageError,
 }: {
     ad: Ad;
     onDelete: () => void;
     onStatusChange: (status: AdStatus) => void;
-    onUploadImage: (file: File) => void;
+    onUploadImage: (file: File) => Promise<void>;
+    onImageInvalid: (message: string) => void;
     imageError?: string;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ad.id });
@@ -63,46 +67,26 @@ function SortableAdRow({
         <div
             ref={setNodeRef}
             style={style}
-            className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0"
+            className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0"
         >
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-3">
                 <button
                     type="button"
-                    className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+                    className="inline-flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-muted active:cursor-grabbing"
                     aria-label={`Drag to reorder ${ad.name}`}
                     {...attributes}
                     {...listeners}
                 >
                     <GripVertical className="size-4" />
                 </button>
-                <label
-                    className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-lg"
-                    aria-label={`Upload image for ${ad.name}`}
-                    title="Preferred size: 1200 × 550px (landscape banner, ~2.2:1)"
-                >
-                    {ad.image_url ? (
-                        <img
-                            src={ad.image_url}
-                            alt=""
-                            loading="lazy"
-                            className="size-10 rounded-lg object-cover"
-                        />
-                    ) : (
-                        <ImagePlaceholder label="" className="size-10 rounded-lg" />
-                    )}
-                    <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        className="absolute inset-0 cursor-pointer opacity-0"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) onUploadImage(file);
-                            e.target.value = '';
-                        }}
-                    />
-                </label>
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
+                <ImageThumbUpload
+                    name={ad.name}
+                    url={ad.image_url}
+                    onUpload={onUploadImage}
+                    onInvalid={onImageInvalid}
+                />
+                <div className="flex min-w-0 flex-col">
+                    <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium">{ad.name}</span>
                         <Badge variant={ad.is_currently_visible ? 'default' : 'secondary'}>
                             {ad.is_currently_visible ? 'Live' : statusLabel[ad.status]}
@@ -111,6 +95,9 @@ function SortableAdRow({
                     <p className="text-xs text-muted-foreground">
                         ${ad.paid_amount.toFixed(2)} · {ad.starts_at} → {ad.ends_at}
                     </p>
+                    {!ad.image_url && !imageError && (
+                        <p className="text-xs text-muted-foreground">Add a banner image — 1200 × 550px landscape works best.</p>
+                    )}
                     {imageError && <p className="text-xs text-destructive">{imageError}</p>}
                 </div>
             </div>
@@ -159,6 +146,9 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
             setAds((prev) => [...prev, created]);
             setCreateOpen(false);
             setForm(emptyForm);
+            toast.success('Ad created. Add a banner image next.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't create the ad."));
         } finally {
             setBusy(false);
         }
@@ -181,8 +171,12 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
     }
 
     async function updateStatus(ad: Ad, status: AdStatus) {
-        const updated = await api.put<Ad>(`/admin/ads/${ad.id}`, { status });
-        setAds((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+        try {
+            const updated = await api.put<Ad>(`/admin/ads/${ad.id}`, { status });
+            setAds((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't change the ad status."));
+        }
     }
 
     async function remove() {
@@ -192,6 +186,9 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
             await api.delete(`/admin/ads/${deleteTarget.id}`);
             setAds((prev) => prev.filter((a) => a.id !== deleteTarget.id));
             setDeleteTarget(null);
+            toast.success('Ad deleted.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't delete the ad."));
         } finally {
             setBusy(false);
         }
@@ -206,13 +203,21 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
         const reordered = arrayMove(ads, oldIndex, newIndex);
         setAds(reordered);
 
-        await api.patch('/admin/ads/reorder', { order: reordered.map((a) => a.id) });
+        try {
+            await api.patch('/admin/ads/reorder', { order: reordered.map((a) => a.id) });
+        } catch (err) {
+            setAds(ads);
+            toast.error(errorMessage(err, undefined, "Couldn't save the new order. Please try again."));
+        }
     }
 
     async function saveSetting() {
         setSettingBusy(true);
         try {
             await api.put('/admin/ads/setting', { rotation_seconds: Number(rotationSeconds) });
+            toast.success('Rotation speed saved.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't save the setting."));
         } finally {
             setSettingBusy(false);
         }
@@ -266,6 +271,7 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
                                 onDelete={() => setDeleteTarget(ad)}
                                 onStatusChange={(status) => updateStatus(ad, status)}
                                 onUploadImage={(file) => uploadImage(ad, file)}
+                                onImageInvalid={(message) => setImageErrors((prev) => ({ ...prev, [ad.id]: message }))}
                             />
                         ))}
                     </SortableContext>

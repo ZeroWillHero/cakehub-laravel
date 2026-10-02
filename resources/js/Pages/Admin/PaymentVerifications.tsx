@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/Layouts/AdminLayout';
 import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { Payment } from '@/types/payment';
 
@@ -31,6 +33,9 @@ export default function AdminPaymentVerifications({ payments: initial }: Props) 
             await api.post(`/admin/payments/${payment.id}/verify`);
             setPayments((prev) => prev.filter((p) => p.id !== payment.id));
             closePreview();
+            toast.success('Payment approved.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't approve the payment."));
         } finally {
             setBusy(null);
         }
@@ -42,6 +47,9 @@ export default function AdminPaymentVerifications({ payments: initial }: Props) 
             await api.post(`/admin/payments/${payment.id}/reject`, { rejection_reason: reason });
             setPayments((prev) => prev.filter((p) => p.id !== payment.id));
             closePreview();
+            toast.success('Payment declined.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't decline the payment."));
         } finally {
             setBusy(null);
         }

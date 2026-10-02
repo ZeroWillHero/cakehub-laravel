@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import ImagePlaceholder from '@/components/shared/ImagePlaceholder';
+import SmartImage from '@/components/shared/SmartImage';
 import PageHero from '@/components/shared/PageHero';
 import RatingStars from '@/components/shared/RatingStars';
 import Section from '@/components/shared/Section';
@@ -110,6 +110,7 @@ export default function Products({ categories }: Props) {
                             type="button"
                             variant={categoryId === null ? 'default' : 'outline'}
                             size="sm"
+                            className="min-h-11 rounded-full px-4 sm:min-h-8"
                             onClick={() => setCategoryId(null)}
                         >
                             All
@@ -120,6 +121,7 @@ export default function Products({ categories }: Props) {
                                 type="button"
                                 variant={categoryId === category.id ? 'default' : 'outline'}
                                 size="sm"
+                                className="min-h-11 rounded-full px-4 sm:min-h-8"
                                 onClick={() => setCategoryId(category.id)}
                             >
                                 {category.name}
@@ -131,6 +133,7 @@ export default function Products({ categories }: Props) {
                         <label className="flex min-h-11 items-center gap-2 text-sm">
                             <input
                                 type="checkbox"
+                                className="size-4 accent-primary"
                                 checked={inStockOnly}
                                 onChange={(e) => setInStockOnly(e.target.checked)}
                             />
@@ -141,6 +144,7 @@ export default function Products({ categories }: Props) {
                             type="button"
                             variant={coords !== null ? 'default' : 'outline'}
                             size="sm"
+                            className="min-h-11 rounded-full px-4 sm:min-h-8"
                             onClick={coords !== null ? clearLocation : useNearMe}
                             disabled={geo === 'locating'}
                         >
@@ -190,18 +194,7 @@ export default function Products({ categories }: Props) {
                                     href={product.seller ? `/sellers/${product.seller.slug}/products/${product.id}` : '#'}
                                 >
                                     <Card className="h-full transition-shadow hover:shadow-md">
-                                        {product.images[0] ? (
-                                            <img
-                                                src={product.images[0].url}
-                                                alt={product.name}
-                                                className="aspect-square w-full rounded-t-lg object-cover"
-                                            />
-                                        ) : (
-                                            <ImagePlaceholder
-                                                label={product.name}
-                                                className="aspect-square w-full rounded-b-none"
-                                            />
-                                        )}
+                                        <SmartImage src={product.images[0]?.url} alt={product.name} className="aspect-square w-full rounded-t-lg" />
                                         <CardContent className="space-y-1 py-3">
                                             <div className="flex items-start justify-between gap-2">
                                                 <span className="line-clamp-1 text-sm font-medium">{product.name}</span>

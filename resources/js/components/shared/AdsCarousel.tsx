@@ -1,6 +1,7 @@
 import type { ElementType, ReactNode } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import SmartImage from '@/components/shared/SmartImage';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/types/ad';
 
@@ -54,10 +55,12 @@ export default function AdsCarousel({ ads, rotationSeconds }: Props) {
                     <CarouselItem key={ad.id} className="basis-full pl-0">
                         <AdSlide ad={ad}>
                             {ad.image_url ? (
-                                <img
+                                <SmartImage
                                     src={ad.image_url}
                                     alt={ad.name}
-                                    className="h-56 w-full object-cover sm:h-72 md:h-96"
+                                    loading="eager"
+                                    fallbackLabel=""
+                                    className="h-56 w-full sm:h-72 md:h-96"
                                 />
                             ) : (
                                 <div className="flex h-40 w-full items-center justify-center bg-muted sm:h-56 md:h-64">

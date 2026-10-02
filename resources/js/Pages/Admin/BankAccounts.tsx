@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { AdminBankAccount } from '@/types/adminBankAccount';
 
@@ -41,14 +43,21 @@ export default function AdminBankAccounts({ accounts: initial }: Props) {
             setAccounts((prev) => [...prev, created]);
             setCreateOpen(false);
             setForm(emptyForm);
+            toast.success('Bank account added.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't add the bank account."));
         } finally {
             setBusy(false);
         }
     }
 
     async function toggleActive(account: AdminBankAccount) {
-        const updated = await api.patch<AdminBankAccount>(`/admin/bank-accounts/${account.id}/toggle`);
-        setAccounts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+        try {
+            const updated = await api.patch<AdminBankAccount>(`/admin/bank-accounts/${account.id}/toggle`);
+            setAccounts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't update the bank account."));
+        }
     }
 
     async function remove() {
@@ -58,6 +67,9 @@ export default function AdminBankAccounts({ accounts: initial }: Props) {
             await api.delete(`/admin/bank-accounts/${deleteTarget.id}`);
             setAccounts((prev) => prev.filter((a) => a.id !== deleteTarget.id));
             setDeleteTarget(null);
+            toast.success('Bank account deleted.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't delete the bank account."));
         } finally {
             setBusy(false);
         }

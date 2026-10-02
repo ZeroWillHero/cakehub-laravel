@@ -1,16 +1,6 @@
-import { router } from '@inertiajs/react';
-import { useRef, useState, type ChangeEventHandler, type SubmitEventHandler } from 'react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { Link, router } from '@inertiajs/react';
+import { useEffect, useRef, useState, type SubmitEventHandler } from 'react';
+import { CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
+import ProductPhotoManager, { type PendingPhoto } from '@/components/shared/ProductPhotoManager';
 import Spinner from '@/components/shared/Spinner';
 import { api } from '@/lib/api';
+import { errorMessage } from '@/lib/errors';
 import type { Category } from '@/types/category';
 import type { Product, ProductAvailabilityStatus, ProductImage } from '@/types/product';
 
@@ -69,9 +61,84 @@ export default function ListingForm({ categories, usage, limit, product }: Props
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [saving, setSaving] = useState(false);
     const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
-    const [imageError, setImageError] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [pending, setPending] = useState<PendingPhoto[]>([]);
+    const [savePhase, setSavePhase] = useState<string | null>(null);
+    const [photosFailed] = useState(() => new URLSearchParams(window.location.search).has('photos_failed'));
+    const uploadingRef = useRef(false);
+    const uploadingNow = pending.some((p) => p.progress !== null);
+
+    function patchPending(key: string, patch: Partial<PendingPhoto>) {
+        setPending((prev) => prev.map((p) => (p.key === key ? { ...p, ...patch } : p)));
+    }
+
+    async function uploadPhoto(productId: number, photo: PendingPhoto): Promise<boolean> {
+        patchPending(photo.key, { progress: 0, error: null });
+        try {
+            const formData = new FormData();
+            formData.append('image', photo.file);
+            const uploaded = await api.upload<ProductImage>(`/seller/products/${productId}/images`, formData, {
+                onProgress: (progress) => patchPending(photo.key, { progress }),
+            });
+            setImages((prev) => [...prev, uploaded]);
+            setPending((prev) => prev.filter((p) => p.key !== photo.key));
+            URL.revokeObjectURL(photo.previewUrl);
+            return true;
+        } catch (err) {
+            patchPending(photo.key, {
+                progress: null,
+                error: errorMessage(err, 'image', "We couldn't upload this photo. Please try again."),
+            });
+            return false;
+        }
+    }
+
+    // Editing an existing product: upload new photos straight away, one at a
+    // time so a slow connection isn't split across several large files.
+    useEffect(() => {
+        if (!isEdit || uploadingRef.current) return;
+        const next = pending.find((p) => p.progress === null && p.error === null);
+        if (!next) return;
+        uploadingRef.current = true;
+        uploadPhoto(product.id, next).finally(() => {
+            uploadingRef.current = false;
+            setPending((prev) => [...prev]);
+        });
+    }, [pending, isEdit]);
+
+    function addPhotos(files: File[]) {
+        setPending((prev) => [
+            ...prev,
+            ...files.map((file) => ({
+                key: `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`,
+                file,
+                previewUrl: URL.createObjectURL(file),
+                progress: null,
+                error: null,
+            })),
+        ]);
+    }
+
+    function removePending(key: string) {
+        setPending((prev) => {
+            const target = prev.find((p) => p.key === key);
+            if (target) URL.revokeObjectURL(target.previewUrl);
+            return prev.filter((p) => p.key !== key);
+        });
+    }
+
+    function retryPending(key: string) {
+        if (isEdit) {
+            patchPending(key, { error: null });
+        } else {
+            patchPending(key, { error: null, progress: null });
+        }
+    }
+
+    async function removeImage(image: ProductImage) {
+        if (!product) return;
+        await api.delete(`/seller/products/${product.id}/images/${image.id}`);
+        setImages((prev) => prev.filter((img) => img.id !== image.id));
+    }
 
     function toggleCategory(id: number) {
         setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
@@ -106,48 +173,6 @@ export default function ListingForm({ categories, usage, limit, product }: Props
         setVariants((prev) => prev.filter((_, i) => i !== index));
     }
 
-    const uploadImage: ChangeEventHandler<HTMLInputElement> = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file || !product) return;
-
-        // Validate file size
-        if (file.size > 20 * 1024 * 1024) {
-            setImageError('File size must be less than 20MB');
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-        }
-
-        // Validate file type
-        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            setImageError('Please upload a valid image file (JPG, PNG, or WebP)');
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-        }
-
-        setUploading(true);
-        setImageError(null);
-
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
-            const uploaded = await api.upload<ProductImage>(`/seller/products/${product.id}/images`, formData);
-            setImages((prev) => [...prev, uploaded]);
-        } catch (err) {
-            const apiError = err as { errors?: Record<string, string[]> };
-            setImageError(apiError.errors?.image?.[0] ?? 'Could not upload image. Please try again.');
-        } finally {
-            setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
-    };
-
-    async function removeImage(imageId: number) {
-        if (!product) return;
-        await api.delete(`/seller/products/${product.id}/images/${imageId}`);
-        setImages((prev) => prev.filter((img) => img.id !== imageId));
-    }
-
     const submit: SubmitEventHandler = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -168,45 +193,103 @@ export default function ListingForm({ categories, usage, limit, product }: Props
 
         try {
             if (isEdit) {
+                setSavePhase('Saving changes…');
                 await api.put(`/seller/products/${product.id}`, payload);
-            } else {
-                await api.post('/seller/products', payload);
+                router.visit('/seller/listings');
+                return;
             }
-            router.visit('/seller/listings');
+
+            setSavePhase('Saving product…');
+            const created = await api.post<Product>('/seller/products', payload);
+            let failed = 0;
+            for (const [i, photo] of pending.entries()) {
+                setSavePhase(`Uploading photo ${i + 1} of ${pending.length}…`);
+                if (!(await uploadPhoto(created.id, photo))) failed++;
+            }
+            // The product exists now; send them to its edit page if any photo
+            // needs another try, otherwise back to the list.
+            router.visit(failed > 0 ? `/seller/listings/${created.id}/edit?photos_failed=${failed}` : '/seller/listings');
         } catch (err) {
-            const apiError = err as { errors?: Record<string, string[]> };
-            setErrors(apiError.errors ?? {});
+            const apiError = err as { errors?: Record<string, string[]>; message?: string };
+            setErrors(apiError.errors ?? { form: [apiError.message ?? 'Could not save. Please try again.'] });
         } finally {
             setSaving(false);
+            setSavePhase(null);
         }
     };
 
+    const errorCount = Object.keys(errors).filter((key) => key !== 'listing_limit').length;
+
     return (
         <SellerLayout breadcrumb={['Listings', isEdit ? 'Edit listing' : 'Add product']}>
-            <Card>
+            <div className="mx-auto w-full max-w-3xl space-y-6 pb-4">
+                <div>
+                    <h1 className="text-2xl font-semibold">{isEdit ? 'Edit listing' : 'Add a new product'}</h1>
+                    <p className="text-sm text-muted-foreground">
+                        {isEdit
+                            ? 'Update the photos and details customers see for this product.'
+                            : 'Add photos and details — customers will see this on your storefront.'}
+                    </p>
+                </div>
+
+                {!isEdit && <ListingUsageIndicator usage={usage} limit={limit} />}
+
+                {errors.listing_limit && (
+                    <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                        {errors.listing_limit[0]}
+                    </p>
+                )}
+
+                {photosFailed && pending.length === 0 && (
+                    <p className="flex items-start gap-2 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3 text-sm" role="alert">
+                        <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        Your product was saved, but some photos didn&apos;t upload. Please add them again below.
+                    </p>
+                )}
+
+                {errorCount > 0 && (
+                    <p className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                        <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        {errors.form?.[0] ?? 'Some details need fixing — please check the highlighted fields below.'}
+                    </p>
+                )}
+
+                <Card>
                     <CardHeader>
-                        <CardTitle>{isEdit ? 'Edit listing' : 'Add product'}</CardTitle>
+                        <CardTitle className="text-base">Photos</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            {isEdit
+                                ? 'New photos are saved as soon as you add them.'
+                                : 'Pick your photos now — they upload when you click “Add product”.'}
+                        </p>
                     </CardHeader>
                     <CardContent>
-                        {!isEdit && (
-                            <div className="mb-6">
-                                <ListingUsageIndicator usage={usage} limit={limit} />
-                            </div>
-                        )}
+                        <ProductPhotoManager
+                            images={images}
+                            pending={pending}
+                            deferred={!isEdit}
+                            disabled={atLimit || saving}
+                            onAdd={addPhotos}
+                            onRemoveSaved={removeImage}
+                            onRemovePending={removePending}
+                            onRetry={retryPending}
+                        />
+                    </CardContent>
+                </Card>
 
-                        {errors.listing_limit && (
-                            <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                                {errors.listing_limit[0]}
-                            </p>
-                        )}
-
-                        <form onSubmit={submit} className="space-y-5">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Product details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form id="listing-form" onSubmit={submit} className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">Product name</Label>
                                 <Input
                                     id="name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
+                                    placeholder="e.g. Chocolate fudge birthday cake"
                                     aria-invalid={Boolean(errors.name)}
                                     disabled={atLimit}
                                 />
@@ -219,13 +302,15 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                     id="description"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Flavors, size, serving count, how far in advance to order…"
+                                    rows={4}
                                     disabled={atLimit}
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="base_price">Base price</Label>
+                                    <Label htmlFor="base_price">Price ($)</Label>
                                     <Input
                                         id="base_price"
                                         type="number"
@@ -233,6 +318,8 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                         min="0"
                                         value={basePrice}
                                         onChange={(e) => setBasePrice(e.target.value)}
+                                        inputMode="decimal"
+                                        placeholder="0.00"
                                         aria-invalid={Boolean(errors.base_price)}
                                         disabled={atLimit}
                                     />
@@ -309,7 +396,12 @@ export default function ListingForm({ categories, usage, limit, product }: Props
 
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <Label>Size / flavor variants</Label>
+                                    <div>
+                                        <Label>Size / flavor options</Label>
+                                        <p className="text-xs text-muted-foreground">
+                                            Optional. Add an extra price for bigger sizes or special flavors (0 if same price).
+                                        </p>
+                                    </div>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -317,24 +409,26 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                         onClick={addVariant}
                                         disabled={atLimit}
                                     >
-                                        Add variant
+                                        Add option
                                     </Button>
                                 </div>
                                 {variants.map((variant, index) => (
                                     <div key={index} className="flex flex-wrap items-center gap-2 rounded-md border p-2">
                                         <Input
                                             placeholder="e.g. 1kg — Chocolate"
+                                            aria-label={`Option ${index + 1} name`}
                                             value={variant.name}
                                             onChange={(e) => updateVariant(index, { name: e.target.value })}
-                                            className="flex-1 min-w-[10rem]"
+                                            className="min-h-11 min-w-40 flex-1"
                                         />
                                         <Input
                                             type="number"
                                             step="0.01"
-                                            placeholder="Price add-on"
+                                            placeholder="Extra price"
+                                            aria-label={`Option ${index + 1} extra price`}
                                             value={variant.price_modifier}
                                             onChange={(e) => updateVariant(index, { price_modifier: e.target.value })}
-                                            className="w-32"
+                                            className="min-h-11 w-32"
                                         />
                                         <Button
                                             type="button"
@@ -349,74 +443,35 @@ export default function ListingForm({ categories, usage, limit, product }: Props
                                 ))}
                             </div>
 
-                            <Button type="submit" disabled={saving || atLimit} className="min-h-11">
-                                {saving && <Spinner className="mr-2" />}
-                                {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add product'}
-                            </Button>
                         </form>
                     </CardContent>
                 </Card>
 
-                {isEdit && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base">Photos</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {images.length === 0 && (
-                                <p className="text-sm text-muted-foreground">No photos yet.</p>
-                            )}
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                {images.map((image) => (
-                                    <div key={image.id} className="group relative aspect-square overflow-hidden rounded-md border">
-                                        <img src={image.url} alt="" className="h-full w-full object-cover" />
-                                        <AlertDialog>
-                                            <AlertDialogTrigger className="absolute right-1 top-1 min-h-8 min-w-8 rounded-md bg-background/90 px-2 text-xs text-destructive shadow">
-                                                Remove
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Remove this photo?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This cannot be undone.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => removeImage(image.id)}>
-                                                        Remove
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </div>
-                                ))}
-                            </div>
-                            <div>
-                                <Label htmlFor="image-upload" className="mb-2 flex items-center gap-2">
-                                    Add a photo
-                                    {uploading && <Spinner size={16} />}
-                                </Label>
-                                <input
-                                    ref={fileInputRef}
-                                    id="image-upload"
-                                    type="file"
-                                    accept="image/png,image/jpeg,image/webp"
-                                    onChange={uploadImage}
-                                    disabled={uploading}
-                                    className="min-h-11 w-full text-sm file:mr-3 file:min-h-11 file:rounded-md file:border file:bg-background file:px-3 file:text-sm disabled:opacity-50"
-                                />
-                                {uploading && (
-                                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Spinner size={16} />
-                                        <span>Uploading image to cloud...</span>
-                                    </div>
-                                )}
-                                {imageError && <p className="mt-2 text-sm text-destructive">{imageError}</p>}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+                <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
+                    {uploadingNow && !saving && (
+                        <span className="mr-auto flex items-center gap-2 text-sm text-muted-foreground" role="status">
+                            <Spinner size={14} />
+                            Uploading photos — please wait…
+                        </span>
+                    )}
+                    {savePhase && (
+                        <span className="mr-auto flex items-center gap-2 text-sm text-muted-foreground" role="status">
+                            <Spinner size={14} />
+                            {savePhase}
+                        </span>
+                    )}
+                    <Link
+                        href="/seller/listings"
+                        className="inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+                    >
+                        Cancel
+                    </Link>
+                    <Button type="submit" form="listing-form" disabled={saving || atLimit || uploadingNow} className="min-h-11 min-w-36">
+                        {saving && <Spinner className="mr-2" />}
+                        {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add product'}
+                    </Button>
+                </div>
+            </div>
         </SellerLayout>
     );
 }

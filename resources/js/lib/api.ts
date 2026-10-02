@@ -64,26 +64,62 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     return (json as ApiSuccess<T>).data;
 }
 
-async function upload<T>(path: string, formData: FormData): Promise<T> {
+export interface UploadOptions {
+    /** Called with 0–100 as the request body is sent. */
+    onProgress?: (percent: number) => void;
+}
+
+function parseXhrResponse<T>(xhr: XMLHttpRequest): ApiSuccess<T> | ApiError {
+    try {
+        return JSON.parse(xhr.responseText) as ApiSuccess<T> | ApiError;
+    } catch {
+        if (xhr.status === 413) {
+            return { message: 'That file is too large. Please choose a smaller one.' };
+        }
+        if (xhr.status === 0) {
+            return { message: 'Upload interrupted. Please check your internet connection and try again.' };
+        }
+        return { message: `Something went wrong (${xhr.status}). Please try again.` };
+    }
+}
+
+/**
+ * Multipart upload. Uses XMLHttpRequest rather than fetch because fetch
+ * can't report upload progress, and a visible percentage matters for large
+ * photos on slow mobile connections.
+ */
+async function upload<T>(path: string, formData: FormData, options: UploadOptions = {}): Promise<T> {
     await primeCsrf();
 
-    const response = await fetch(`/api${path}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            Accept: 'application/json',
-            'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') ?? '',
-        },
-        body: formData,
+    return new Promise<T>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/api${path}`);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('X-XSRF-TOKEN', getCookie('XSRF-TOKEN') ?? '');
+
+        if (options.onProgress) {
+            const onProgress = options.onProgress;
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    onProgress(Math.round((event.loaded / event.total) * 100));
+                }
+            });
+        }
+
+        xhr.addEventListener('load', () => {
+            const json = parseXhrResponse<T>(xhr);
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve((json as ApiSuccess<T>).data);
+            } else {
+                reject(json as ApiError);
+            }
+        });
+        xhr.addEventListener('error', () => reject(parseXhrResponse<T>(xhr)));
+        xhr.addEventListener('abort', () => reject({ message: 'Upload cancelled.' } satisfies ApiError));
+
+        xhr.send(formData);
     });
-
-    const json = await parseJsonResponse<T>(response);
-
-    if (!response.ok) {
-        throw json as ApiError;
-    }
-
-    return (json as ApiSuccess<T>).data;
 }
 
 export const api = {
@@ -92,5 +128,5 @@ export const api = {
     put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
     patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
     delete: <T>(path: string) => request<T>('DELETE', path),
-    upload: <T>(path: string, formData: FormData) => upload<T>(path, formData),
+    upload: <T>(path: string, formData: FormData, options?: UploadOptions) => upload<T>(path, formData, options),
 };

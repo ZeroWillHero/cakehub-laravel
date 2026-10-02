@@ -37,6 +37,13 @@ Defined as the plain `:root`/`.dark` token set in `resources/css/app.css` — no
 ### Imagery
 Real photography (Pexels stock images, added Phase 7.6) is now used on the Customer home/gallery. `resources/js/components/shared/ImagePlaceholder.tsx` still exists and should still be used for any Customer-facing image slot that doesn't yet have a real asset (e.g. a seller's own product/storefront photos, which are user-uploaded and can't be stocked in advance) — but don't reach for it where a real Pexels/uploaded image is already wired in. Do not fabricate placeholder image URLs (Unsplash links, `picsum.photos`, etc.) for anything — use the component or a real uploaded asset.
 
+### Images, uploads & loading (added 2026-10-02 — see [audit-2026-10-02-ux.md](../audit-2026-10-02-ux.md))
+- **Showing photos:** use `SmartImage` for every remote/user-uploaded photo (reserves space, shimmer while loading, friendly fallback on error) — not a bare `<img>`. Multi-photo products use `ProductGallery`; full-screen viewing uses `ImageLightbox`; slips/documents use `SlipPreviewDialog`.
+- **Uploading files:** use `FileDropzone` (or `ImageUploadField` / `ImageThumbUpload` / `ProductPhotoManager` built on the same rules) — never a raw `<input type="file">`. Pass the matching rule from `lib/files.ts`, which must mirror the backend FormRequest `mimes`/`max`; if a backend rule changes, update the rule there too. Show upload progress via `api.upload(path, formData, { onProgress })`.
+- **Page loading:** Inertia's top progress bar (configured in `app.tsx`) plus the non-blocking `LoadingScreen` pill — never a full-screen blocking overlay for navigation. In-page async data uses `Skeleton` shaped like the content.
+- **Action feedback:** every mutation catches errors and reports them (`toast.error(errorMessage(err, …))` or an inline message next to the control); confirm important successes with `toast.success()`.
+- **Status badges:** use `statusTone(status)` from `lib/statusTone.ts` for the traffic-light colors below.
+
 ### Component import convention
 Every `resources/js/components/ui/*.tsx` shadcn primitive imports its `cn` helper from `@/lib/utils` (backed by the `cn` npm package, aliased via `components.json`) — a centralized import, not a per-file relative path. If Vite fails to resolve this import, that's a missing/stale `node_modules` (run `npm install`), not a code bug — don't hand-edit the import path.
 

@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import SellerLayout from '@/Layouts/SellerLayout';
 import RatingStars from '@/components/shared/RatingStars';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { Review } from '@/types/order';
 
@@ -24,6 +26,9 @@ function ReviewCard({ review, onResponded }: { review: Review; onResponded: (r: 
             const updated = await api.post<Review>(`/seller/reviews/${review.id}/response`, { response });
             onResponded(updated);
             setResponding(false);
+            toast.success('Your reply has been posted.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't post your reply."));
         } finally {
             setSubmitting(false);
         }

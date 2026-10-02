@@ -17,7 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SellerLayout from '@/Layouts/SellerLayout';
 import ListingUsageIndicator from '@/components/shared/ListingUsageIndicator';
+import SmartImage from '@/components/shared/SmartImage';
 import { api } from '@/lib/api';
+import { errorMessage } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types/category';
 import type { Product } from '@/types/product';
@@ -54,9 +56,16 @@ export default function Listings({ products: initialProducts, limit, categories 
         return true;
     });
 
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
     async function remove(id: number) {
-        await api.delete(`/seller/products/${id}`);
-        setProducts((prev) => prev.filter((p) => p.id !== id));
+        setDeleteError(null);
+        try {
+            await api.delete(`/seller/products/${id}`);
+            setProducts((prev) => prev.filter((p) => p.id !== id));
+        } catch (err) {
+            setDeleteError(errorMessage(err, undefined, "We couldn't delete that listing. Please try again."));
+        }
     }
 
     return (
@@ -126,6 +135,12 @@ export default function Listings({ products: initialProducts, limit, categories 
                     </div>
                 )}
 
+                {deleteError && (
+                    <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                        {deleteError}
+                    </p>
+                )}
+
                 {visibleProducts.length === 0 ? (
                     <Card>
                         <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -138,21 +153,41 @@ export default function Listings({ products: initialProducts, limit, categories 
                     <div className="space-y-3">
                         {visibleProducts.map((product) => (
                             <Card key={product.id}>
-                                <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-medium">{product.name}</p>
-                                            {!product.is_active && <Badge variant="secondary">Unpublished</Badge>}
+                                <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <SmartImage
+                                            src={product.images[0]?.url}
+                                            alt={product.name}
+                                            fallbackLabel="No photo"
+                                            className="size-16 shrink-0 rounded-lg border"
+                                        />
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-medium">{product.name}</p>
+                                                {!product.is_active && <Badge variant="secondary">Unpublished</Badge>}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                                ${product.base_price.toFixed(2)} ·{' '}
+                                                {statusLabel[product.availability_status]}
+                                            </p>
+                                            {product.images.length === 0 ? (
+                                                <Link
+                                                    href={`/seller/listings/${product.id}/edit`}
+                                                    className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                                                >
+                                                    No photos yet — add some so customers can see your cake
+                                                </Link>
+                                            ) : (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {product.images.length} photo{product.images.length === 1 ? '' : 's'}
+                                                </p>
+                                            )}
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            ${product.base_price.toFixed(2)} ·{' '}
-                                            {statusLabel[product.availability_status]}
-                                        </p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Link
                                             href={`/seller/listings/${product.id}/edit`}
-                                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-9')}
+                                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'min-h-11 sm:min-h-9')}
                                         >
                                             Edit
                                         </Link>
@@ -160,7 +195,7 @@ export default function Listings({ products: initialProducts, limit, categories 
                                             <AlertDialogTrigger
                                                 className={cn(
                                                     buttonVariants({ variant: 'ghost', size: 'sm' }),
-                                                    'min-h-9 text-destructive hover:text-destructive',
+                                                    'min-h-11 text-destructive hover:text-destructive sm:min-h-9',
                                                 )}
                                             >
                                                 Delete
@@ -174,7 +209,7 @@ export default function Listings({ products: initialProducts, limit, categories 
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => remove(product.id)}>
+                                                    <AlertDialogAction variant="destructive" onClick={() => remove(product.id)}>
                                                         Delete
                                                     </AlertDialogAction>
                                                 </AlertDialogFooter>

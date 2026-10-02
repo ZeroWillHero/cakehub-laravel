@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SellerLayout from '@/Layouts/SellerLayout';
 import Spinner from '@/components/shared/Spinner';
+import { errorMessage } from '@/lib/errors';
+import { toast } from '@/lib/toast';
 import { api } from '@/lib/api';
 import type { Order, OrderStatus } from '@/types/order';
 
@@ -62,6 +64,9 @@ export default function SellerOrders({ orders: initialOrders, filters }: Props) 
         try {
             const updated = await api.patch<Order>(`/seller/orders/${order.id}/status`, { status });
             setOrders((prev) => prev.map((o) => (o.id === order.id ? updated : o)));
+            toast.success('Order status updated.');
+        } catch (err) {
+            toast.error(errorMessage(err, undefined, "Couldn't update the order."));
         } finally {
             setUpdating(null);
         }
