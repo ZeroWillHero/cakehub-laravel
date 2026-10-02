@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\PaymentVerificationController;
 use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\Api\AdminBankAccountController;
+use App\Http\Controllers\Api\CartMergeController;
+use App\Http\Controllers\Api\GuestCartController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SellerPayoutController;
 use App\Http\Controllers\CategoryController;
@@ -38,6 +40,15 @@ Route::get('/sellers/{seller:slug}/products', [ProductController::class, 'bySell
 Route::get('/products/search', [ProductSearchController::class, 'search']);
 Route::get('/admin-bank-accounts', [AdminBankAccountController::class, 'index']);
 
+// Signed-out visitors' session cart — same contract as /api/cart below
+// (docs/plan-public-browsing-guest-cart.md). Signed-in users get a 403.
+Route::middleware('throttle:60,1')->prefix('guest-cart')->group(function () {
+    Route::get('/', [GuestCartController::class, 'index']);
+    Route::post('/', [GuestCartController::class, 'store']);
+    Route::put('/{id}', [GuestCartController::class, 'update'])->whereNumber('id');
+    Route::delete('/{id}', [GuestCartController::class, 'destroy'])->whereNumber('id');
+});
+
 Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
@@ -53,6 +64,7 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/cart', [CartController::class, 'store']);
         Route::put('/cart/{cartItem}', [CartController::class, 'update']);
         Route::delete('/cart/{cartItem}', [CartController::class, 'destroy']);
+        Route::post('/cart/merge', CartMergeController::class);
         Route::post('/checkout', [CheckoutController::class, 'store']);
         Route::post('/orders/{order}/reviews', [CustomerReviewController::class, 'store']);
     });

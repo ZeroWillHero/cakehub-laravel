@@ -11,6 +11,8 @@ class ProductController extends Controller
 {
     public function bySeller(Request $request, Seller $seller): JsonResponse
     {
+        abort_unless($seller->isPubliclyVisible(), 404);
+
         $products = $seller->products()
             ->active()
             ->with(['categories', 'variants', 'images'])

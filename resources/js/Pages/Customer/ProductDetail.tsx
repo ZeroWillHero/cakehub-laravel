@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import {
     AlertDialog,
@@ -18,10 +18,11 @@ import CustomerLayout from '@/Layouts/CustomerLayout';
 import ProductGallery from '@/components/shared/ProductGallery';
 import Spinner from '@/components/shared/Spinner';
 import RatingStars from '@/components/shared/RatingStars';
-import { api } from '@/lib/api';
+import { cartApi } from '@/lib/cart';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types/product';
 import type { Seller } from '@/types/seller';
+import type { SharedPageProps } from '@/types/shared';
 
 interface Props {
     seller: Seller;
@@ -41,6 +42,10 @@ function whatsappLink(seller: Seller, product: Product): string {
 }
 
 export default function ProductDetail({ seller, product }: Props) {
+    const user = usePage<SharedPageProps>().props.auth?.user ?? null;
+    // Guests shop with a session cart; sellers/admins browsing the public
+    // page can't place orders at all.
+    const canShop = user === null || user.role === 'customer';
     const [selectedVariant, setSelectedVariant] = useState(
         product.variants.find((v) => v.is_default)?.id ?? product.variants[0]?.id ?? null,
     );
@@ -57,7 +62,7 @@ export default function ProductDetail({ seller, product }: Props) {
         setAdding(true);
         setError(null);
         try {
-            await api.post('/cart', {
+            await cartApi(user === null).add({
                 product_id: product.id,
                 product_variant_id: selectedVariant,
                 customization_notes: notes || null,
@@ -69,7 +74,12 @@ export default function ProductDetail({ seller, product }: Props) {
             if (apiError.errors?.seller_conflict) {
                 setConfirmSwitch(true);
             } else {
-                setError(apiError.errors?.product_id?.[0] ?? 'Could not add to cart.');
+                setError(
+                    apiError.errors?.product_id?.[0] ??
+                        apiError.errors?.product_variant_id?.[0] ??
+                        apiError.errors?.cart?.[0] ??
+                        'Could not add to cart.',
+                );
             }
         } finally {
             setAdding(false);
@@ -152,12 +162,17 @@ export default function ProductDetail({ seller, product }: Props) {
                             type="button"
                             size="lg"
                             className="mt-4 w-full min-h-11"
-                            disabled={adding || unavailable}
+                            disabled={adding || unavailable || !canShop}
                             onClick={() => addToCart(false)}
                         >
                             {adding && <Spinner className="mr-2" />}
                             {unavailable ? 'Unavailable' : adding ? 'Adding…' : 'Add to cart'}
                         </Button>
+                        {!canShop && (
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Sign in with a customer account to order.
+                            </p>
+                        )}
 
                         <a
                             href={whatsappLink(seller, product)}

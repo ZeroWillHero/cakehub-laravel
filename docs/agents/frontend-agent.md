@@ -34,7 +34,7 @@ Every page's `Props` interface and every REST API call is typed against the back
 10. **Accessibility (WCAG AA baseline)** — semantic HTML, sufficient color contrast, all interactive elements keyboard-reachable and screen-reader labeled, focus states visible. shadcn/Base UI primitives already give a strong baseline — do not strip their built-in a11y behavior (e.g. don't replace `<Dialog>` focus trapping with custom code).
 
 ## Known gotchas (this project's actual install)
-- **Base UI, not Radix.** This project's shadcn style (`base-nova`) is built on Base UI. `Button` has no `asChild` prop — for a link styled as a button, apply `buttonVariants({...})` via `cn()` directly to an `<a>` (see `resources/js/Pages/Welcome.tsx`).
+- **Base UI, not Radix.** This project's shadcn style (`base-nova`) is built on Base UI. `Button` has no `asChild` prop — for a link styled as a button, apply `buttonVariants({...})` via `cn()` directly to an `<a>` (see `resources/js/components/shared/SignInToCheckoutDialog.tsx`).
 - **React 19.2 deprecates `FormEvent`/`FormEventHandler`** from `@types/react` ("doesn't actually exist"). Use `SubmitEventHandler`/`SubmitEvent` for form submissions, `ChangeEventHandler`/`ChangeEvent` for input changes.
 
 ## Working rules

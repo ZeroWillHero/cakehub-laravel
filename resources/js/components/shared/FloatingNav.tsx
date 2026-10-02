@@ -1,17 +1,18 @@
 import { Link, usePage } from '@inertiajs/react';
 import { House, Search, ShoppingCart, Package, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import NotificationBell from '@/components/shared/NotificationBell';
+import { accountLinkFor, navLinksFor } from '@/components/shared/SiteHeader';
 import type { SharedPageProps } from '@/types/shared';
 
-const items = [
-    { label: 'Home', href: '/', icon: House },
-    { label: 'Search', href: '/search', icon: Search },
-    { label: 'Cart', href: '/cart', icon: ShoppingCart },
-    { label: 'Orders', href: '/orders', icon: Package },
-];
+const icons: Record<string, typeof House> = {
+    '/': House,
+    '/search': Search,
+    '/cart': ShoppingCart,
+    '/orders': Package,
+};
 
 interface Props {
     visible: boolean;
@@ -21,6 +22,8 @@ interface Props {
 export default function FloatingNav({ visible }: Props) {
     const { props, url } = usePage<SharedPageProps>();
     const user = props.auth?.user ?? null;
+    // Account is shown as the avatar/sign-in button at the end instead.
+    const items = navLinksFor(user).filter((link) => link.href in icons);
 
     return (
         <nav
@@ -32,7 +35,7 @@ export default function FloatingNav({ visible }: Props) {
         >
             <div className="flex items-center gap-1 rounded-full border border-border bg-card/95 px-2 py-2 shadow-lg backdrop-blur">
                 {items.map((item) => {
-                    const Icon = item.icon;
+                    const Icon = icons[item.href];
                     const active = url === item.href;
                     return (
                         <Link
@@ -49,19 +52,25 @@ export default function FloatingNav({ visible }: Props) {
                     );
                 })}
 
-                <NotificationBell />
+                {user && <NotificationBell />}
 
                 {user ? (
-                    <Link href="/account" aria-label="Account">
+                    <Link {...accountLinkFor(user)}>
                         <Avatar className="size-8">
                             <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
                             <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
                         </Avatar>
                     </Link>
                 ) : (
-                    <Button type="button" variant="ghost" size="icon" render={<Link href="/account" aria-label="Account" />}>
+                    // A full-page link, not an Inertia <Link>: the OAuth
+                    // redirect to Google can't be followed by an XHR visit.
+                    <a
+                        href="/auth/google/redirect"
+                        aria-label="Sign in with Google"
+                        className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
                         <User className="size-5" />
-                    </Button>
+                    </a>
                 )}
             </div>
         </nav>

@@ -179,6 +179,8 @@ Single-seller cart (confirmed 2026-09-02, [plan.md](plan.md) Phase 0): a custome
 
 Adding a product from a different seller than what's already in the cart **replaces** the cart (with a confirmation prompt in the UI) rather than merging — see [screens.md](screens.md) C8.
 
+**Guest cart (Phase 11, 2026-10-03):** signed-out visitors' carts are **not** stored in this table. They live in the session (`guest_cart` key, database session driver) with the same single-seller rule, and are copied into `cart_items` at sign-in. If the account's existing rows belong to a different seller, nothing is written until the customer picks which cart to keep. No schema change. See [plan-public-browsing-guest-cart.md](plan-public-browsing-guest-cart.md).
+
 ### `orders`
 | Column | Type | Notes |
 |---|---|---|

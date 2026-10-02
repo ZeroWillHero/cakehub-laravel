@@ -13,7 +13,7 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel';
 import CustomerLayout from '@/Layouts/CustomerLayout';
-import AdsCarousel from '@/components/shared/AdsCarousel';
+import HeroAdsCarousel from '@/components/shared/HeroAdsCarousel';
 import SmartImage from '@/components/shared/SmartImage';
 import HeroImage from '@/components/shared/HeroImage';
 import PageHero from '@/components/shared/PageHero';
@@ -103,62 +103,68 @@ export default function CustomerHome({ categories, featuredSellers, subscription
         );
     }
 
+    // Shared by both heroes. Over an ad's dark scrim the Near me label
+    // switches to white so it stays readable.
+    function heroActions(onDarkBackground: boolean) {
+        return (
+            <div className="flex flex-col items-center gap-4">
+                <div className="flex flex-wrap justify-center gap-3">
+                    <Link href="/products" className={cn(buttonVariants({ size: 'lg' }), 'min-h-11')}>
+                        Shop now
+                    </Link>
+                    <a href="/onboarding" className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'min-h-11')}>
+                        Become a seller
+                    </a>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Switch id="near-me" checked={nearMe} onCheckedChange={handleNearMeToggle} />
+                    <Label htmlFor="near-me" className={cn('text-sm font-medium', onDarkBackground && 'text-white')}>
+                        Near me
+                    </Label>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <CustomerLayout>
-            <PageHero
-                size="lg"
-                title="Cake, made for the moment."
-                subtitle="Browse local bakers by category, or find the ones closest to you order straight through CakeHub or message them directly."
-                actions={
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="flex flex-wrap justify-center gap-3">
-                            <Link href="/products" className={cn(buttonVariants({ size: 'lg' }), 'min-h-11')}>
-                                Shop now
-                            </Link>
-                            <a
-                                href="/onboarding"
-                                className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'min-h-11')}
-                            >
-                                Become a seller
-                            </a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Switch id="near-me" checked={nearMe} onCheckedChange={handleNearMeToggle} />
-                            <Label htmlFor="near-me" className="text-sm font-medium">
-                                Near me
-                            </Label>
-                        </div>
-                    </div>
-                }
-            />
-
+            {/*
+              * Live ads take over the hero itself (each ad's image/name/description
+              * as a rotating hero slide); with none, the default hero shows.
+              */}
             {ads.length > 0 ? (
-                <Section className="pt-0">
-                    <div className="mx-auto max-w-4xl">
-                        <AdsCarousel ads={ads} rotationSeconds={adRotationSeconds} />
-                    </div>
-                </Section>
+                <>
+                    <h1 className="sr-only">Cake, made for the moment.</h1>
+                    <HeroAdsCarousel ads={ads} rotationSeconds={adRotationSeconds} actions={heroActions(true)} />
+                </>
             ) : (
-                <Section className="pt-0">
-                    <div className="group/marquee overflow-hidden">
-                        <div className="animate-marquee flex w-max items-end gap-4 group-hover/marquee:[animation-play-state:paused]">
-                            {[...GALLERY_HEIGHTS, ...GALLERY_HEIGHTS].map((height, index) => (
-                                <div key={index} className="shrink-0">
-                                    <HeroImage
-                                        src={galleryImages[index % galleryImages.length]}
-                                        alt="Cake photography from CakeHub bakers"
-                                        label="Cake photo"
-                                        className={cn(
-                                            'w-auto rounded-3xl object-cover transition-transform duration-300 ease-out hover:-translate-y-3',
-                                            height,
-                                        )}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </Section>
+                <PageHero
+                    size="lg"
+                    title="Cake, made for the moment."
+                    subtitle="Browse local bakers by category, or find the ones closest to you order straight through CakeHub or message them directly."
+                    actions={heroActions(false)}
+                />
             )}
+
+            <Section className="pt-0">
+                <div className="group/marquee overflow-hidden">
+                    <div className="animate-marquee flex w-max items-end gap-4 group-hover/marquee:[animation-play-state:paused]">
+                        {[...GALLERY_HEIGHTS, ...GALLERY_HEIGHTS].map((height, index) => (
+                            <div key={index} className="shrink-0">
+                                <HeroImage
+                                    src={galleryImages[index % galleryImages.length]}
+                                    alt="Cake photography from CakeHub bakers"
+                                    label="Cake photo"
+                                    className={cn(
+                                        'w-auto rounded-3xl object-cover transition-transform duration-300 ease-out hover:-translate-y-3',
+                                        height,
+                                    )}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Section>
 
             {nearMe && (
                 <Section title="Near you" className="pb-0 pt-8 sm:pt-10">

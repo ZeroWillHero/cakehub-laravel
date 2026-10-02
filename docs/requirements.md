@@ -19,6 +19,7 @@ CakeHub is a two-sided e-commerce marketplace that connects **cake buyers (custo
 7. Admin can edit subscription plans, or make a plan fully free.
 8. Admin can add, remove, and edit subscription packages.
 9. Customers, sellers, and admins can each manage their own accounts.
+10. Visitors can browse and search cakes, view seller stores and product details, contact sellers on WhatsApp, and build a cart **without an account**. Sign-in (Google) is only required at checkout, and afterwards the visitor returns to checkout with the cart they built. (Added 2026-10-03, see [plan-public-browsing-guest-cart.md](plan-public-browsing-guest-cart.md).)
 
 ---
 
@@ -30,6 +31,8 @@ CakeHub is a two-sided e-commerce marketplace that connects **cake buyers (custo
 - Separate onboarding flows post-login: Customer (simple — done after Google sign-in), Seller (additional business info + documents required for verification after Google sign-in).
 - No forgot-password/reset-password flow needed — account recovery is handled by Google.
 - Role-based access control (RBAC) — customer, seller, admin permissions enforced on every route.
+- **Public browsing (confirmed 2026-10-03):** Home, search, all-products, seller storefront and product detail pages, plus the cart, work for signed-out guests. Checkout, orders and account still require a signed-in customer. A guest who hits checkout is sent through Google sign-in (and onboarding if they're new) and then returned to checkout. Sellers and admins can view the public browse pages but can't add to cart.
+- **Public visibility (confirmed 2026-10-03):** only `verified` sellers (and their products) appear on public storefront/product pages and in public search/listing results. Pending, rejected and suspended sellers return 404.
 - Profile management: name, avatar, contact info, addresses (customers); business name, logo, description, address, operating hours (sellers).
 - Account deactivation / deletion (self-service + admin-enforced suspension).
 - Session management (JWT/refresh tokens), logout from all devices.
@@ -57,6 +60,7 @@ CakeHub is a two-sided e-commerce marketplace that connects **cake buyers (custo
 
 ### 3.5 Ordering & Checkout
 - Add to cart, cart persistence, multi-seller cart handling (or single-seller-per-order model — decide early).
+- **Guest cart (confirmed 2026-10-03):** signed-out visitors get a session-stored cart with the same single-seller rule. At sign-in it merges into the account's cart. If the account cart is from a different seller, the customer is asked which cart to keep. Nothing is replaced automatically.
 - Order types: **Delivery** (online order) vs **In-store pickup / visit-to-order**.
 - Checkout: delivery address selection, delivery date/time slot (important for made-to-order cakes — lead time), special instructions/customization (message on cake, size).
 - Order summary, price breakdown (item price + delivery fee + tax + discounts).

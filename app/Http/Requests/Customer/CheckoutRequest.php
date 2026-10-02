@@ -28,6 +28,8 @@ class CheckoutRequest extends FormRequest
         $validator->after(function (ValidatorContract $validator) {
             if ($this->user()->cartItems()->count() === 0) {
                 $validator->errors()->add('cart', 'Your cart is empty.');
+            } elseif ($this->user()->cartItems()->whereDoesntHave('seller', fn ($query) => $query->publiclyVisible())->exists()) {
+                $validator->errors()->add('cart', 'This seller is not currently accepting orders.');
             }
 
             $addressId = $this->input('delivery_address_id');

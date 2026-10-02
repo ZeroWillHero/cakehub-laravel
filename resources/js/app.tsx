@@ -1,10 +1,22 @@
 import '../css/app.css';
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import type { ResolvedComponent } from '@inertiajs/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import Toaster from '@/components/shared/Toaster';
+import { toast } from '@/lib/toast';
+
+// One-off notices the server flashes across a redirect with
+// Inertia::flash('notice', …) — e.g. after Google sign-in, when guest cart
+// items were dropped. Registered before the app boots so a notice on the
+// very first page load is caught too.
+router.on('flash', (event) => {
+    const notice = event.detail.flash.notice;
+    if (typeof notice === 'string') {
+        toast.success(notice);
+    }
+});
 
 createInertiaApp({
     // Thin brand-colored bar across the top on every page change. The

@@ -139,6 +139,21 @@ class Seller extends Model
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Only verified sellers are visible on public storefront/product pages
+     * and in public search results (docs/plan-public-browsing-guest-cart.md
+     * D4) — pending, rejected and suspended sellers are all excluded.
+     */
+    public function scopePubliclyVisible($query)
+    {
+        return $query->where('verification_status', VerificationStatus::Verified);
+    }
+
+    public function isPubliclyVisible(): bool
+    {
+        return $this->verification_status === VerificationStatus::Verified;
+    }
+
     public function recalculateAverageRating(): void
     {
         $this->average_rating = $this->reviews()->avg('rating') ?? 0;

@@ -46,9 +46,23 @@ if (app()->environment('local')) {
     Route::get('/dev-login/{slug}', [DevLoginController::class, 'login'])->name('dev-login');
 }
 
-// Public root: shows sign-in for guests, redirects authenticated users to
-// their role-appropriate landing (see CustomerHomeController).
-Route::get('/', [CustomerHomeController::class, 'index'])->name('home');
+// Public browsing (docs/plan-public-browsing-guest-cart.md): guests can
+// browse, search and view verified sellers' stores/products without an
+// account. account.active passes guests through but still logs out a
+// deactivated user with a leftover session.
+Route::middleware('account.active')->group(function () {
+    // Customer Home for guests and customers; other roles are redirected
+    // to their own landing (see CustomerHomeController).
+    Route::get('/', [CustomerHomeController::class, 'index'])->name('home');
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/products', [CustomerProductsController::class, 'index'])->name('products.index');
+    Route::get('/sellers/{seller:slug}', [StorefrontController::class, 'show'])->name('sellers.show');
+    Route::get('/sellers/{seller:slug}/products/{product}', [StorefrontController::class, 'product'])
+        ->name('sellers.products.show');
+
+    // Guests get a session cart; signing in is only required at checkout.
+    Route::get('/cart', [CartPageController::class, 'index'])->middleware('guest.or.role:customer')->name('cart');
+});
 
 Route::middleware(['auth', 'account.active'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
@@ -57,12 +71,6 @@ Route::middleware(['auth', 'account.active'])->group(function () {
 
     Route::middleware('role:customer')->group(function () {
         Route::get('/account', [AccountController::class, 'edit'])->name('customer.account.edit');
-        Route::get('/search', [SearchController::class, 'index'])->name('search');
-        Route::get('/products', [CustomerProductsController::class, 'index'])->name('products.index');
-        Route::get('/sellers/{seller:slug}', [StorefrontController::class, 'show'])->name('sellers.show');
-        Route::get('/sellers/{seller:slug}/products/{product}', [StorefrontController::class, 'product'])
-            ->name('sellers.products.show');
-        Route::get('/cart', [CartPageController::class, 'index'])->name('cart');
         Route::get('/checkout', [CheckoutPageController::class, 'show'])->name('checkout');
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');

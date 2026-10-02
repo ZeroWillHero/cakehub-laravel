@@ -16,9 +16,9 @@ function pointAtKm(float $km): Point
 }
 
 it('returns sellers within the requested radius, sorted nearest first', function () {
-    $near = Seller::factory()->create(['location' => pointAtKm(1), 'business_name' => 'Near Bakery']);
-    $mid = Seller::factory()->create(['location' => pointAtKm(4), 'business_name' => 'Mid Bakery']);
-    Seller::factory()->create(['location' => pointAtKm(20), 'business_name' => 'Far Bakery']);
+    $near = Seller::factory()->verified()->create(['location' => pointAtKm(1), 'business_name' => 'Near Bakery']);
+    $mid = Seller::factory()->verified()->create(['location' => pointAtKm(4), 'business_name' => 'Mid Bakery']);
+    Seller::factory()->verified()->create(['location' => pointAtKm(20), 'business_name' => 'Far Bakery']);
 
     $response = $this->getJson('/api/sellers/nearby?lat='.ORIGIN_LAT.'&lng='.ORIGIN_LNG.'&radius_km=5')
         ->assertOk();
@@ -29,7 +29,7 @@ it('returns sellers within the requested radius, sorted nearest first', function
 });
 
 it('excludes sellers outside the radius', function () {
-    Seller::factory()->create(['location' => pointAtKm(50)]);
+    Seller::factory()->verified()->create(['location' => pointAtKm(50)]);
 
     $this->getJson('/api/sellers/nearby?lat='.ORIGIN_LAT.'&lng='.ORIGIN_LNG.'&radius_km=5')
         ->assertOk()
@@ -37,7 +37,7 @@ it('excludes sellers outside the radius', function () {
 });
 
 it('excludes sellers with no location set', function () {
-    Seller::factory()->create(['location' => null]);
+    Seller::factory()->verified()->create(['location' => null]);
 
     $this->getJson('/api/sellers/nearby?lat='.ORIGIN_LAT.'&lng='.ORIGIN_LNG.'&radius_km=50')
         ->assertOk()
@@ -48,10 +48,10 @@ it('filters nearby sellers by category', function () {
     $categoryA = Category::factory()->create();
     $categoryB = Category::factory()->create();
 
-    $sellerA = Seller::factory()->create(['location' => pointAtKm(1)]);
+    $sellerA = Seller::factory()->verified()->create(['location' => pointAtKm(1)]);
     Product::factory()->for($sellerA)->create()->categories()->attach($categoryA);
 
-    $sellerB = Seller::factory()->create(['location' => pointAtKm(2)]);
+    $sellerB = Seller::factory()->verified()->create(['location' => pointAtKm(2)]);
     Product::factory()->for($sellerB)->create()->categories()->attach($categoryB);
 
     $response = $this->getJson(
@@ -75,8 +75,8 @@ it('rejects out-of-range coordinates', function () {
 });
 
 it('searches sellers by business name', function () {
-    Seller::factory()->create(['business_name' => 'Chocolate Dreams']);
-    Seller::factory()->create(['business_name' => 'Vanilla Sky']);
+    Seller::factory()->verified()->create(['business_name' => 'Chocolate Dreams']);
+    Seller::factory()->verified()->create(['business_name' => 'Vanilla Sky']);
 
     $response = $this->getJson('/api/sellers/search?q=chocolate')->assertOk();
 
@@ -85,7 +85,7 @@ it('searches sellers by business name', function () {
 });
 
 it('returns all sellers when search has no query or category', function () {
-    Seller::factory()->count(3)->create();
+    Seller::factory()->verified()->count(3)->create();
 
     $this->getJson('/api/sellers/search')
         ->assertOk()
@@ -93,10 +93,10 @@ it('returns all sellers when search has no query or category', function () {
 });
 
 it('filters search results by price range', function () {
-    $cheap = Seller::factory()->create(['business_name' => 'Cheap Bakery']);
+    $cheap = Seller::factory()->verified()->create(['business_name' => 'Cheap Bakery']);
     Product::factory()->for($cheap)->create(['base_price' => 5]);
 
-    $pricey = Seller::factory()->create(['business_name' => 'Pricey Bakery']);
+    $pricey = Seller::factory()->verified()->create(['business_name' => 'Pricey Bakery']);
     Product::factory()->for($pricey)->create(['base_price' => 50]);
 
     $response = $this->getJson('/api/sellers/search?min_price=10&max_price=100')->assertOk();
@@ -106,8 +106,8 @@ it('filters search results by price range', function () {
 });
 
 it('filters search results by minimum rating', function () {
-    $lowRated = Seller::factory()->create(['average_rating' => 2.0]);
-    $highRated = Seller::factory()->create(['average_rating' => 4.5]);
+    $lowRated = Seller::factory()->verified()->create(['average_rating' => 2.0]);
+    $highRated = Seller::factory()->verified()->create(['average_rating' => 4.5]);
 
     $response = $this->getJson('/api/sellers/search?rating_min=4')->assertOk();
 

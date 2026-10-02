@@ -96,7 +96,7 @@ function SortableAdRow({
                         ${ad.paid_amount.toFixed(2)} · {ad.starts_at} → {ad.ends_at}
                     </p>
                     {!ad.image_url && !imageError && (
-                        <p className="text-xs text-muted-foreground">Add a banner image — 1200 × 550px landscape works best.</p>
+                        <p className="text-xs text-muted-foreground">Add a hero image — 1920 × 800px landscape works best.</p>
                     )}
                     {imageError && <p className="text-xs text-destructive">{imageError}</p>}
                 </div>
@@ -146,7 +146,7 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
             setAds((prev) => [...prev, created]);
             setCreateOpen(false);
             setForm(emptyForm);
-            toast.success('Ad created. Add a banner image next.');
+            toast.success('Ad created. Add a hero image next.');
         } catch (err) {
             toast.error(errorMessage(err, undefined, "Couldn't create the ad."));
         } finally {
@@ -251,12 +251,12 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
             </div>
 
             <div className="space-y-1 text-sm text-muted-foreground">
-                <p>Drag ads by the handle to set priority — top shows first in the homepage carousel.</p>
+                <p>Drag ads by the handle to set priority — top shows first in the homepage hero.</p>
                 <p>
-                    Preferred image size: <span className="font-medium text-foreground">1200 × 550px</span> (landscape
-                    banner, ~2.2:1) — JPG, PNG, or WebP, up to 20MB. The carousel is slightly narrower than the page's
-                    full content width and taller than a typical section, and crops to fit — avoid important content
-                    near the top/bottom edges.
+                    Preferred image size: <span className="font-medium text-foreground">1920 × 800px</span> (wide
+                    landscape, ~2.4:1) — JPG, PNG, or WebP, up to 20MB. Each ad becomes a full-width homepage hero
+                    slide with its name and description centered over a dark overlay, and the image crops to fit —
+                    keep the subject clear of the center and edges.
                 </p>
             </div>
 
@@ -313,7 +313,7 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
                                 onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Clicking this ad on the homepage carousel will open this URL.
+                                Adds a “Learn more” link to this ad’s homepage hero slide, opening this URL.
                             </p>
                         </div>
                         <div className="space-y-2">
@@ -365,7 +365,7 @@ export default function AdminAds({ ads: initial, setting: initialSetting }: Prop
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete "{deleteTarget?.name}"?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This removes the ad from the homepage carousel. This cannot be undone.
+                            This removes the ad from the homepage hero. This cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -7,7 +7,7 @@ use App\Models\User;
 
 it('shows a seller storefront with active products', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create(['business_name' => 'Cake Corner']);
+    $seller = Seller::factory()->verified()->create(['business_name' => 'Cake Corner']);
     Product::factory()->for($seller)->create(['is_active' => true, 'name' => 'Red Velvet']);
     Product::factory()->for($seller)->create(['is_active' => false, 'name' => 'Hidden Cake']);
 
@@ -29,7 +29,7 @@ it('returns not found for an unknown seller slug', function () {
 
 it('shows a product detail page scoped to its seller', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
 
     $this->actingAs($customer)
@@ -42,8 +42,8 @@ it('shows a product detail page scoped to its seller', function () {
 
 it('returns not found when the product does not belong to the given seller', function () {
     $customer = User::factory()->customer()->create();
-    $sellerA = Seller::factory()->create();
-    $sellerB = Seller::factory()->create();
+    $sellerA = Seller::factory()->verified()->create();
+    $sellerB = Seller::factory()->verified()->create();
     $product = Product::factory()->for($sellerB)->create();
 
     $this->actingAs($customer)
@@ -52,7 +52,7 @@ it('returns not found when the product does not belong to the given seller', fun
 });
 
 it('lists a seller\'s active products via the public API, filterable by category', function () {
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $categoryA = Category::factory()->create();
     $categoryB = Category::factory()->create();
 
