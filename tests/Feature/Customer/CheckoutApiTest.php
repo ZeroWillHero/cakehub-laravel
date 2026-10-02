@@ -8,7 +8,7 @@ use App\Models\User;
 
 it('checks out a cart into an order with pickup', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create(['base_price' => 15]);
     $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 2]);
 
@@ -29,7 +29,7 @@ it('checks out a cart into an order with pickup', function () {
 
 it('requires a delivery address when delivery_type is delivery', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
 
@@ -56,7 +56,7 @@ it('rejects checkout with an empty cart', function () {
 
 it('rejects checkout with a past scheduled time', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
 
@@ -72,7 +72,7 @@ it('rejects checkout with a past scheduled time', function () {
 it('rejects checkout using another customer\'s address', function () {
     $customer = User::factory()->customer()->create();
     $otherCustomer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
     $otherAddress = Address::factory()->for($otherCustomer, 'user')->create();
@@ -92,4 +92,21 @@ it('rejects an unauthenticated checkout request', function () {
         'delivery_type' => 'pickup',
         'scheduled_at' => now()->addDay()->toIso8601String(),
     ])->assertUnauthorized();
+});
+
+it('rejects checking out a cart whose seller is no longer verified', function () {
+    $customer = User::factory()->customer()->create();
+    $seller = Seller::factory()->create(['verification_status' => \App\Enums\VerificationStatus::Suspended]);
+    $product = Product::factory()->for($seller)->create();
+    $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
+
+    $this->actingAs($customer)
+        ->postJson('/api/checkout', [
+            'delivery_type' => 'pickup',
+            'scheduled_at' => now()->addDay()->toIso8601String(),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['cart']);
+
+    expect($customer->orders()->count())->toBe(0);
 });

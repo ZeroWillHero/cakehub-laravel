@@ -18,6 +18,7 @@ class SellerSearchController extends Controller
         $radiusMeters = ($data['radius_km'] ?? 10) * 1000;
 
         $sellers = Seller::query()
+            ->publiclyVisible()
             ->whereNotNull('location')
             ->when(
                 $data['category_id'] ?? null,
@@ -58,6 +59,7 @@ class SellerSearchController extends Controller
         $data = $request->validated();
 
         $sellers = Seller::query()
+            ->publiclyVisible()
             ->when(
                 $data['q'] ?? null,
                 fn ($query, $q) => $query->where('business_name', 'ilike', "%{$q}%"),

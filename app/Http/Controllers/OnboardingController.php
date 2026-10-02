@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Requests\Onboarding\SelectRoleRequest;
 use App\Models\CustomerProfile;
 use App\Models\Seller;
+use App\Services\CartMerger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -30,8 +31,10 @@ class OnboardingController extends Controller
         if ($role === UserRole::Customer) {
             CustomerProfile::query()->firstOrCreate(['user_id' => $user->id]);
 
-            return redirect()->route('home');
+            return (new CartMerger($request->session()))->afterCustomerSignIn($user);
         }
+
+        (new CartMerger($request->session()))->discardForNonCustomer();
 
         Seller::query()->firstOrCreate(
             ['user_id' => $user->id],

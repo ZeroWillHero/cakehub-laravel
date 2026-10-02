@@ -9,7 +9,7 @@ use App\Models\User;
 
 it('lets a customer review a specific order item and updates the product average rating', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $order = Order::factory()->for($customer, 'customer')->for($seller)->create(['status' => OrderStatus::Completed]);
     $item = OrderItem::factory()->for($order)->for($product)->create();
@@ -29,7 +29,7 @@ it('lets a customer review a specific order item and updates the product average
 
 it('lets a customer leave both an overall review and a per-item review on the same order', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $order = Order::factory()->for($customer, 'customer')->for($seller)->create(['status' => OrderStatus::Completed]);
     $item = OrderItem::factory()->for($order)->for($product)->create();
@@ -47,7 +47,7 @@ it('lets a customer leave both an overall review and a per-item review on the sa
 
 it('rejects reviewing the same order item twice', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $order = Order::factory()->for($customer, 'customer')->for($seller)->create(['status' => OrderStatus::Completed]);
     $item = OrderItem::factory()->for($order)->for($product)->create();
@@ -75,7 +75,7 @@ it('rejects reviewing an order item that does not belong to the order', function
 
 it('shows product reviews and average rating on the product detail page', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create(['average_rating' => 4.5]);
     $order = Order::factory()->for($customer, 'customer')->for($seller)->create(['status' => OrderStatus::Completed]);
     $item = OrderItem::factory()->for($order)->for($product)->create();

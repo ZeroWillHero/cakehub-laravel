@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import {
@@ -12,23 +12,32 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import CustomerLayout from '@/Layouts/CustomerLayout';
+import CartMergeDialog, { type PendingMerge } from '@/components/shared/CartMergeDialog';
 import PageHero from '@/components/shared/PageHero';
 import Section from '@/components/shared/Section';
+import SignInToCheckoutDialog from '@/components/shared/SignInToCheckoutDialog';
 import Spinner from '@/components/shared/Spinner';
-import { api } from '@/lib/api';
+import { cartApi } from '@/lib/cart';
 import { errorMessage } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import type { CartItem } from '@/types/cart';
+import type { SharedPageProps } from '@/types/shared';
 
 interface Props {
     items: CartItem[];
+    /** Set right after sign-in when the guest cart and the saved cart are from different sellers. */
+    pendingMerge: PendingMerge | null;
 }
 
-export default function Cart({ items: initialItems }: Props) {
+export default function Cart({ items: initialItems, pendingMerge }: Props) {
+    // Signed-out visitors' carts live in their session (/api/guest-cart).
+    const isGuest = (usePage<SharedPageProps>().props.auth?.user ?? null) === null;
+    const cart = cartApi(isGuest);
     const [items, setItems] = useState(initialItems);
+    const [signInOpen, setSignInOpen] = useState(false);
     const total = useMemo(() => items.reduce((sum, i) => sum + i.line_total, 0), [items]);
 
     const [busyId, setBusyId] = useState<number | null>(null);
@@ -39,7 +48,7 @@ export default function Cart({ items: initialItems }: Props) {
         setBusyId(id);
         setError(null);
         try {
-            const updated = await api.put<CartItem>(`/cart/${id}`, { quantity });
+            const updated = await cart.updateQuantity(id, quantity);
             setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
         } catch (err) {
             setError(errorMessage(err, 'quantity', "We couldn't update the quantity. Please try again."));
@@ -52,7 +61,7 @@ export default function Cart({ items: initialItems }: Props) {
         setBusyId(id);
         setError(null);
         try {
-            await api.delete(`/cart/${id}`);
+            await cart.remove(id);
             setItems((prev) => prev.filter((i) => i.id !== id));
         } catch (err) {
             setError(errorMessage(err, undefined, "We couldn't remove that item. Please try again."));
@@ -169,16 +178,30 @@ export default function Cart({ items: initialItems }: Props) {
                             <span className="text-lg font-semibold">${total.toFixed(2)}</span>
                         </div>
 
-                        <Link
-                            href="/checkout"
-                            className={cn(buttonVariants({ size: 'lg' }), 'mt-4 w-full min-h-11')}
-                        >
-                            Proceed to checkout
-                        </Link>
+                        {isGuest ? (
+                            <Button
+                                type="button"
+                                size="lg"
+                                className="mt-4 w-full min-h-11"
+                                onClick={() => setSignInOpen(true)}
+                            >
+                                Proceed to checkout
+                            </Button>
+                        ) : (
+                            <Link
+                                href="/checkout"
+                                className={cn(buttonVariants({ size: 'lg' }), 'mt-4 w-full min-h-11')}
+                            >
+                                Proceed to checkout
+                            </Link>
+                        )}
                     </>
                 )}
               </div>
             </Section>
+
+            {isGuest && <SignInToCheckoutDialog open={signInOpen} onOpenChange={setSignInOpen} />}
+            {pendingMerge && <CartMergeDialog pendingMerge={pendingMerge} />}
         </CustomerLayout>
     );
 }

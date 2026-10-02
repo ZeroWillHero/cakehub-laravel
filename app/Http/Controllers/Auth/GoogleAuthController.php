@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CartMerger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -35,12 +36,24 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, remember: true);
 
+        // A brand-new user picks their role first; any guest cart and the
+        // checkout URL they were heading to wait in the session until then
+        // (OnboardingController hands them to CartMerger).
         if ($user->role === null) {
             return redirect()->route('onboarding.show');
         }
 
+        $cartMerger = new CartMerger(request()->session());
+
+        if ($user->role === UserRole::Customer) {
+            return $cartMerger->afterCustomerSignIn($user);
+        }
+
+        // Sellers/admins ignore the intended URL — a stale customer URL
+        // (e.g. /checkout) would only 403 for them.
+        $cartMerger->discardForNonCustomer();
+
         return match ($user->role) {
-            UserRole::Customer => redirect()->route('home'),
             UserRole::Seller => redirect()->route('seller.dashboard'),
             UserRole::Admin => redirect()->route('admin.dashboard'),
         };

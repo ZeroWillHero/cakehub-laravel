@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
+            'guest.or.role' => \App\Http\Middleware\EnsureGuestOrRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

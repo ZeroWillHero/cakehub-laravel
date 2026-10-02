@@ -307,6 +307,24 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 ---
 
+## Phase 11 — Public Browsing & Guest Cart
+
+**Status:** implemented on `phase-11-public-browsing-guest-cart` (2026-10-03), awaiting review.
+
+**Goal:** let signed-out visitors browse, search, view stores/products, contact sellers on WhatsApp and build a cart. Google sign-in is only required at checkout, and afterwards they go straight back to checkout with that cart. Requested 2026-10-03. Full plan: [plan-public-browsing-guest-cart.md](plan-public-browsing-guest-cart.md).
+
+**Confirmed decisions (2026-10-03):** guests see Customer Home at `/` (Welcome page retired). Guest cart lives in the session and merges into the account cart at sign-in. On a cross-seller conflict the customer chooses which cart to keep. Only `verified` sellers are publicly visible (storefront, product pages, public search APIs).
+
+**Also confirmed 2026-10-03 (plan file §2):** non-verified sellers' products are rejected on the existing `/api/cart` + `/api/checkout` too. Guest cart is capped at 20 lines. Session lifetime stays at 120 min. Deactivated products' direct URLs return 404.
+
+**What gets built:** `Seller::publiclyVisible()` scope applied to storefront/product pages and public search APIs. Browse routes moved out of `auth`/`role:customer` (same paths and names). `guest.or.role:customer` middleware for `/cart`. Session-backed `GuestCart` + `/api/guest-cart` (same contract as `/api/cart`). `CartMerger` run from the Google callback and the onboarding customer branch. `POST /api/cart/merge`. Customers honor `url.intended` after sign-in. `auth.user.role` shared prop. Header/nav gating, sign-in-to-checkout dialog, cart-merge dialog. No new tables, packages or env vars.
+
+**Agents/skills:** [backend-agent](agents/backend-agent.md) → [frontend-agent](agents/frontend-agent.md) → [backend-integration-testing-agent](agents/backend-integration-testing-agent.md) + [frontend-unit-testing-agent](agents/frontend-unit-testing-agent.md) → [chrome-ui-testing-agent](agents/chrome-ui-testing-agent.md) → [requirements-verification-agent](agents/requirements-verification-agent.md).
+
+**Exit criteria:** guest → browse → cart → checkout → Google → back on `/checkout` with the same cart works end to end. Every pre-existing test passes, with only the fixture updates the visibility decision requires (plan file §7).
+
+---
+
 ## How to use this plan
 
 - Work top-to-bottom; later phases assume earlier ones are exit-criteria-complete, but flag if you want a different order (e.g. Admin verification before Search, if seller onboarding needs to be gated from day one).

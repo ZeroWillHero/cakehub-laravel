@@ -16,7 +16,7 @@ function productPointAtKm(float $km): Point
 }
 
 it('returns active products with seller info', function () {
-    $seller = Seller::factory()->create(['business_name' => 'Chocolate Dreams']);
+    $seller = Seller::factory()->verified()->create(['business_name' => 'Chocolate Dreams']);
     Product::factory()->for($seller)->create(['name' => 'Fudge Cake']);
 
     $response = $this->getJson('/api/products/search')->assertOk();
@@ -27,7 +27,7 @@ it('returns active products with seller info', function () {
 });
 
 it('excludes inactive products', function () {
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     Product::factory()->for($seller)->create(['is_active' => false]);
 
     $this->getJson('/api/products/search')
@@ -36,7 +36,7 @@ it('excludes inactive products', function () {
 });
 
 it('searches products by title', function () {
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     Product::factory()->for($seller)->create(['name' => 'Red Velvet Cake']);
     Product::factory()->for($seller)->create(['name' => 'Lemon Tart']);
 
@@ -47,10 +47,10 @@ it('searches products by title', function () {
 });
 
 it('searches products by seller business name', function () {
-    $matching = Seller::factory()->create(['business_name' => 'Sweet Layers Bakery']);
+    $matching = Seller::factory()->verified()->create(['business_name' => 'Sweet Layers Bakery']);
     Product::factory()->for($matching)->create(['name' => 'Any Cake']);
 
-    $other = Seller::factory()->create(['business_name' => 'Other Bakery']);
+    $other = Seller::factory()->verified()->create(['business_name' => 'Other Bakery']);
     Product::factory()->for($other)->create(['name' => 'Another Cake']);
 
     $response = $this->getJson('/api/products/search?q=sweet+layers')->assertOk();
@@ -62,7 +62,7 @@ it('searches products by seller business name', function () {
 it('filters products by category', function () {
     $categoryA = Category::factory()->create();
     $categoryB = Category::factory()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
 
     $inCategory = Product::factory()->for($seller)->create();
     $inCategory->categories()->attach($categoryA);
@@ -77,7 +77,7 @@ it('filters products by category', function () {
 });
 
 it('filters products to in-stock only when requested', function () {
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $inStock = Product::factory()->for($seller)->create(['availability_status' => ProductAvailabilityStatus::InStock]);
     Product::factory()->for($seller)->create(['availability_status' => ProductAvailabilityStatus::Unavailable]);
 
@@ -88,7 +88,7 @@ it('filters products to in-stock only when requested', function () {
 });
 
 it('includes made-to-order and unavailable products when in_stock is not set', function () {
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     Product::factory()->for($seller)->create(['availability_status' => ProductAvailabilityStatus::InStock]);
     Product::factory()->for($seller)->create(['availability_status' => ProductAvailabilityStatus::MadeToOrder]);
     Product::factory()->for($seller)->create(['availability_status' => ProductAvailabilityStatus::Unavailable]);
@@ -99,10 +99,10 @@ it('includes made-to-order and unavailable products when in_stock is not set', f
 });
 
 it('returns products within the requested radius, sorted by seller distance', function () {
-    $near = Seller::factory()->create(['location' => productPointAtKm(1)]);
+    $near = Seller::factory()->verified()->create(['location' => productPointAtKm(1)]);
     Product::factory()->for($near)->create(['name' => 'Near Cake']);
 
-    $far = Seller::factory()->create(['location' => productPointAtKm(20)]);
+    $far = Seller::factory()->verified()->create(['location' => productPointAtKm(20)]);
     Product::factory()->for($far)->create(['name' => 'Far Cake']);
 
     $response = $this->getJson(
@@ -115,7 +115,7 @@ it('returns products within the requested radius, sorted by seller distance', fu
 });
 
 it('excludes products from sellers with no location when filtering by radius', function () {
-    $seller = Seller::factory()->create(['location' => null]);
+    $seller = Seller::factory()->verified()->create(['location' => null]);
     Product::factory()->for($seller)->create();
 
     $this->getJson('/api/products/search?lat='.PRODUCT_ORIGIN_LAT.'&lng='.PRODUCT_ORIGIN_LNG.'&radius_km=50')

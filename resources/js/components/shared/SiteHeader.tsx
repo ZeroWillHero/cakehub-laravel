@@ -18,20 +18,49 @@ import NotificationBell from '@/components/shared/NotificationBell';
 import ThemeToggle from '@/components/shared/ThemeToggle';
 import { useScrolledDown } from '@/lib/useScrollDirection';
 import { cn } from '@/lib/utils';
-import type { SharedPageProps } from '@/types/shared';
+import type { SharedAuthUser, SharedPageProps } from '@/types/shared';
 
-const navLinks = [
-    { label: 'Home', href: '/' },
-    { label: 'Search', href: '/search' },
-    { label: 'Orders', href: '/orders' },
-    { label: 'Cart', href: '/cart' },
-    { label: 'Account', href: '/account' },
+type Audience = 'everyone' | 'shopper' | 'customer';
+
+const allNavLinks: { label: string; href: string; audience: Audience }[] = [
+    { label: 'Home', href: '/', audience: 'everyone' },
+    { label: 'Search', href: '/search', audience: 'everyone' },
+    { label: 'Orders', href: '/orders', audience: 'customer' },
+    { label: 'Cart', href: '/cart', audience: 'shopper' },
+    { label: 'Account', href: '/account', audience: 'customer' },
 ];
+
+/**
+ * Customers' avatar opens their account page; sellers/admins (browsing the
+ * public pages) have no customer account, so it takes them back to `/`,
+ * which redirects to their own dashboard.
+ */
+export function accountLinkFor(user: SharedAuthUser) {
+    return user.role === 'customer'
+        ? { href: '/account', 'aria-label': 'Account' }
+        : { href: '/', 'aria-label': 'Your dashboard' };
+}
+
+/**
+ * Browsing is public, so the header is shown to guests and to sellers/admins
+ * viewing a storefront too. Cart is for anyone who can shop (guests keep a
+ * session cart); Orders/Account only exist for signed-in customers.
+ */
+export function navLinksFor(user: SharedAuthUser | null) {
+    const isCustomer = user?.role === 'customer';
+    return allNavLinks.filter(
+        (link) =>
+            link.audience === 'everyone' ||
+            (link.audience === 'shopper' && (user === null || isCustomer)) ||
+            (link.audience === 'customer' && isCustomer),
+    );
+}
 
 export default function SiteHeader() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const { auth } = usePage<SharedPageProps>().props;
     const user = auth?.user ?? null;
+    const navLinks = navLinksFor(user);
     const scrolledDown = useScrolledDown();
 
     return (
@@ -66,13 +95,15 @@ export default function SiteHeader() {
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
 
-                        <div className="hidden md:block">
-                            <NotificationBell />
-                        </div>
+                        {user && (
+                            <div className="hidden md:block">
+                                <NotificationBell />
+                            </div>
+                        )}
 
                         {user ? (
                             <div className="hidden items-center gap-1 md:flex">
-                                <Link href="/account" aria-label="Account">
+                                <Link {...accountLinkFor(user)}>
                                     <Avatar className="size-8">
                                         <AvatarImage src={user.avatar_url ?? undefined} alt={user.name} />
                                         <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>

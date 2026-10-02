@@ -14,6 +14,8 @@ class StorefrontController extends Controller
 {
     public function show(Seller $seller): Response
     {
+        abort_unless($seller->isPubliclyVisible(), 404);
+
         return Inertia::render('Customer/Storefront', [
             'seller' => (new SellerResource($seller))->resolve(),
             'products' => ProductResource::collection(
@@ -24,7 +26,8 @@ class StorefrontController extends Controller
 
     public function product(Seller $seller, Product $product): Response
     {
-        abort_unless($product->seller_id === $seller->id, 404);
+        abort_unless($seller->isPubliclyVisible(), 404);
+        abort_unless($product->seller_id === $seller->id && $product->is_active, 404);
 
         return Inertia::render('Customer/ProductDetail', [
             'seller' => (new SellerResource($seller))->resolve(),

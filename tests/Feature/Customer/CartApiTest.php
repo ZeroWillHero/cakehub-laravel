@@ -7,7 +7,7 @@ use App\Models\User;
 
 it('adds a product to an empty cart', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create(['base_price' => 20]);
 
     $this->actingAs($customer)
@@ -21,7 +21,7 @@ it('adds a product to an empty cart', function () {
 
 it('adds a variant with its price modifier applied', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create(['base_price' => 20]);
     $variant = ProductVariant::factory()->for($product)->create(['price_modifier' => 5]);
 
@@ -48,8 +48,8 @@ it('rejects adding a nonexistent product', function () {
 
 it('warns with a 409 when adding a different seller\'s product without confirming replace', function () {
     $customer = User::factory()->customer()->create();
-    $sellerA = Seller::factory()->create();
-    $sellerB = Seller::factory()->create();
+    $sellerA = Seller::factory()->verified()->create();
+    $sellerB = Seller::factory()->verified()->create();
     $productA = Product::factory()->for($sellerA)->create();
     $productB = Product::factory()->for($sellerB)->create();
 
@@ -64,8 +64,8 @@ it('warns with a 409 when adding a different seller\'s product without confirmin
 
 it('replaces the cart when adding a different seller\'s product with replace_cart confirmed', function () {
     $customer = User::factory()->customer()->create();
-    $sellerA = Seller::factory()->create();
-    $sellerB = Seller::factory()->create();
+    $sellerA = Seller::factory()->verified()->create();
+    $sellerB = Seller::factory()->verified()->create();
     $productA = Product::factory()->for($sellerA)->create();
     $productB = Product::factory()->for($sellerB)->create();
 
@@ -81,7 +81,7 @@ it('replaces the cart when adding a different seller\'s product with replace_car
 
 it('lets a customer update their own cart item quantity', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $item = $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
 
@@ -94,7 +94,7 @@ it('lets a customer update their own cart item quantity', function () {
 it('forbids updating another customer\'s cart item', function () {
     $owner = User::factory()->customer()->create();
     $intruder = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $item = $owner->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
 
@@ -105,13 +105,25 @@ it('forbids updating another customer\'s cart item', function () {
 
 it('lets a customer remove their own cart item', function () {
     $customer = User::factory()->customer()->create();
-    $seller = Seller::factory()->create();
+    $seller = Seller::factory()->verified()->create();
     $product = Product::factory()->for($seller)->create();
     $item = $customer->cartItems()->create(['seller_id' => $seller->id, 'product_id' => $product->id, 'quantity' => 1]);
 
     $this->actingAs($customer)
         ->deleteJson("/api/cart/{$item->id}")
         ->assertOk();
+
+    expect($customer->cartItems()->count())->toBe(0);
+});
+
+it('rejects adding a product from a seller who is not verified', function () {
+    $customer = User::factory()->customer()->create();
+    $product = Product::factory()->for(Seller::factory())->create();
+
+    $this->actingAs($customer)
+        ->postJson('/api/cart', ['product_id' => $product->id])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['product_id']);
 
     expect($customer->cartItems()->count())->toBe(0);
 });

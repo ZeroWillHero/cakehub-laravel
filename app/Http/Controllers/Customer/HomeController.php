@@ -25,8 +25,11 @@ class HomeController extends Controller
     {
         $user = request()->user();
 
+        // Guests see the same Home as customers — browsing is public, and
+        // sign-in is only asked for at checkout
+        // (docs/plan-public-browsing-guest-cart.md D1).
         if ($user === null) {
-            return Inertia::render('Welcome');
+            return Inertia::render('Customer/Home', $this->homeProps());
         }
 
         if ($user->role === null) {
@@ -34,32 +37,40 @@ class HomeController extends Controller
         }
 
         return match ($user->role) {
-            UserRole::Customer => Inertia::render('Customer/Home', [
-                'categories' => CategoryResource::collection(
-                    Category::query()->where('is_active', true)->orderBy('sort_order')->get()
-                )->resolve(),
-                // "Featured" sellers are simply the top-rated, live, verified
-                // sellers — no dedicated is_featured column (see plan notes).
-                'featuredSellers' => SellerResource::collection(
-                    Seller::query()
-                        ->where('store_status', StoreStatus::Open)
-                        ->where('verification_status', VerificationStatus::Verified)
-                        ->orderByDesc('average_rating')
-                        ->limit(8)
-                        ->get()
-                )->resolve(),
-                // Shown in the "Sell on CakeHub" section so prospective sellers
-                // can see pricing before starting onboarding.
-                'subscriptionPlans' => SubscriptionPlanResource::collection(
-                    SubscriptionPlan::query()->where('is_active', true)->orderBy('sort_order')->get()
-                )->resolve(),
-                'ads' => AdResource::collection(
-                    Ad::query()->eligible()->orderBy('sort_order')->get()
-                )->resolve(),
-                'adRotationSeconds' => AdSetting::current()->rotation_seconds,
-            ]),
+            UserRole::Customer => Inertia::render('Customer/Home', $this->homeProps()),
             UserRole::Seller => redirect()->route('seller.dashboard'),
             UserRole::Admin => redirect()->route('admin.dashboard'),
         };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function homeProps(): array
+    {
+        return [
+            'categories' => CategoryResource::collection(
+                Category::query()->where('is_active', true)->orderBy('sort_order')->get()
+            )->resolve(),
+            // "Featured" sellers are simply the top-rated, live, verified
+            // sellers — no dedicated is_featured column (see plan notes).
+            'featuredSellers' => SellerResource::collection(
+                Seller::query()
+                    ->where('store_status', StoreStatus::Open)
+                    ->where('verification_status', VerificationStatus::Verified)
+                    ->orderByDesc('average_rating')
+                    ->limit(8)
+                    ->get()
+            )->resolve(),
+            // Shown in the "Sell on CakeHub" section so prospective sellers
+            // can see pricing before starting onboarding.
+            'subscriptionPlans' => SubscriptionPlanResource::collection(
+                SubscriptionPlan::query()->where('is_active', true)->orderBy('sort_order')->get()
+            )->resolve(),
+            'ads' => AdResource::collection(
+                Ad::query()->eligible()->orderBy('sort_order')->get()
+            )->resolve(),
+            'adRotationSeconds' => AdSetting::current()->rotation_seconds,
+        ];
     }
 }

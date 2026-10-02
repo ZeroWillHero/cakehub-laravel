@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Models\Product;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AddCartItemRequest extends FormRequest
@@ -24,5 +26,21 @@ class AddCartItemRequest extends FormRequest
             // rather than silently overwriting the cart.
             'replace_cart' => ['boolean'],
         ];
+    }
+
+    public function withValidator(ValidatorContract $validator): void
+    {
+        $validator->after(function (ValidatorContract $validator) {
+            if ($validator->errors()->has('product_id')) {
+                return;
+            }
+
+            // Only verified sellers are publicly visible, so only their
+            // products can be bought (docs/plan-public-browsing-guest-cart.md D4).
+            $product = Product::query()->with('seller')->find($this->input('product_id'));
+            if (! $product?->seller?->isPubliclyVisible()) {
+                $validator->errors()->add('product_id', 'This seller is not currently accepting orders.');
+            }
+        });
     }
 }

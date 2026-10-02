@@ -81,7 +81,7 @@ it('lets a seller update their payout details', function () {
 
 it('never exposes payout details to a non-owning viewer', function () {
     $user = User::factory()->seller()->create();
-    $seller = Seller::factory()->for($user)->create([
+    $seller = Seller::factory()->verified()->for($user)->create([
         'payout_bank_name' => 'Secret Bank',
     ]);
     $customer = User::factory()->customer()->create();

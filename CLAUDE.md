@@ -18,6 +18,7 @@ The phased build order lives in [docs/plan.md](docs/plan.md) — work through ph
 
 Core mechanics:
 - Customers search cakes by **category** and by **location** ("near me").
+- Browsing is **public**: guests can browse/search, view verified sellers' stores and products, use WhatsApp, and build a session cart. Google sign-in is required only at checkout, which then resumes with that cart (confirmed 2026-10-03, see [docs/plan-public-browsing-guest-cart.md](docs/plan-public-browsing-guest-cart.md)).
 - Customers order directly through the platform (checkout) OR contact sellers directly via a **WhatsApp deep link** — both are first-class, neither replaces the other.
 - Sellers manage their own storefront/catalog, subject to a **listing limit** tied to their subscription tier.
 - Admin verifies sellers, manages cake categories, and manages subscription plans (fully dynamic — add/edit/delete/enable-disable, including free plans) — no code deploys required to change pricing/tiers.

@@ -12,7 +12,7 @@ it('notifies the seller when a customer places an order', function () {
 
     $customer = User::factory()->customer()->create();
     $sellerUser = User::factory()->seller()->create();
-    $seller = Seller::factory()->for($sellerUser, 'user')->create();
+    $seller = Seller::factory()->verified()->for($sellerUser, 'user')->create();
     $product = \App\Models\Product::factory()->for($seller)->create();
     $customer->cartItems()->create([
         'seller_id' => $seller->id,

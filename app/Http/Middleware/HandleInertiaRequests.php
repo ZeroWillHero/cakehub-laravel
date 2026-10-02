@@ -43,6 +43,10 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'avatar_url' => $request->user()->avatar_url,
+                    // Lets the shared customer-facing header/pages hide
+                    // customer-only UI (cart, orders) from sellers/admins
+                    // browsing the public pages.
+                    'role' => $request->user()->role?->value,
                 ] : null,
             ],
         ];

@@ -23,6 +23,7 @@ class ProductSearchController extends Controller
             $radiusMeters = ($data['radius_km'] ?? 10) * 1000;
 
             $nearbySellers = Seller::query()
+                ->publiclyVisible()
                 ->whereNotNull('location')
                 ->withDistanceSphere('location', $point)
                 ->whereDistanceSphere('location', $point, '<=', $radiusMeters)
@@ -34,6 +35,7 @@ class ProductSearchController extends Controller
 
         $products = Product::query()
             ->active()
+            ->whereHas('seller', fn ($query) => $query->publiclyVisible())
             ->with(['categories', 'variants', 'images', 'seller'])
             ->when(
                 $data['q'] ?? null,
