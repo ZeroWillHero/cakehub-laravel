@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react';
-import { ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
+import { ExternalLink, FileX2, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Spinner from '@/components/shared/Spinner';
@@ -26,6 +26,19 @@ export default function SlipPreviewDialog({ open, onOpenChange, slipUrl, title =
     const [imageFailed, setImageFailed] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [zoomed, setZoomed] = useState(false);
+    const [missing, setMissing] = useState(false);
+
+    // The image failed: it's either a PDF (show it in an iframe) or the file
+    // is gone. Ask the server which, without downloading it — the document
+    // route returns 404 for a missing file and a redirect otherwise.
+    function handleImageError() {
+        setImageFailed(true);
+        fetch(slipUrl, { method: 'HEAD', redirect: 'manual', credentials: 'include' })
+            .then((response) => {
+                if (response.status === 404 || response.status === 410) setMissing(true);
+            })
+            .catch(() => {});
+    }
 
     return (
         <Dialog
@@ -33,6 +46,7 @@ export default function SlipPreviewDialog({ open, onOpenChange, slipUrl, title =
             onOpenChange={(next) => {
                 if (!next) {
                     setImageFailed(false);
+                    setMissing(false);
                     setLoaded(false);
                     setZoomed(false);
                 }
@@ -45,21 +59,23 @@ export default function SlipPreviewDialog({ open, onOpenChange, slipUrl, title =
                 </DialogHeader>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    {!imageFailed && (
+                    {!imageFailed && !missing && (
                         <Button type="button" variant="outline" size="sm" className="min-h-9" onClick={() => setZoomed((z) => !z)}>
                             {zoomed ? <ZoomOut aria-hidden="true" /> : <ZoomIn aria-hidden="true" />}
                             {zoomed ? 'Fit to screen' : 'Zoom in'}
                         </Button>
                     )}
-                    <a
-                        href={slipUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                    >
-                        <ExternalLink className="size-4" aria-hidden="true" />
-                        Open in new tab
-                    </a>
+                    {!missing && (
+                        <a
+                            href={slipUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                        >
+                            <ExternalLink className="size-4" aria-hidden="true" />
+                            Open in new tab
+                        </a>
+                    )}
                 </div>
 
                 <div className="relative min-h-64 flex-1 overflow-auto rounded-lg border bg-muted/30">
@@ -69,14 +85,22 @@ export default function SlipPreviewDialog({ open, onOpenChange, slipUrl, title =
                             Loading…
                         </div>
                     )}
-                    {imageFailed ? (
+                    {missing ? (
+                        <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 p-6 text-center" role="alert">
+                            <FileX2 className="size-10 text-muted-foreground" aria-hidden="true" />
+                            <p className="font-medium">This file can&apos;t be found</p>
+                            <p className="max-w-sm text-sm text-muted-foreground">
+                                It may have been removed from storage. Please ask for it to be uploaded again.
+                            </p>
+                        </div>
+                    ) : imageFailed ? (
                         <iframe src={slipUrl} title={title} className="h-[65dvh] w-full" />
                     ) : (
                         <img
                             src={slipUrl}
                             alt={title}
                             onLoad={() => setLoaded(true)}
-                            onError={() => setImageFailed(true)}
+                            onError={handleImageError}
                             onClick={() => setZoomed((z) => !z)}
                             className={cn(
                                 'mx-auto transition-opacity',

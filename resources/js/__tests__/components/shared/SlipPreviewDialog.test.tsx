@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import SlipPreviewDialog from '@/components/shared/SlipPreviewDialog';
 
 describe('SlipPreviewDialog', () => {
@@ -43,5 +43,35 @@ describe('SlipPreviewDialog', () => {
         );
 
         expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
+    });
+});
+
+describe('SlipPreviewDialog missing file', () => {
+    it('explains a missing file instead of showing an error page', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({ status: 404 });
+        vi.stubGlobal('fetch', fetchMock);
+
+        render(<SlipPreviewDialog open onOpenChange={() => {}} slipUrl="/seller-documents/5" title="Business registration" />);
+        fireEvent.error(screen.getByRole('img', { name: 'Business registration' }));
+
+        expect(await screen.findByText("This file can't be found")).toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledWith('/seller-documents/5', expect.objectContaining({ method: 'HEAD' }));
+        expect(document.querySelector('iframe')).toBeNull();
+        expect(screen.queryByText('Open in new tab')).not.toBeInTheDocument();
+
+        vi.unstubAllGlobals();
+    });
+
+    it('keeps the PDF view when the file exists', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 0, type: 'opaqueredirect' }));
+
+        render(<SlipPreviewDialog open onOpenChange={() => {}} slipUrl="/seller-documents/6" title="Food safety certificate" />);
+        fireEvent.error(screen.getByRole('img', { name: 'Food safety certificate' }));
+
+        await Promise.resolve();
+        expect(document.querySelector('iframe')).toHaveAttribute('src', '/seller-documents/6');
+        expect(screen.queryByText("This file can't be found")).not.toBeInTheDocument();
+
+        vi.unstubAllGlobals();
     });
 });

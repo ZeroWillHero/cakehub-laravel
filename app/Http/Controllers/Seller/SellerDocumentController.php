@@ -8,7 +8,9 @@ use App\Http\Requests\Seller\StoreDocumentRequest;
 use App\Http\Resources\SellerDocumentResource;
 use App\Models\SellerDocument;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Http;
 
 class SellerDocumentController extends Controller
 {
@@ -34,10 +36,22 @@ class SellerDocumentController extends Controller
     {
         $this->authorize('view', $document);
 
-        // Get the Cloudinary URL
         $url = CloudinaryHelper::getDocumentUrl($document->file_path);
 
-        // Redirect to Cloudinary for document download/viewing
-        return redirect($url);
+        abort_if($url === '', 404, 'Document storage is not configured.');
+
+        // Check the file is really there before redirecting: if it was removed
+        // from Cloudinary, sending the admin to Cloudinary's bare "Resource not
+        // found" page looks like a broken app. A clear 404 here lets the
+        // preview dialog explain what happened instead. If Cloudinary can't be
+        // reached, fall through to the redirect rather than blocking viewing.
+        try {
+            $head = Http::timeout(5)->head($url);
+            abort_if($head->notFound(), 404, 'This document file could not be found.');
+        } catch (ConnectionException) {
+            // Network hiccup — let the browser try the URL directly.
+        }
+
+        return redirect()->away($url);
     }
 }

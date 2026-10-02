@@ -117,3 +117,10 @@ Watch the run under the repo's **Actions** tab. First boot: Caddy will attempt t
 - **No database backups are configured by this plan.** Supabase has its own backup settings (Database → Backups) — check your plan's retention and consider enabling point-in-time recovery if the data matters.
 - **Caddy's certs persist** in the `caddy_data` Docker volume — don't `docker compose down -v` (which removes volumes) or you'll need to re-issue certificates (rate-limited by Let's Encrypt).
 - If you outgrow a single EC2 instance later (multiple instances, load balancing, etc.), this compose-based setup will need to change — treat that as a future architecture decision, not something to build speculatively now.
+
+
+## Upload size limits
+
+PHP upload limits live in `docker/php.ini`, which is copied into the image. The current values are `upload_max_filesize=20M` and `post_max_size=25M`, matching the largest FormRequest rule (images, `max:20480`). nginx's `client_max_body_size` in `docker/nginx.conf` must stay at or above `post_max_size`. If you raise an upload rule, raise all three, plus `IMAGE_RULE` in `resources/js/lib/files.ts`. Otherwise uploads fail with 413 before Laravel validation runs.
+
+For local development with Laravel Herd, set Herd → Settings → PHP → "Max file upload size" to at least 25 MB. Herd's default is 2 MB.

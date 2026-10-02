@@ -161,7 +161,12 @@ export default function SellerDetail({ seller: initialSeller }: Props) {
                                             <span className="inline-flex size-9 items-center justify-center rounded-lg bg-muted">
                                                 <FileText className="size-4" aria-hidden="true" />
                                             </span>
-                                            <span className="font-medium">{documentLabel[doc.type]}</span>
+                                            <span>
+                                                <span className="block font-medium">{documentLabel[doc.type]}</span>
+                                                <span className="block text-xs text-muted-foreground">
+                                                    Uploaded {new Date(doc.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </span>
+                                            </span>
                                         </span>
                                         <span className="flex items-center gap-2">
                                             <Badge className={statusTone(doc.status)}>{documentStatusLabel[doc.status]}</Badge>

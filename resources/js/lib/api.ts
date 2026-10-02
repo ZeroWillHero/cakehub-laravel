@@ -69,13 +69,17 @@ export interface UploadOptions {
     onProgress?: (percent: number) => void;
 }
 
+const TOO_LARGE_MESSAGE = 'That file is too large to upload. Please choose a smaller photo or file.';
+
 function parseXhrResponse<T>(xhr: XMLHttpRequest): ApiSuccess<T> | ApiError {
+    // A 413 comes from PHP/nginx size limits before Laravel validation runs,
+    // so its body ("The POST data is too large.") isn't useful to show.
+    if (xhr.status === 413) {
+        return { message: TOO_LARGE_MESSAGE };
+    }
     try {
         return JSON.parse(xhr.responseText) as ApiSuccess<T> | ApiError;
     } catch {
-        if (xhr.status === 413) {
-            return { message: 'That file is too large. Please choose a smaller one.' };
-        }
         if (xhr.status === 0) {
             return { message: 'Upload interrupted. Please check your internet connection and try again.' };
         }

@@ -49,6 +49,7 @@ COPY --from=assets /app/public/build ./public/build
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+COPY docker/php.ini /usr/local/etc/php/conf.d/zz-cakehub-uploads.ini
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

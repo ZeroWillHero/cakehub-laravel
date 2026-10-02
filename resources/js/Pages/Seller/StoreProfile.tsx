@@ -92,6 +92,9 @@ function DocumentUpload({ documents: initialDocuments }: { documents: SellerDocu
                                     </span>
                                     <div className="min-w-0">
                                         <p className="font-medium">{documentLabel[doc.type]}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Uploaded {new Date(doc.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </p>
                                         {doc.status === 'rejected' && doc.rejection_reason && (
                                             <p className="text-xs text-destructive">Reason: {doc.rejection_reason}</p>
                                         )}
