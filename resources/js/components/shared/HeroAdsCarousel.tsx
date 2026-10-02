@@ -91,11 +91,7 @@ export default function HeroAdsCarousel({ ads, rotationSeconds, actions }: Props
                 </CarouselContent>
             </Carousel>
 
-            {/* Top fade keeps the transparent header readable over any photo; bottom fade blends into the page. */}
-            <div
-                className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/80 to-transparent"
-                aria-hidden="true"
-            />
+            {/* Bottom fade blends the hero into the page; the header stays fully transparent over the photo. */}
             <div
                 className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background sm:h-32"
                 aria-hidden="true"

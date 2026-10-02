@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import type { Ad } from '@/types/ad';
 import type { Category } from '@/types/category';
 import type { Seller } from '@/types/seller';
+import type { SharedPageProps } from '@/types/shared';
 import type { SubscriptionPlan } from '@/types/subscriptionPlan';
 
 interface Props {
@@ -58,6 +59,11 @@ export default function CustomerHome({ categories, featuredSellers, subscription
         ...GALLERY_IMAGES,
         ...featuredSellers.filter((seller) => seller.cover_url).map((seller) => seller.cover_url as string),
     ];
+
+    // Only guests are pitched on selling — signed-in customers never see the
+    // "Become a seller" CTAs or the subscription plans (the server also
+    // sends them no plans).
+    const isGuest = (usePage<SharedPageProps>().props.auth?.user ?? null) === null;
 
     const [nearMe, setNearMe] = useState(false);
     const [nearbySellers, setNearbySellers] = useState<NearbySeller[]>([]);
@@ -112,9 +118,11 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                     <Link href="/products" className={cn(buttonVariants({ size: 'lg' }), 'min-h-11')}>
                         Shop now
                     </Link>
-                    <a href="/onboarding" className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'min-h-11')}>
-                        Become a seller
-                    </a>
+                    {isGuest && (
+                        <a href="/onboarding" className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'min-h-11')}>
+                            Become a seller
+                        </a>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     <Switch id="near-me" checked={nearMe} onCheckedChange={handleNearMeToggle} />
@@ -145,6 +153,39 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                     actions={heroActions(false)}
                 />
             )}
+
+            <Section title="Categories">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {categories.map((category) => (
+                        <Link
+                            key={category.id}
+                            href={`/search?category_id=${category.id}`}
+                            className="group relative block overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            {/*
+                              * The name is the link text; the photo behind it is decorative.
+                              * With no photo (or a broken one), a brand gradient shows instead
+                              * of SmartImage's "no photo" icon, which would sit behind the name.
+                              */}
+                            <SmartImage
+                                src={category.image_url}
+                                alt=""
+                                fallbackLabel=""
+                                className="aspect-square w-full bg-linear-to-br from-primary/70 to-accent [&_svg]:hidden"
+                                imgClassName="transition-transform duration-300 ease-out group-hover:scale-105"
+                            />
+                            {/* Dark scrim so the white name stays readable over any photo. */}
+                            <div
+                                className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"
+                                aria-hidden="true"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center p-3 text-center font-heading text-xl font-bold text-balance text-white drop-shadow-md sm:text-2xl lg:text-3xl">
+                                {category.name}
+                            </span>
+                        </Link>
+                    ))}
+                </div>
+            </Section>
 
             <Section className="pt-0">
                 <div className="group/marquee overflow-hidden">
@@ -234,21 +275,6 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                 </Carousel>
             </Section>
 
-            <Section title="Categories">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                    {categories.map((category) => (
-                        <Link key={category.id} href={`/search?category_id=${category.id}`}>
-                            <Card className="transition-shadow hover:shadow-md">
-                                <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
-                                    <SmartImage src={category.image_url} alt={category.name} fallbackLabel="" className="aspect-square w-full rounded-2xl" />
-                                    <span className="text-sm font-medium">{category.name}</span>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    ))}
-                </div>
-            </Section>
-
             {featuredSellers.length > 0 && (
                 <Section title="Featured bakers" description="Our highest-rated sellers right now.">
                     <Carousel opts={{ align: 'start' }}>
@@ -283,7 +309,7 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                 </Section>
             )}
 
-            {subscriptionPlans.length > 0 && (
+            {isGuest && subscriptionPlans.length > 0 && (
                 <Section
                     title="Sell your cakes on CakeHub"
                     description="Reach local customers and manage your own storefront — pick a plan that fits your business."
