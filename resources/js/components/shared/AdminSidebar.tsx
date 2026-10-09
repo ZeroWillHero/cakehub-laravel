@@ -1,5 +1,16 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Banknote, ClipboardCheck, CreditCard, LayoutDashboard, Megaphone, Receipt, Settings, Tag } from 'lucide-react';
+import {
+    Banknote,
+    ClipboardCheck,
+    CreditCard,
+    LayoutDashboard,
+    Megaphone,
+    Receipt,
+    Settings,
+    ShoppingBag,
+    Tag,
+    Users,
+} from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -15,6 +26,8 @@ import UserSidebarFooter from '@/components/shared/UserSidebarFooter';
 
 const navItems = [
     { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
+    { title: 'Orders', url: '/admin/orders', icon: ShoppingBag },
+    { title: 'Users', url: '/admin/users', icon: Users },
     { title: 'Verification Queue', url: '/admin/sellers/pending', icon: ClipboardCheck },
     { title: 'Categories', url: '/admin/categories', icon: Tag },
     { title: 'Subscription Plans', url: '/admin/subscription-plans', icon: CreditCard },
@@ -27,7 +40,8 @@ const navItems = [
 const settingsItem = { title: 'Settings', url: '/admin/settings', icon: Settings };
 
 export default function AdminSidebar() {
-    const { url } = usePage();
+    // Ignore the query string so filtered list pages (e.g. /admin/orders?status=ready) stay highlighted.
+    const url = usePage().url.split('?')[0];
 
     return (
         <Sidebar collapsible="icon">

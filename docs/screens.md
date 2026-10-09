@@ -46,14 +46,14 @@ Built with: Inertia.js + React + shadcn/ui + Tailwind. Types: every page compone
 
 | # | Screen | Purpose | Key elements | HCI focus |
 |---|---|---|---|---|
-| A1 | **Admin Dashboard** | Platform overview | Key metrics (customers, sellers, orders, revenue, pending verifications) | Information-dense but scannable — group by category, not a wall of numbers |
+| A1 | **Admin Dashboard** | Platform overview | Key metrics (customers, sellers, orders, revenue, pending verifications); each metric card links to its list (A8 tabs, A6, A2) (Phase 12) | Information-dense but scannable — group by category, not a wall of numbers |
 | A2 | **Seller Verification Queue** | Review pending sellers | Queue list, document viewer, approve/reject/request-info actions with required reason on reject | Error prevention — reject requires a reason so the seller gets actionable feedback |
 | A3 | **Seller Detail / Management** | View/manage one seller | Full profile, documents, status history, suspend/ban action (confirm dialog) | Destructive-action confirmation (shadcn AlertDialog) |
 | A4 | **Category Management** | CRUD cake categories | Table with add/edit/delete/reorder (drag or up/down), active/inactive toggle | Consistency — same table/action pattern as A6 (plans) |
 | A5 | **Subscription Plan Management** | CRUD dynamic plans | Table of plans (name, price, billing cycle, listing limit, status), add/edit/delete, mark-free toggle, enable/disable, reorder | Error prevention — deleting a plan with active subscribers prompts a migration choice, not silent breakage |
-| A6 | **Orders Oversight** | View all orders, handle disputes | Filterable order list, dispute/refund action | Visibility of status |
+| A6 | **Orders Oversight** | View all orders, handle disputes | Filterable order list, dispute/refund action. **Built (Phase 12):** searchable/filterable paginated table (status, payment, date range, per-customer/per-seller deep links); row opens a side Sheet with items, totals, delivery details and links to the seller/customer. Dispute/refund action not built yet. | Visibility of status |
 | A7 | **Review Moderation** | Handle flagged reviews | Flagged review queue, remove/restore action | Error prevention — confirm before removal |
-| A8 | **User Management** | Manage customer/seller accounts | Searchable list, suspend/reactivate action | Consistency with A3's suspend pattern |
+| A8 | **User Management** | Manage customer/seller accounts | Searchable list, suspend/reactivate action. **Built (Phase 12):** one page with Customers/Sellers tabs, same table + side Sheet pattern as A6; suspend/reactivate behind an AlertDialog. Suspending a seller's account also hides their store from public browse/search/cart. Admin accounts aren't listed. | Consistency with A3's suspend pattern |
 | A9 | **Bank Accounts** (Phase 8) | CRUD the accounts customers/sellers pay into | Table with add/edit/delete, active/inactive toggle | Consistency — same table/action pattern as A4/A5 |
 | A10 | **Payment Verifications** (Phase 8) | Approve/reject submitted payment slips | Queue of pending payments (payable, amount, submitted-by, slip viewer), verify/reject with required reason on reject | Error prevention — reject requires a reason so the customer/seller gets actionable feedback, same pattern as A2 |
 | A11 | **Seller Payouts** (Phase 8) | Pay out sellers for completed orders and track confirmation | Queue of payouts, upload slip + mark paid action, status (pending/paid/confirmed) | Visibility of status — clear pending/paid/confirmed states |

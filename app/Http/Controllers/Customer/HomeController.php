@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Customer;
 
 use App\Enums\StoreStatus;
 use App\Enums\UserRole;
-use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdResource;
 use App\Http\Resources\CategoryResource;
@@ -57,7 +56,7 @@ class HomeController extends Controller
             'featuredSellers' => SellerResource::collection(
                 Seller::query()
                     ->where('store_status', StoreStatus::Open)
-                    ->where('verification_status', VerificationStatus::Verified)
+                    ->publiclyVisible()
                     ->orderByDesc('average_rating')
                     ->limit(8)
                     ->get()

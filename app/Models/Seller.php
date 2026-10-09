@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\SellerSubscriptionStatus;
 use App\Enums\StoreStatus;
+use App\Enums\UserStatus;
 use App\Enums\VerificationStatus;
 use App\Helpers\CloudinaryHelper;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -142,16 +143,20 @@ class Seller extends Model
     /**
      * Only verified sellers are visible on public storefront/product pages
      * and in public search results (docs/plan-public-browsing-guest-cart.md
-     * D4) — pending, rejected and suspended sellers are all excluded.
+     * D4) — pending, rejected and suspended sellers are all excluded, as are
+     * sellers whose user account an admin has suspended (Phase 12).
      */
     public function scopePubliclyVisible($query)
     {
-        return $query->where('verification_status', VerificationStatus::Verified);
+        return $query
+            ->where('verification_status', VerificationStatus::Verified)
+            ->whereDoesntHave('user', fn ($user) => $user->where('status', UserStatus::Suspended));
     }
 
     public function isPubliclyVisible(): bool
     {
-        return $this->verification_status === VerificationStatus::Verified;
+        return $this->verification_status === VerificationStatus::Verified
+            && $this->user?->status !== UserStatus::Suspended;
     }
 
     public function recalculateAverageRating(): void

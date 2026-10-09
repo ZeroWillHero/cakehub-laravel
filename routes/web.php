@@ -5,9 +5,11 @@ use App\Http\Controllers\Admin\AdminBankAccountController as AdminAdminBankAccou
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DashboardExportController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentVerificationController;
 use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\DevLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -92,6 +94,8 @@ Route::middleware(['auth', 'account.active'])->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/export', [DashboardExportController::class, 'export'])->name('dashboard.export');
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/sellers/pending', [SellerVerificationController::class, 'pending'])->name('sellers.pending');
         Route::get('/sellers/{seller}', [SellerVerificationController::class, 'show'])->name('sellers.show');
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');

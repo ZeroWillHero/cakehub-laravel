@@ -1,4 +1,5 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
@@ -21,6 +22,13 @@ interface Props {
         statusBreakdown: Record<OrderStatus, number>;
     };
 }
+
+const statCards: { label: string; metric: keyof Props['metrics']; href: string }[] = [
+    { label: 'Customers', metric: 'customers', href: '/admin/users?tab=customers' },
+    { label: 'Sellers', metric: 'sellers', href: '/admin/users?tab=sellers' },
+    { label: 'Orders', metric: 'orders', href: '/admin/orders' },
+    { label: 'Pending verifications', metric: 'pending_verifications', href: '/admin/sellers/pending' },
+];
 
 const statusLabel: Record<OrderStatus, string> = {
     placed: 'Placed',
@@ -47,32 +55,26 @@ export default function AdminDashboard({ metrics, analytics }: Props) {
     return (
         <AdminLayout breadcrumb={['Dashboard']}>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Customers</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold">{metrics.customers}</CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Sellers</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold">{metrics.sellers}</CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Orders</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold">{metrics.orders}</CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Pending verifications
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold">{metrics.pending_verifications}</CardContent>
-                </Card>
+                {statCards.map((stat) => (
+                    <Link
+                        key={stat.label}
+                        href={stat.href}
+                        className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                        <Card className="h-full transition-shadow group-hover:shadow-md group-hover:ring-foreground/20">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex items-end justify-between gap-2">
+                                <span className="text-2xl font-semibold">{metrics[stat.metric]}</span>
+                                <span className="flex items-center gap-0.5 text-xs text-muted-foreground group-hover:text-foreground">
+                                    View all
+                                    <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+                                </span>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))}
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
