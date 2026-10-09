@@ -138,36 +138,41 @@ export default function CustomerHome({ categories, featuredSellers, subscription
             )}
 
             <Section title="Categories">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                    {categories.map((category) => (
-                        <Link
-                            key={category.id}
-                            href={`/search?category_id=${category.id}`}
-                            className="group relative block overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            {/*
-                              * The name is the link text; the photo behind it is decorative.
-                              * With no photo (or a broken one), a brand gradient shows instead
-                              * of SmartImage's "no photo" icon, which would sit behind the name.
-                              */}
-                            <SmartImage
-                                src={category.image_url}
-                                alt=""
-                                fallbackLabel=""
-                                className="aspect-square w-full bg-linear-to-br from-primary/70 to-accent [&_svg]:hidden"
-                                imgClassName="transition-transform duration-300 ease-out group-hover:scale-105"
-                            />
-                            {/* Dark scrim so the white name stays readable over any photo. */}
-                            <div
-                                className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"
-                                aria-hidden="true"
-                            />
-                            <span className="absolute inset-0 flex items-center justify-center p-3 text-center font-heading text-xl font-bold text-balance text-white drop-shadow-md sm:text-2xl lg:text-3xl">
-                                {category.name}
-                            </span>
-                        </Link>
-                    ))}
-                </div>
+                <Carousel opts={{ align: 'start' }} className="mx-auto max-w-xl">
+                    <CarouselContent className="-ml-3">
+                        {categories.map((category) => (
+                            <CarouselItem key={category.id} className="basis-1/3 pl-3">
+                                <Link
+                                    href={`/search?category_id=${category.id}`}
+                                    className="group relative block overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                >
+                                    {/*
+                                     * The name is the link text; the photo behind it is decorative.
+                                     * With no photo (or a broken one), a brand gradient shows instead
+                                     * of SmartImage's "no photo" icon, which would sit behind the name.
+                                     */}
+                                    <SmartImage
+                                        src={category.image_url}
+                                        alt=""
+                                        fallbackLabel=""
+                                        className="aspect-4/3 w-full bg-linear-to-br from-primary/70 to-accent [&_svg]:hidden"
+                                        imgClassName="transition-transform duration-300 ease-out group-hover:scale-105"
+                                    />
+                                    {/* Dark scrim so the white name stays readable over any photo. */}
+                                    <div
+                                        className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"
+                                        aria-hidden="true"
+                                    />
+                                    <span className="absolute inset-0 flex items-center justify-center p-2 text-center font-heading text-sm font-bold text-balance text-white drop-shadow-md sm:text-base lg:text-lg">
+                                        {category.name}
+                                    </span>
+                                </Link>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="hidden sm:inline-flex sm:-left-12" />
+                    <CarouselNext className="hidden sm:inline-flex sm:-right-12" />
+                </Carousel>
             </Section>
 
             {nearMe && (
@@ -203,7 +208,11 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                                 <Link key={seller.id} href={`/sellers/${seller.slug}`}>
                                     <Card className="transition-shadow hover:shadow-md">
                                         <CardContent className="flex items-center gap-3 py-4">
-                                            <SmartImage src={seller.cover_url} alt={seller.business_name} className="size-14 shrink-0 rounded-lg" />
+                                            <SmartImage
+                                                src={seller.cover_url}
+                                                alt={seller.business_name}
+                                                className="size-14 shrink-0 rounded-lg"
+                                            />
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-medium">{seller.business_name}</p>
                                                 <div className="mt-1 flex items-center gap-2">
@@ -233,7 +242,11 @@ export default function CustomerHome({ categories, featuredSellers, subscription
                                     <Link href={`/sellers/${seller.slug}`}>
                                         <Card className="h-full transition-shadow hover:shadow-md">
                                             <CardContent className="flex flex-col gap-3 py-4">
-                                                <SmartImage src={seller.cover_url} alt={seller.business_name} className="aspect-[16/9] w-full rounded-lg" />
+                                                <SmartImage
+                                                    src={seller.cover_url}
+                                                    alt={seller.business_name}
+                                                    className="aspect-[16/9] w-full rounded-lg"
+                                                />
                                                 <div>
                                                     <p className="font-medium">{seller.business_name}</p>
                                                     <div className="mt-1 flex items-center gap-2">

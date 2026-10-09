@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\PaymentVerificationController;
 use App\Http\Controllers\Admin\SellerPayoutController as AdminSellerPayoutController;
 use App\Http\Controllers\Admin\SellerVerificationController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AdminBankAccountController;
 use App\Http\Controllers\Api\CartMergeController;
 use App\Http\Controllers\Api\GuestCartController;
@@ -98,6 +99,8 @@ Route::middleware(['auth:sanctum', 'account.active'])->group(function () {
         Route::post('/sellers/{seller}/reject', [SellerVerificationController::class, 'reject']);
         Route::post('/sellers/{seller}/request-info', [SellerVerificationController::class, 'requestInfo']);
         Route::post('/sellers/{seller}/suspend', [SellerVerificationController::class, 'suspend']);
+        Route::patch('/users/{user}/suspend', [AdminUserController::class, 'suspend']);
+        Route::patch('/users/{user}/reactivate', [AdminUserController::class, 'reactivate']);
         Route::post('/categories', [AdminCategoryController::class, 'store']);
         Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
         Route::post('/categories/{category}/image', [AdminCategoryController::class, 'uploadImage']);

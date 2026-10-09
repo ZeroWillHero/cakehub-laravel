@@ -327,6 +327,32 @@ Each phase lists: goal, what gets built, which [agents](agents/)/[skills](skills
 
 ---
 
+## Phase 12 — Admin Orders & User Management
+
+**Status:** implemented on `phase-12-admin-orders-users` (branched from `home-hero-ads`, since `main` doesn't have Phase 11 yet) on 2026-10-08, awaiting review.
+
+**Goal:** the admin dashboard's stat cards were plain numbers, and there was no admin page to browse orders or user accounts. Build screens.md A6 (Orders Oversight) and A8 (User Management), and make each stat card link to its list. Requested 2026-10-08.
+
+**Builds on:** requirements.md §3.10 ("User management: view/search/suspend", "Order oversight: view all orders"), §3.8 (suspend sellers).
+
+**Confirmed decisions (2026-10-08):**
+- Scope is view plus suspend/reactivate of customer and seller accounts. Order refunds and disputes stay out (the `POST /api/admin/orders/{order}/refund` row in api-endpoints.md is still unbuilt).
+- UX: dedicated pages with a searchable, filterable, paginated table; clicking a row opens a side Sheet. Filters live in the URL.
+- Users: one `/admin/users` page with Customers / Sellers tabs.
+- Suspending a seller's **account** also hides their store: `Seller::publiclyVisible()` now also requires the owning user not to be `suspended`. This is separate from the existing verification-level "Suspend seller" on A3.
+- Suspend only goes active → suspended, and reactivate only suspended → active. A user's own `deactivated` status can't be changed by an admin. Admin accounts are never listed.
+
+**What gets built:**
+- `Admin\OrderController@index` and `Admin\UserController@index|suspend|reactivate`.
+- `AdminUserResource` and `App\Support\PaginationMeta`.
+- `Admin/Orders` and `Admin/Users` pages on a shared `AdminDataTable` (shadcn `table` + `pagination`) and a `useListFilters` hook.
+- Linked dashboard stat cards; "Orders" and "Users" sidebar entries. Sidebar highlighting now ignores the query string.
+- `HomeController`'s featured sellers now use `publiclyVisible()`. No new tables, packages or env vars.
+
+**Exit criteria:** every stat card leads to its list; admins can search, filter and page orders and users and open their details. Suspending a customer locks them out on their next request; suspending a seller also hides their store. Every pre-existing test still passes.
+
+---
+
 ## How to use this plan
 
 - Work top-to-bottom; later phases assume earlier ones are exit-criteria-complete, but flag if you want a different order (e.g. Admin verification before Search, if seller onboarding needs to be gated from day one).

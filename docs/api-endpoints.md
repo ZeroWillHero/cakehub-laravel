@@ -40,9 +40,9 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | GET | `/admin/sellers/{seller}` | admin | `Admin/SellerDetail` | A3 |
 | GET | `/admin/categories` | admin | `Admin/Categories` | A4 |
 | GET | `/admin/subscription-plans` | admin | `Admin/SubscriptionPlans` | A5 |
-| GET | `/admin/orders` | admin | `Admin/Orders` | A6 |
+| GET | `/admin/orders` | admin | `Admin/Orders` | A6 — paginated (20), query params `search`, `status`, `payment_status`, `from`, `to`, `customer`, `seller` (Phase 12) |
 | GET | `/admin/reviews` | admin | `Admin/ReviewModeration` | A7 |
-| GET | `/admin/users` | admin | `Admin/UserManagement` | A8 |
+| GET | `/admin/users` | admin | `Admin/Users` | A8 — paginated (20), `tab=customers\|sellers`, `search`, `status`, `verification` (sellers tab) (Phase 12) |
 | GET | `/admin/bank-accounts` | admin | `Admin/BankAccounts` | A9 |
 | GET | `/admin/payment-verifications` | admin | `Admin/PaymentVerifications` | A10 |
 | GET | `/admin/seller-payouts` | admin | `Admin/SellerPayouts` | A11 |
@@ -102,10 +102,10 @@ Schema reference: [database-design.md](database-design.md). Testing: every endpo
 | POST/PUT/DELETE | `/api/admin/subscription-plans[/{plan}]` | `Admin\SubscriptionPlanController` | delete requires `migrate_to` if a plan has active subscribers (no separate GET — index is Inertia-delivered, like the other admin list pages) |
 | PATCH | `/api/admin/subscription-plans/{plan}/toggle` | `Admin\SubscriptionPlanController@toggleActive` | |
 | PATCH | `/api/admin/subscription-plans/reorder` | `Admin\SubscriptionPlanController@reorder` | bulk sort_order update from `order: number[]` |
-| GET | `/api/admin/orders` | `Admin\OrderController@index` | filterable |
-| POST | `/api/admin/orders/{order}/refund` | `Admin\OrderController@refund` | |
+| POST | `/api/admin/orders/{order}/refund` | `Admin\OrderController@refund` | **not built** — refunds/disputes were left out of Phase 12's scope |
 | POST | `/api/admin/reviews/{review}/remove` | `Admin\ReviewModerationController@remove` | |
-| PATCH | `/api/admin/users/{user}/suspend` | `Admin\UserController@suspend` | |
+| PATCH | `/api/admin/users/{user}/suspend` | `Admin\UserController@suspend` | active → suspended; 422 for admins or a non-active account (Phase 12) |
+| PATCH | `/api/admin/users/{user}/reactivate` | `Admin\UserController@reactivate` | suspended → active; 422 otherwise, so a user's own `deactivated` status isn't overridden (Phase 12) |
 | GET/POST/PUT/DELETE | `/api/admin/bank-accounts[/{bankAccount}]` | `Admin\AdminBankAccountController` | full CRUD (Phase 8); no separate GET — index is Inertia-delivered like the other admin list pages |
 | PATCH | `/api/admin/bank-accounts/{bankAccount}/toggle` | `Admin\AdminBankAccountController@toggleActive` | (Phase 8) |
 | GET | `/api/admin/payments/pending` | `Admin\PaymentVerificationController@index` | pending-verification payments, payable eager-loaded (Phase 8) |
